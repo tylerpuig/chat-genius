@@ -24,11 +24,16 @@ for (let i = 4; i < 100; i++) {
 
 export default function ChannelList() {
   const [channels, setChannels] = useState<Channel[]>([...CHANNEL_LIST])
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isChannelsExpanded, setIsChannelsExpanded] = useState(true)
+  const [isDMsExpanded, setIsDMsExpanded] = useState(true)
   const [newChannelName, setNewChannelName] = useState('')
 
   const toggleChannels = () => {
-    setIsExpanded(!isExpanded)
+    setIsChannelsExpanded(!isChannelsExpanded)
+  }
+
+  const toggleDMs = () => {
+    setIsDMsExpanded(!isDMsExpanded)
   }
 
   const addChannel = () => {
@@ -41,10 +46,10 @@ export default function ChannelList() {
   return (
     <div className="text-gray-300">
       <Button variant="blue" className="mb-2 w-full justify-start" onClick={toggleChannels}>
-        {isExpanded ? <ChevronDown className="mr-2" /> : <ChevronRight className="mr-2" />}
+        {isChannelsExpanded ? <ChevronDown className="mr-2" /> : <ChevronRight className="mr-2" />}
         Channels
       </Button>
-      {isExpanded && (
+      {isChannelsExpanded && (
         <>
           {/* <ScrollArea className="mb-4 h-[300px]"> */}
           {channels.map((channel) => (
@@ -54,25 +59,35 @@ export default function ChannelList() {
             </Button>
           ))}
           {/* </ScrollArea> */}
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              placeholder="New channel name"
-              value={newChannelName}
-              onChange={(e) => setNewChannelName(e.target.value)}
-              className="border-gray-700 bg-gray-800 text-gray-300 placeholder-gray-500"
-            />
-            <Button
-              onClick={addChannel}
-              size="icon"
-              variant="blue"
-              className="border-gray-700 bg-gray-800 hover:bg-gray-700"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
         </>
       )}
+
+      <Button variant="blue" className="mb-2 w-full justify-start" onClick={toggleDMs}>
+        {isDMsExpanded ? <ChevronDown className="mr-2" /> : <ChevronRight className="mr-2" />}
+        DMs
+      </Button>
+      {isDMsExpanded && (
+        <>
+          {/* <ScrollArea className="mb-4 h-[300px]"> */}
+          {channels.map((channel) => (
+            <Button key={channel.id} variant="channel" className="mb-1 w-full justify-start">
+              <Hash className="mr-2 h-4 w-4" />
+              {channel.name}
+            </Button>
+          ))}
+        </>
+      )}
+
+      <Button
+        onClick={addChannel}
+        variant="blue"
+        className="w-full justify-start border-gray-700 bg-gray-700 hover:bg-gray-600"
+      >
+        <div className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          <div>Create Channel</div>
+        </div>
+      </Button>
     </div>
   )
 }

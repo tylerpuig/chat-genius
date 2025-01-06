@@ -39,7 +39,10 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                 <Button
                   variant="default"
                   className="w-full border-0 bg-gray-700 text-gray-200 hover:bg-gray-600"
-                  onClick={() => signIn('discord', { redirectTo: '/' })}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    signIn('discord', { redirectTo: '/' })
+                  }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
