@@ -85,7 +85,7 @@ export function ChatInput() {
 export function ChatContainer() {
   return (
     <div className="absolute inset-0 bottom-[73px] flex flex-col overflow-hidden bg-gray-900">
-      <div className="scrollbar-thin scrollbar-track-gray-800 scrollbar-thumb-gray-600 hover:scrollbar-thumb-gray-500 flex-1 overflow-y-auto scroll-smooth">
+      <div className="scrollbar-overlay flex-1 overflow-y-auto scroll-smooth">
         {SAMPLE_MESSAGES.map((message) => (
           <ChatMessage key={message.id} {...message} />
         ))}

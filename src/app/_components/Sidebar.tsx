@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 
-interface ResizableSidebarProps {
+type ResizableSidebarProps = {
   children: React.ReactNode;
   minWidth?: number;
   maxWidth?: number;
-}
+};
 
 export default function ResizableSidebar({
   children,
@@ -47,7 +47,7 @@ export default function ResizableSidebar({
 
   return (
     <div className="flex h-screen bg-gray-900" style={{ width: sidebarWidth }}>
-      <div className="flex-1 overflow-auto bg-gray-800 text-gray-300">
+      <div className="scrollbar-overlay flex-1 overflow-auto bg-gray-800 text-gray-300">
         {children}
       </div>
       <div
