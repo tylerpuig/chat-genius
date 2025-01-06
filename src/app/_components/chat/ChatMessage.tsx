@@ -76,21 +76,21 @@ export function ChatMessage({
 
             <div className="flex flex-shrink-0 items-start gap-1">
               <Button
-                variant="ghost"
+                variant="channel"
                 size="icon"
                 className="h-8 w-8 text-gray-400 hover:text-gray-300"
               >
                 <ReplyIcon className="h-4 w-4" />
               </Button>
               <Button
-                variant="ghost"
+                variant="channel"
                 size="icon"
                 className="h-8 w-8 text-gray-400 hover:text-gray-300"
               >
                 <Repeat2 className="h-4 w-4" />
               </Button>
               <Button
-                variant="ghost"
+                variant="channel"
                 size="icon"
                 className="h-8 w-8 text-gray-400 hover:text-gray-300"
               >
@@ -99,7 +99,7 @@ export function ChatMessage({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="ghost"
+                    variant="channel"
                     size="icon"
                     className="h-8 w-8 text-gray-400 hover:text-gray-300"
                   >

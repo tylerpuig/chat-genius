@@ -18,7 +18,7 @@ const CHANNEL_LIST = [
   { name: '# development', id: '3' }
 ]
 
-for (let i = 4; i < 100; i++) {
+for (let i = 4; i < 5; i++) {
   CHANNEL_LIST.push({ name: `# random${i}`, id: i.toString() })
 }
 
@@ -45,7 +45,7 @@ export default function ChannelList() {
 
   return (
     <div className="text-gray-300">
-      <Button variant="blue" className="mb-2 w-full justify-start" onClick={toggleChannels}>
+      <Button variant="sidebar" className="mb-2 w-full justify-start" onClick={toggleChannels}>
         {isChannelsExpanded ? <ChevronDown className="mr-2" /> : <ChevronRight className="mr-2" />}
         Channels
       </Button>
@@ -62,7 +62,18 @@ export default function ChannelList() {
         </>
       )}
 
-      <Button variant="blue" className="mb-2 w-full justify-start" onClick={toggleDMs}>
+      <Button
+        onClick={addChannel}
+        variant="sidebar"
+        className="w-full justify-start border-gray-700 hover:bg-gray-600"
+      >
+        <div className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          <div>Create Channel</div>
+        </div>
+      </Button>
+
+      <Button variant="sidebar" className="mb-2 w-full justify-start" onClick={toggleDMs}>
         {isDMsExpanded ? <ChevronDown className="mr-2" /> : <ChevronRight className="mr-2" />}
         DMs
       </Button>
@@ -77,17 +88,6 @@ export default function ChannelList() {
           ))}
         </>
       )}
-
-      <Button
-        onClick={addChannel}
-        variant="blue"
-        className="w-full justify-start border-gray-700 bg-gray-700 hover:bg-gray-600"
-      >
-        <div className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          <div>Create Channel</div>
-        </div>
-      </Button>
     </div>
   )
 }

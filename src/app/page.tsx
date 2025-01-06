@@ -7,6 +7,7 @@ import { ChatContainer, ChatInput } from './_components/chat/ChatContainer'
 import { redirect } from 'next/navigation'
 import { WorkspaceSidebar } from './_components/WorkspaceSidebar'
 import { NewChannelSheet } from './_components/sheets/NewChannel'
+import ChatTabs from './_components/chat/ChatTabs'
 
 export default async function Home() {
   // const hello = await api.post.hello({ text: "from tRPC" });
@@ -28,20 +29,12 @@ export default async function Home() {
   return (
     <HydrateClient>
       <div className="flex h-screen">
-        {' '}
-        {/* Make it full height and flex */}
-        <WorkspaceSidebar /> {/* Fixed width */}
+        <WorkspaceSidebar />
         <div className="flex-1">
-          {' '}
-          {/* Main content area - takes remaining space */}
+          {/* Main content area*/}
           <Layout>
             <div className="flex h-full flex-col">
-              <div className="border-b border-gray-800 p-4">
-                <h1 className="text-xl font-bold text-blue-400"># general</h1>
-                <p className="text-sm text-gray-400">
-                  This channel is for team-wide communication and announcements
-                </p>
-              </div>
+              <ChatTabs />
               <div className="relative flex flex-1 flex-col overflow-hidden">
                 <ChatContainer />
                 <ChatInput />
