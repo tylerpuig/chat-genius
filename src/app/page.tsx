@@ -1,19 +1,27 @@
-import Link from "next/link";
-import { auth } from "~/server/auth";
-import { api, HydrateClient } from "~/trpc/server";
-import Layout from "./_components/Layout";
-import { ChatContainer, ChatInput } from "./_components/chat/ChatContainer";
+import Link from 'next/link'
+import { auth } from '~/server/auth'
+import { api, HydrateClient } from '~/trpc/server'
+import Layout from './_components/Layout'
+import { ChatContainer, ChatInput } from './_components/chat/ChatContainer'
+// import { useRouter } from 'next/navigation'
+import { redirect } from 'next/navigation'
 
 export default async function Home() {
   // const hello = await api.post.hello({ text: "from tRPC" });
-  const session = await auth();
-  console.log(session);
+  // const router = useRouter()
+
+  const session = await auth()
+  console.log(session)
 
   // if (session?.user) {
   //   void api.post.getLatest.prefetch();
   // }
 
-  // console.log(session);
+  // console.log(session)
+
+  if (!session || !session.user) {
+    redirect('/login')
+  }
 
   return (
     <HydrateClient>
@@ -32,5 +40,5 @@ export default async function Home() {
         </div>
       </Layout>
     </HydrateClient>
-  );
+  )
 }

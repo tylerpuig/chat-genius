@@ -1,69 +1,54 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { ChevronDown, ChevronRight, Hash, Plus } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import { useState } from 'react'
+import { ChevronDown, ChevronRight, Hash, Plus } from 'lucide-react'
+import { Button } from '~/components/ui/button'
 // import { Input } from "";
 // import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Channel {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 const CHANNEL_LIST = [
-  { name: "# general", id: "1" },
+  { name: '# general', id: '1' },
 
-  { name: "# random", id: "2" },
-  { name: "# development", id: "3" },
-];
+  { name: '# random', id: '2' },
+  { name: '# development', id: '3' }
+]
 
 for (let i = 4; i < 100; i++) {
-  CHANNEL_LIST.push({ name: `# random${i}`, id: i.toString() });
+  CHANNEL_LIST.push({ name: `# random${i}`, id: i.toString() })
 }
 
 export default function ChannelList() {
-  const [channels, setChannels] = useState<Channel[]>([...CHANNEL_LIST]);
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [newChannelName, setNewChannelName] = useState("");
+  const [channels, setChannels] = useState<Channel[]>([...CHANNEL_LIST])
+  const [isExpanded, setIsExpanded] = useState(true)
+  const [newChannelName, setNewChannelName] = useState('')
 
   const toggleChannels = () => {
-    setIsExpanded(!isExpanded);
-  };
+    setIsExpanded(!isExpanded)
+  }
 
   const addChannel = () => {
     if (newChannelName.trim()) {
-      setChannels([
-        ...channels,
-        { id: Date.now().toString(), name: newChannelName.trim() },
-      ]);
-      setNewChannelName("");
+      setChannels([...channels, { id: Date.now().toString(), name: newChannelName.trim() }])
+      setNewChannelName('')
     }
-  };
+  }
 
   return (
     <div className="text-gray-300">
-      <Button
-        variant="blue"
-        className="mb-2 w-full justify-start"
-        onClick={toggleChannels}
-      >
-        {isExpanded ? (
-          <ChevronDown className="mr-2" />
-        ) : (
-          <ChevronRight className="mr-2" />
-        )}
+      <Button variant="blue" className="mb-2 w-full justify-start" onClick={toggleChannels}>
+        {isExpanded ? <ChevronDown className="mr-2" /> : <ChevronRight className="mr-2" />}
         Channels
       </Button>
       {isExpanded && (
         <>
           {/* <ScrollArea className="mb-4 h-[300px]"> */}
           {channels.map((channel) => (
-            <Button
-              key={channel.id}
-              variant="channel"
-              className="mb-1 w-full justify-start"
-            >
+            <Button key={channel.id} variant="channel" className="mb-1 w-full justify-start">
               <Hash className="mr-2 h-4 w-4" />
               {channel.name}
             </Button>
@@ -89,5 +74,5 @@ export default function ChannelList() {
         </>
       )}
     </div>
-  );
+  )
 }

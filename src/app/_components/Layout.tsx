@@ -1,10 +1,10 @@
-import React from "react";
-import ResizableSidebar from "./Sidebar";
-import ChannelList from "./ChannelList";
+import React from 'react'
+import ResizableSidebar from './Sidebar'
+import ChannelList from './ChannelList'
 
 type LayoutProps = {
-  children: React.ReactNode;
-};
+  children: React.ReactNode
+}
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
@@ -29,7 +29,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* <main className="flex-1 overflow-auto bg-gray-800 p-6">{children}</main> */}
       <main className="flex-1 overflow-hidden bg-gray-800">{children}</main>
     </div>
-  );
-};
+  )
+}
 
-export default Layout;
+export default Layout

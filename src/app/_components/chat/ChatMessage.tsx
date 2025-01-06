@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import React from "react";
+import React from 'react'
 // import { formatDistanceToNow } from "date-fns";
 import {
   MoreHorizontal,
@@ -8,43 +8,43 @@ import {
   Bookmark,
   Repeat2,
   ThumbsUp,
-  Reply as ReplyIcon,
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import { Button } from "~/components/ui/button";
+  Reply as ReplyIcon
+} from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import { Button } from '~/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
+  DropdownMenuTrigger
+} from '~/components/ui/dropdown-menu'
 
 type Reaction = {
-  emoji: string;
-  count: number;
-  userHasReacted: boolean;
-};
+  emoji: string
+  count: number
+  userHasReacted: boolean
+}
 
 type Reply = {
-  id: string;
-  authorName: string;
-  authorAvatar: string;
-  content: string;
-  timestamp: Date;
-};
+  id: string
+  authorName: string
+  authorAvatar: string
+  content: string
+  timestamp: Date
+}
 
 type ChatMessageProps = {
-  id: string;
+  id: string
   author: {
-    name: string;
-    avatar: string;
-  };
-  content: string;
-  timestamp: Date;
-  reactions?: Reaction[];
-  replies?: Reply[];
-  isPinned?: boolean;
-};
+    name: string
+    avatar: string
+  }
+  content: string
+  timestamp: Date
+  reactions?: Reaction[]
+  replies?: Reply[]
+  isPinned?: boolean
+}
 
 export function ChatMessage({
   author,
@@ -52,7 +52,7 @@ export function ChatMessage({
   timestamp,
   reactions = [],
   replies = [],
-  isPinned = false,
+  isPinned = false
 }: ChatMessageProps) {
   return (
     <div className="group px-4 py-2 hover:bg-gray-800/50">
@@ -66,9 +66,7 @@ export function ChatMessage({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-gray-100">{author.name}</span>
-              <span className="text-sm text-gray-400">
-                {timestamp.toISOString()}
-              </span>
+              <span className="text-sm text-gray-400">{timestamp.toISOString()}</span>
               {isPinned && (
                 <span className="rounded bg-blue-900/30 px-2 py-0.5 text-xs text-blue-400">
                   Pinned
@@ -108,10 +106,7 @@ export function ChatMessage({
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-48 border-gray-800 bg-gray-900"
-                >
+                <DropdownMenuContent align="end" className="w-48 border-gray-800 bg-gray-900">
                   <DropdownMenuItem className="text-gray-300 hover:text-gray-100">
                     Copy Message Link
                   </DropdownMenuItem>
@@ -135,8 +130,8 @@ export function ChatMessage({
                   key={index}
                   className={`flex items-center gap-1 rounded-full px-2 py-1 text-sm ${
                     reaction.userHasReacted
-                      ? "bg-blue-600/30 text-blue-400"
-                      : "bg-gray-700/50 text-gray-300"
+                      ? 'bg-blue-600/30 text-blue-400'
+                      : 'bg-gray-700/50 text-gray-300'
                   } transition-colors hover:bg-blue-600/40`}
                 >
                   <span>{reaction.emoji}</span>
@@ -149,11 +144,11 @@ export function ChatMessage({
           {replies.length > 0 && (
             <button className="mt-2 flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300">
               <MessageSquare className="h-4 w-4" />
-              {replies.length} {replies.length === 1 ? "reply" : "replies"}
+              {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
             </button>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }
