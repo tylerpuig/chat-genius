@@ -6,7 +6,6 @@ import { Button } from '~/components/ui/button'
 import { api } from '../../../trpc/react'
 import { useSession } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
-import { type ChatMessageData } from '~/trpc/types'
 import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
 
 export function ChatInput() {

@@ -12,20 +12,15 @@ type ChannelInfo = {
   name: string
 }
 
-const CHANNEL_LIST = [
-  { name: '# general', id: '1' },
-
-  { name: '# random', id: '2' },
-  { name: '# development', id: '3' }
-]
-
-for (let i = 4; i < 5; i++) {
-  CHANNEL_LIST.push({ name: `# random${i}`, id: i.toString() })
-}
-
 export default function ChannelList() {
   const { data: channels, refetch: refetchChannels } = api.messages.getChannels.useQuery()
-  const { setChannelSheetOpen, channelSheetOpen, selectedChannelId, setSelectedChannelId } = useUI()
+  const {
+    setChannelSheetOpen,
+    channelSheetOpen,
+    selectedChannelId,
+    setSelectedChannelId,
+    setSelectedChannelName
+  } = useUI()
   const [isChannelsExpanded, setIsChannelsExpanded] = useState(true)
   const [isDMsExpanded, setIsDMsExpanded] = useState(true)
 
@@ -55,6 +50,7 @@ export default function ChannelList() {
             <Button
               onClick={() => {
                 setSelectedChannelId(channel.id)
+                setSelectedChannelName(channel.name)
               }}
               key={channel.id}
               variant="channel"

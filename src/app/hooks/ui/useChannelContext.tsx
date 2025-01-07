@@ -14,7 +14,7 @@ const MessagesContext = createContext<ChannelContext>({
 })
 
 export function ChannelProvider({ children }: { children: ReactNode }) {
-  const { selectedChannelId, setSelectedChannelId } = useUI()
+  const { selectedChannelId, setSelectedChannelId, setSelectedChannelName } = useUI()
 
   const channels = api.messages.getChannels.useQuery(undefined, {
     enabled: !selectedChannelId
@@ -23,6 +23,7 @@ export function ChannelProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!selectedChannelId && channels?.data?.[0]?.id) {
       setSelectedChannelId(channels.data[0]?.id)
+      setSelectedChannelName(channels.data[0]?.name)
     }
   }, [channels.data])
 

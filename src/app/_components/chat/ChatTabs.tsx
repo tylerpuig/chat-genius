@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { signOut } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { type ChatTab } from '~/app/store/features/ui/types'
+import { AvatarStack } from './AvatarStack'
 
 type NavItemProps = {
   icon: React.ReactNode
@@ -47,9 +48,7 @@ export default function ChatTabs() {
   return (
     <div className="flex flex-col gap-1 bg-gray-900/40 p-2">
       <div className="flex items-center justify-between px-3 py-2">
-        <h2 className="text-lg font-semibold text-white">
-          {selectedChannelName || '# all-gauntletai'}
-        </h2>
+        <h2 className="text-lg font-semibold text-white">{'# ' + (selectedChannelName || '')}</h2>
 
         <DropdownMenu>
           <DropdownMenuTrigger className="outline-none">
@@ -70,15 +69,19 @@ export default function ChatTabs() {
         </DropdownMenu>
       </div>
 
-      <div className="flex items-center gap-2">
-        {TABS.map((tab) => (
-          <NavItem
-            key={tab.label}
-            icon={tab.icon}
-            label={tab.label}
-            isActive={tab.label === currentTab}
-          />
-        ))}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          {TABS.map((tab) => (
+            <NavItem
+              key={tab.label}
+              icon={tab.icon}
+              label={tab.label}
+              isActive={tab.label === currentTab}
+            />
+          ))}
+        </div>
+
+        <AvatarStack />
       </div>
     </div>
   )

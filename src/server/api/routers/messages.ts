@@ -52,7 +52,7 @@ export const messagesRouter = createTRPCRouter({
         channelId: z.number()
       })
     )
-    .subscription(async function* ({ input, ctx, signal }) {
+    .subscription(async function* ({ signal }) {
       // AsyncIterator for the new message events
 
       for await (const [data] of on(ee, 'newMessage', {
@@ -191,7 +191,44 @@ export const messagesRouter = createTRPCRouter({
       .where(ne(schema.users.id, ctx.session.user.id))
 
     return users
-  })
+  }),
+  getUsersInChannel: protectedProcedure
+    .input(z.object({ channelId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const channelInfo = await ctx.db.query.channels
+        .findFirst({
+          where: eq(schema.channels.id, input.channelId)
+        })
+        .execute()
+
+      if (!channelInfo) {
+        return []
+      }
+
+      if (channelInfo.isPrivate) {
+        const members = await ctx.db
+          .select({
+            image: schema.users.image,
+            name: schema.users.name
+          })
+          .from(schema.channelMembers)
+          .where(eq(schema.channelMembers.channelId, input.channelId))
+          .leftJoin(schema.users, eq(schema.channelMembers.userId, schema.users.id))
+
+        return members
+      }
+
+      // If the channel is public, return all users
+      const users = await ctx.db
+        .select({
+          image: schema.users.image,
+          name: schema.users.name
+        })
+        .from(schema.users)
+        .where(ne(schema.users.id, ctx.session.user.id))
+
+      return users
+    })
 })
 
 // Initialize the PostgreSQL trigger
