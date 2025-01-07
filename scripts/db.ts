@@ -45,3 +45,6 @@
 // AFTER INSERT ON message
 // FOR EACH ROW
 // EXECUTE FUNCTION notify_new_message();
+
+// delete tables
+// DROP TABLE IF EXISTS "account", "channel", "channel_member", "session", "user", "verification_token", "message" CASCADE;

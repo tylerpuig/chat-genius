@@ -2,6 +2,7 @@ import { DrizzleAdapter } from '@auth/drizzle-adapter'
 import { type DefaultSession, type NextAuthConfig } from 'next-auth'
 import DiscordProvider from 'next-auth/providers/discord'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import Credentials from 'next-auth/providers/credentials'
 
 import { db } from '~/server/db'
 import { accounts, sessions, users, verificationTokens } from '~/server/db/schema'
@@ -35,12 +36,41 @@ declare module 'next-auth' {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authConfig = {
+  session: {
+    strategy: 'jwt'
+  },
+  callbacks: {
+    session: ({ session, token }) => {
+      console.log('Session callback - token:', token)
+      console.log('Session callback - session:', session)
+
+      if (!token) return session
+
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.sub,
+          email: token.email,
+          name: token.name,
+          image: token.picture
+        }
+      }
+    },
+    jwt: async ({ token, user }: { token: any; user: any }) => {
+      console.log('JWT callback - token:', token)
+      console.log('JWT callback - user:', user)
+
+      if (user) {
+        token.sub = user.id
+      }
+      return token
+    }
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+
   providers: [
-    DiscordProvider({
-      clientId: process.env.DISCORD_CLIENT_ID!,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET!
-    }),
-    CredentialsProvider({
+    Credentials({
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -57,12 +87,21 @@ export const authConfig = {
           return null
         }
 
-        const isPasswordValid = bcrypt.compare(credentials.password as string, user.password)
+        const isPasswordValid = await bcrypt.compare(credentials.password as string, user.password)
+        console.log('isPasswordValid', isPasswordValid)
 
         if (!isPasswordValid) {
           return null
         }
 
+        const userData = {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image
+        }
+
+        console.log('user', userData)
         return {
           id: user.id,
           email: user.email,
@@ -70,7 +109,12 @@ export const authConfig = {
           image: user.image
         }
       }
+    }),
+    DiscordProvider({
+      clientId: process.env.DISCORD_CLIENT_ID!,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET!
     })
+
     /**
      * ...add more providers here.
      *
@@ -86,14 +130,5 @@ export const authConfig = {
     accountsTable: accounts,
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens
-  }),
-  callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id
-      }
-    })
-  }
+  })
 } satisfies NextAuthConfig

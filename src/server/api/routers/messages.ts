@@ -1,20 +1,17 @@
 import { z } from 'zod'
 import EventEmitter, { on } from 'events'
-import { tracked } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
-import { eq, and, gt } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
-// import { db } from '~/server/db'
-// import { type Message } from '~/server/db/schema'
 import { env } from '~/env'
 import { Pool } from 'pg'
 
-// Initialize PostgreSQL pool
+// PostgreSQL pool
 const pool = new Pool({
   connectionString: env.DATABASE_URL
 })
 
-// Create an event emitter to bridge Postgres notifications to tRPC
+// Event emitter to bridge Postgres notifications to tRPC
 const ee = new EventEmitter()
 
 let postgresInitialized = false
@@ -48,10 +45,9 @@ export const messagesRouter = createTRPCRouter({
       })
     )
     .subscription(async function* ({ input, ctx, signal }) {
-      // Create an AsyncIterator for the new message events
+      // AsyncIterator for the new message events
 
       for await (const [data] of on(ee, 'newMessage', {
-        // Passing the AbortSignal from the request automatically cancels the event emitter when the request is aborted
         signal: signal
       })) {
         const post = data
@@ -116,8 +112,20 @@ export const messagesRouter = createTRPCRouter({
       })
     }),
   getChannels: protectedProcedure.query(async ({ ctx }) => {
-    const channels = await ctx.db.select().from(schema.channels)
-    return channels || []
+    const userChannels = await ctx.db
+      .select({
+        id: schema.channels.id,
+        name: schema.channels.name,
+        description: schema.channels.description,
+        isPrivate: schema.channels.isPrivate,
+        createdAt: schema.channels.createdAt,
+        isAdmin: schema.channelMembers.isAdmin
+      })
+      .from(schema.channels)
+      .innerJoin(schema.channelMembers, eq(schema.channels.id, schema.channelMembers.channelId))
+      .where(eq(schema.channelMembers.userId, ctx.session.user.id))
+
+    return userChannels
   })
 })
 
@@ -159,7 +167,7 @@ async function initializePostgresTrigger() {
 
 // Initialize everything
 export async function initializeMessaging() {
-  await initializePostgresTrigger()
+  // await initializePostgresTrigger()
   await initializePostgresListener()
 }
 initializeMessaging()

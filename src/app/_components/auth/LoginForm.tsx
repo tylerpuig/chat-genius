@@ -1,24 +1,25 @@
 'use client'
+import { useRef } from 'react'
 import { cn } from '~/lib/utils'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { signIn } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
+  const emailRef = useRef<HTMLInputElement>(null)
+  const passwordRef = useRef<HTMLInputElement>(null)
+
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className="bg-gray-800 text-gray-100">
         <CardHeader className="text-center">
           <CardTitle className="text-xl text-blue-300">Welcome back</CardTitle>
-          {/* <CardDescription className="text-gray-400">
-            Login with your Discord Account
-          </CardDescription> */}
         </CardHeader>
         <CardContent>
-          <form>
+          <div>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
                 {/* <Button
@@ -69,6 +70,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     Email
                   </Label>
                   <Input
+                    ref={emailRef}
                     id="email"
                     type="email"
                     placeholder="m@example.com"
@@ -88,12 +90,30 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     </a>
                   </div>
                   <Input
+                    ref={passwordRef}
                     id="password"
                     type="password"
                     className="border-0 bg-gray-700 text-gray-200"
                   />
                 </div>
-                <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">
+                <Button
+                  onClick={async (e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    console.log(emailRef.current?.value, passwordRef.current?.value)
+
+                    if (!emailRef.current?.value || !passwordRef.current?.value) return
+
+                    await signIn('credentials', {
+                      email: emailRef.current.value,
+                      password: passwordRef.current.value,
+                      redirect: true,
+                      redirectTo: '/'
+                    })
+                  }}
+                  // type="submit"
+                  className="w-full bg-blue-600 text-white hover:bg-blue-700"
+                >
                   Login
                 </Button>
               </div>
@@ -103,13 +123,13 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   onClick={() => {
                     redirect('/auth/signup')
                   }}
-                  className="text-blue-400 underline underline-offset-4 hover:text-blue-300"
+                  className="cursor-pointer text-blue-400 underline underline-offset-4 hover:text-blue-300"
                 >
                   Sign up
                 </div>
               </div>
             </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
       <div className="text-balance text-center text-xs text-gray-500 [&_a]:text-blue-400 [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-blue-300">

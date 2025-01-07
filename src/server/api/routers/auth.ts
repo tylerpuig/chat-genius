@@ -10,7 +10,7 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const user = await ctx.db.select().from(users).where(eq(users.email, input.email))
 
-      if (user) {
+      if (user.length) {
         throw new Error('User already exists')
       }
 
@@ -28,7 +28,7 @@ export const authRouter = createTRPCRouter({
 
       return {
         success: true,
-        user: newUser
+        user: newUser[0]
       }
     })
 })
