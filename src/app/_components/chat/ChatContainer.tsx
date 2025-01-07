@@ -7,9 +7,11 @@ import { api } from '../../../trpc/react'
 import { useSession } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { type ChatMessageData } from '~/trpc/types'
+import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
 
-export function ChatInput({ refetchMessages }: { refetchMessages: () => void }) {
+export function ChatInput() {
   const { selectedChannelId } = useUI()
+  const { refetchMessages } = useChannelContext()
 
   const sendMessage = api.messages.sendMessage.useMutation({
     onSuccess: () => {
@@ -52,19 +54,16 @@ export function ChatInput({ refetchMessages }: { refetchMessages: () => void }) 
   )
 }
 
-export function ChatContainer({
-  messages,
-  refetchMessages
-}: {
-  messages: ChatMessageData[] | undefined
-  refetchMessages: () => void
-}) {
+export function ChatContainer() {
+  const { messages, refetchMessages } = useChannelContext()
+  const { selectedChannelId } = useUI()
   api.messages.onMessage.useSubscription(
     {
-      channelId: 1
+      channelId: selectedChannelId
     },
     {
-      onData: () => {
+      onData: (data) => {
+        console.log(data)
         refetchMessages()
       }
     }
