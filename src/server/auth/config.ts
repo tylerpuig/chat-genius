@@ -41,9 +41,6 @@ export const authConfig = {
   },
   callbacks: {
     session: ({ session, token }) => {
-      console.log('Session callback - token:', token)
-      console.log('Session callback - session:', session)
-
       if (!token) return session
 
       return {
@@ -58,9 +55,6 @@ export const authConfig = {
       }
     },
     jwt: async ({ token, user }: { token: any; user: any }) => {
-      console.log('JWT callback - token:', token)
-      console.log('JWT callback - user:', user)
-
       if (user) {
         token.sub = user.id
       }
@@ -88,7 +82,6 @@ export const authConfig = {
         }
 
         const isPasswordValid = await bcrypt.compare(credentials.password as string, user.password)
-        console.log('isPasswordValid', isPasswordValid)
 
         if (!isPasswordValid) {
           return null

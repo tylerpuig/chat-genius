@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import EventEmitter, { on } from 'events'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
-import { eq } from 'drizzle-orm'
+import { eq, and, or, ne } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import { env } from '~/env'
 import { Pool } from 'pg'
@@ -13,6 +13,14 @@ const pool = new Pool({
 
 // Event emitter to bridge Postgres notifications to tRPC
 const ee = new EventEmitter()
+
+type PostgresChatNotification = {
+  id: number
+  content: string
+  channelId: number
+  userId: string
+  createdAt: Date
+}
 
 let postgresInitialized = false
 // Initialize the Postgres listener
@@ -50,8 +58,8 @@ export const messagesRouter = createTRPCRouter({
       for await (const [data] of on(ee, 'newMessage', {
         signal: signal
       })) {
-        const post = data
-        yield post
+        const newMessage = data as PostgresChatNotification
+        yield newMessage
       }
     }),
   sendMessage: protectedProcedure
@@ -88,14 +96,22 @@ export const messagesRouter = createTRPCRouter({
       return messages
     }),
   createChannel: protectedProcedure
-    .input(z.object({ name: z.string(), description: z.string(), userId: z.string() }))
+    .input(
+      z.object({
+        name: z.string(),
+        description: z.string(),
+        userId: z.string(),
+        isPrivate: z.boolean(),
+        userIds: z.array(z.string())
+      })
+    )
     .mutation(async ({ input, ctx }) => {
-      const { name, description, userId } = input
+      const { name, description, userId, isPrivate, userIds } = input
 
       return await ctx.db.transaction(async (tx) => {
         const [newChannel] = await tx
           .insert(schema.channels)
-          .values({ name, createdById: userId, description })
+          .values({ name, createdById: userId, description, isPrivate })
           .returning()
         if (!newChannel) {
           throw new Error('Failed to create channel')
@@ -108,6 +124,15 @@ export const messagesRouter = createTRPCRouter({
           isAdmin: true // Creator should probably be an admin
         })
 
+        // Add other users as channel members
+        await tx.insert(schema.channelMembers).values(
+          userIds.map((userId) => ({
+            channelId: newChannel.id,
+            userId: userId,
+            isAdmin: false
+          }))
+        )
+
         return newChannel
       })
     }),
@@ -119,13 +144,39 @@ export const messagesRouter = createTRPCRouter({
         description: schema.channels.description,
         isPrivate: schema.channels.isPrivate,
         createdAt: schema.channels.createdAt,
+        // Use a left join to get isAdmin, which might be null for public channels
         isAdmin: schema.channelMembers.isAdmin
       })
       .from(schema.channels)
-      .innerJoin(schema.channelMembers, eq(schema.channels.id, schema.channelMembers.channelId))
-      .where(eq(schema.channelMembers.userId, ctx.session.user.id))
+      .leftJoin(
+        schema.channelMembers,
+        and(
+          eq(schema.channels.id, schema.channelMembers.channelId),
+          eq(schema.channelMembers.userId, ctx.session.user.id)
+        )
+      )
+      .where(
+        or(
+          // Include channel if it's public
+          eq(schema.channels.isPrivate, false),
+          // OR if user is a member (for private channels)
+          eq(schema.channelMembers.userId, ctx.session.user.id)
+        )
+      )
 
     return userChannels
+  }),
+  getUsers: protectedProcedure.query(async ({ ctx }) => {
+    const users = await ctx.db
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        avatar: schema.users.image
+      })
+      .from(schema.users)
+      .where(ne(schema.users.id, ctx.session.user.id))
+
+    return users
   })
 })
 

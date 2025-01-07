@@ -9,8 +9,7 @@ import {
   SheetContent,
   SheetDescription,
   SheetHeader,
-  SheetTitle,
-  SheetTrigger
+  SheetTitle
 } from '~/components/ui/sheet'
 import { Textarea } from '~/components/ui/textarea'
 import { Switch } from '~/components/ui/switch'
@@ -23,7 +22,7 @@ export function NewChannelSheet() {
   const session = useSession()
   const { channelSheetOpen, setChannelSheetOpen } = useUI()
 
-  const [isPublic, setIsPublic] = useState(true)
+  const [isPrivate, setIsPrivate] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
 
   const createChannel = api.messages.createChannel.useMutation({
@@ -44,24 +43,31 @@ export function NewChannelSheet() {
   const channelNameRef = useRef<HTMLInputElement>(null)
   const channelDescriptionRef = useRef<HTMLTextAreaElement>(null)
 
-  const users: { name: string; id: string }[] = []
+  const userList = api.messages.getUsers.useQuery(undefined, {
+    enabled: isPrivate
+  })
 
   function createChannelNewChannel(): void {
-    if (
-      channelNameRef.current?.value &&
-      channelDescriptionRef.current?.value &&
-      session.data?.user.id
-    ) {
+    if (channelNameRef.current?.value && session.data?.user.id) {
       createChannel.mutate({
         name: channelNameRef.current.value,
-        description: channelDescriptionRef.current.value,
-        userId: session.data?.user.id
+        description: channelDescriptionRef.current?.value || '',
+        userId: session.data?.user.id,
+        isPrivate: isPrivate,
+        userIds: selectedUsers
       })
     }
   }
 
   return (
-    <Sheet open={channelSheetOpen} onOpenChange={(open) => setChannelSheetOpen(open)}>
+    <Sheet
+      open={channelSheetOpen}
+      onOpenChange={(open) => {
+        setChannelSheetOpen(open)
+        setIsPrivate(false)
+        setSelectedUsers([])
+      }}
+    >
       <SheetContent className="scrollbar-overlay overflow-auto border-gray-700 bg-gray-900 text-gray-200">
         <SheetHeader>
           <SheetTitle className="text-gray-200">Create a new channel</SheetTitle>
@@ -94,21 +100,21 @@ export function NewChannelSheet() {
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="public" className="text-right text-gray-400">
-              Public
+              Private
             </Label>
             <Switch
               id="public"
-              checked={isPublic}
-              onCheckedChange={setIsPublic}
+              checked={!!isPrivate}
+              onCheckedChange={setIsPrivate}
               className="col-span-3 bg-blue-400"
             />
           </div>
-          {!isPublic && (
+          {isPrivate && (
             <div className="mt-4 grid grid-cols-4 items-start gap-4">
               <Label className="text-right text-gray-400">Add Users</Label>
               {/* <div className="w-full rounded-md border-gray-700 bg-gray-800 p-4 text-gray-200"> */}
               <div className="scrollbar-overlay col-span-3 max-h-[20rem] space-y-2 overflow-y-auto px-2">
-                {users.map((user) => (
+                {userList.data?.map((user) => (
                   <div key={user.id} className="grid grid-cols-[32px_1fr_100px] items-center gap-4">
                     <Avatar className="h-8 w-8">
                       <AvatarImage

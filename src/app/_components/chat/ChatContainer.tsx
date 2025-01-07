@@ -1,17 +1,15 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useRef } from 'react'
 import { ChatMessage } from './ChatMessage'
 import { Button } from '~/components/ui/button'
 import { api } from '../../../trpc/react'
-import { auth } from '~/server/auth'
 import { useSession } from 'next-auth/react'
+import { useUI } from '~/app/hooks/ui/useUI'
 
 export function ChatInput() {
+  const { selectedChannelId } = useUI()
   const sendMessage = api.messages.sendMessage.useMutation({
-    onSuccess: (data) => {
-      console.log(data)
-    },
     onSettled: () => {
       if (messageContentRef.current) {
         messageContentRef.current.value = ''
@@ -34,7 +32,7 @@ export function ChatInput() {
             if (messageContentRef.current?.value && session.data?.user.id) {
               sendMessage.mutate({
                 content: messageContentRef.current.value,
-                channelId: 1,
+                channelId: selectedChannelId,
                 userId: session.data?.user.id
               })
             }
@@ -50,16 +48,13 @@ export function ChatInput() {
 }
 
 export function ChatContainer() {
-  // const [messages, setMessages] = useState([])
-  // const [mounted, setMounted] = useState(false)
+  const { selectedChannelId } = useUI()
 
   const { data: messages, refetch: refetchMessages } = api.messages.getMessagesFromChannel.useQuery(
     {
-      channelId: 1
+      channelId: selectedChannelId
     }
   )
-
-  console.log(messages)
 
   api.messages.onMessage.useSubscription(
     {
@@ -73,14 +68,16 @@ export function ChatContainer() {
     }
   )
 
-  if (!messages) return null
-
   return (
     <div className="absolute inset-0 bottom-[73px] flex flex-col overflow-hidden bg-gray-900">
       <div className="scrollbar-overlay flex-1 overflow-y-auto scroll-smooth">
-        {messages.map((message) => (
-          <ChatMessage key={message.id} {...message} />
-        ))}
+        {messages && (
+          <>
+            {messages.map((message) => (
+              <ChatMessage key={message.id} {...message} />
+            ))}
+          </>
+        )}
       </div>
     </div>
   )

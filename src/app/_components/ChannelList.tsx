@@ -28,8 +28,6 @@ export default function ChannelList() {
   const [isChannelsExpanded, setIsChannelsExpanded] = useState(true)
   const [isDMsExpanded, setIsDMsExpanded] = useState(true)
 
-  console.log(selectedChannelId)
-
   useEffect(() => {
     refetchChannels()
   }, [channelSheetOpen])
