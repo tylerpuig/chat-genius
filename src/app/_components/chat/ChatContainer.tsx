@@ -6,10 +6,15 @@ import { Button } from '~/components/ui/button'
 import { api } from '../../../trpc/react'
 import { useSession } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
+import { type ChatMessageData } from '~/trpc/types'
 
-export function ChatInput() {
+export function ChatInput({ refetchMessages }: { refetchMessages: () => void }) {
   const { selectedChannelId } = useUI()
+
   const sendMessage = api.messages.sendMessage.useMutation({
+    onSuccess: () => {
+      refetchMessages()
+    },
     onSettled: () => {
       if (messageContentRef.current) {
         messageContentRef.current.value = ''
@@ -47,22 +52,19 @@ export function ChatInput() {
   )
 }
 
-export function ChatContainer() {
-  const { selectedChannelId } = useUI()
-
-  const { data: messages, refetch: refetchMessages } = api.messages.getMessagesFromChannel.useQuery(
-    {
-      channelId: selectedChannelId
-    }
-  )
-
+export function ChatContainer({
+  messages,
+  refetchMessages
+}: {
+  messages: ChatMessageData[] | undefined
+  refetchMessages: () => void
+}) {
   api.messages.onMessage.useSubscription(
     {
       channelId: 1
     },
     {
-      // enabled: mounted,
-      onData: (data) => {
+      onData: () => {
         refetchMessages()
       }
     }

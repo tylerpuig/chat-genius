@@ -124,18 +124,32 @@ export const messagesRouter = createTRPCRouter({
           isAdmin: true // Creator should probably be an admin
         })
 
-        // Add other users as channel members
-        await tx.insert(schema.channelMembers).values(
-          userIds.map((userId) => ({
-            channelId: newChannel.id,
-            userId: userId,
-            isAdmin: false
-          }))
-        )
+        if (userIds.length) {
+          // Add other users as channel members
+          await tx.insert(schema.channelMembers).values(
+            userIds.map((userId) => ({
+              channelId: newChannel.id,
+              userId: userId,
+              isAdmin: false
+            }))
+          )
+        }
 
         return newChannel
       })
     }),
+  getOnlineUsers: protectedProcedure.query(async ({ ctx }) => {
+    const onlineUsers = await ctx.db
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        avatar: schema.users.image
+      })
+      .from(schema.users)
+      .where(ne(schema.users.id, ctx.session.user.id))
+
+    return onlineUsers
+  }),
   getChannels: protectedProcedure.query(async ({ ctx }) => {
     const userChannels = await ctx.db
       .select({

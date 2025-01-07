@@ -3,6 +3,7 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from '~/server/
 import { users } from '~/server/db/schema'
 import { eq } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
+import { AvatarGenerator } from 'random-avatar-generator'
 
 export const authRouter = createTRPCRouter({
   emailSignUp: publicProcedure
@@ -17,12 +18,18 @@ export const authRouter = createTRPCRouter({
       // 10 salt rounds
       const hashedPassword = await bcrypt.hash(input.password, 10)
 
+      const generator = new AvatarGenerator()
+
+      // Simply get a random avatar
+      const randomAvatar = generator.generateRandomAvatar(input.email)
+
       const newUser = await ctx.db
         .insert(users)
         .values({
           name: input.name,
           email: input.email,
-          password: hashedPassword
+          password: hashedPassword,
+          image: randomAvatar
         })
         .returning()
 

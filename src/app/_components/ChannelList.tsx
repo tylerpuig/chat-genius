@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronDown, ChevronRight, Hash, Plus } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 import { api } from '~/trpc/react'
 import { useUI } from '~/app/hooks/ui/useUI'
@@ -42,13 +43,6 @@ export default function ChannelList() {
 
   if (!channels) return null
 
-  const addChannel = () => {
-    // if (newChannelName.trim()) {
-    //   setChannels([...channels, { id: Date.now().toString(), name: newChannelName.trim() }])
-    //   setNewChannelName('')
-    // }
-  }
-
   return (
     <div className="text-gray-300">
       <Button variant="sidebar" className="mb-2 w-full justify-start" onClick={toggleChannels}>
@@ -57,7 +51,6 @@ export default function ChannelList() {
       </Button>
       {isChannelsExpanded && (
         <>
-          {/* <ScrollArea className="mb-4 h-[300px]"> */}
           {channels.map((channel) => (
             <Button
               onClick={() => {
@@ -71,7 +64,6 @@ export default function ChannelList() {
               {channel.name}
             </Button>
           ))}
-          {/* </ScrollArea> */}
         </>
       )}
 
@@ -88,19 +80,62 @@ export default function ChannelList() {
 
       <Button variant="sidebar" className="mb-2 w-full justify-start" onClick={toggleDMs}>
         {isDMsExpanded ? <ChevronDown className="mr-2" /> : <ChevronRight className="mr-2" />}
-        DMs
+        Messages
       </Button>
       {isDMsExpanded && (
         <>
-          {/* <ScrollArea className="mb-4 h-[300px]"> */}
-          {channels.map((channel) => (
-            <Button key={channel.id} variant="channel" className="mb-1 w-full justify-start">
-              <Hash className="mr-2 h-4 w-4" />
-              {channel.name}
-            </Button>
-          ))}
+          <OnlineUserList />
         </>
       )}
+    </div>
+  )
+}
+
+type UserStatusProps = {
+  name: string
+  imageUrl?: string
+  isOnline?: boolean
+  className?: string
+}
+
+function OnlineUserList() {
+  const userList = api.messages.getOnlineUsers.useQuery(undefined)
+
+  if (!userList.data) return null
+
+  return (
+    <div className="flex flex-col gap-4">
+      {userList.data.map((user) => (
+        <UserStatus
+          key={user.id}
+          name={user.name || ''}
+          imageUrl={user.avatar || ''}
+          isOnline
+          className="flex-shrink-0 rounded-md"
+        />
+      ))}
+    </div>
+  )
+}
+
+export function UserStatus({ name, imageUrl, isOnline = false, className = '' }: UserStatusProps) {
+  return (
+    <div
+      className={`relative flex cursor-pointer items-center px-3 ${className} p-1 hover:bg-gray-700`}
+    >
+      <div className="relative">
+        <Avatar className="h-8 w-8 border-0 border-border">
+          <AvatarImage src={imageUrl} alt={name} />
+          <AvatarFallback className="text-md">{name}</AvatarFallback>
+        </Avatar>
+        <div
+          className={`absolute -bottom-0 -right-0 h-2.5 w-2.5 rounded-full ${
+            isOnline ? 'bg-emerald-500' : 'bg-zinc-500'
+          }`}
+          aria-hidden="true"
+        />
+      </div>
+      <span className="ml-3 block truncate">{name}</span>
     </div>
   )
 }

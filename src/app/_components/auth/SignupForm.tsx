@@ -6,13 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/com
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { api } from '~/trpc/react'
-import { redirect } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 export function SignupForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
+  const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
   const signup = api.auth.emailSignUp.useMutation({
     onSuccess: () => {
-      redirect('/auth/login')
+      router.push('/auth/login')
     }
   })
 
@@ -34,7 +35,6 @@ export function SignupForm({ className, ...props }: React.ComponentPropsWithoutR
               const lastName = formData.get('last-name') as string
 
               if (!email || !password || !firstName || !lastName) return
-              console.log(email, password, firstName, lastName)
 
               const fullName = `${firstName} ${lastName}`
 

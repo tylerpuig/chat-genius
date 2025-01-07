@@ -32,7 +32,7 @@ export const users = pgTable('user', {
     mode: 'date',
     withTimezone: true
   }).default(sql`CURRENT_TIMESTAMP`),
-  image: varchar('image', { length: 255 })
+  image: varchar('image', { length: 2048 })
 })
 
 export const channels = pgTable(

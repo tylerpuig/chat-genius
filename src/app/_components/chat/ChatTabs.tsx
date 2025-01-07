@@ -54,7 +54,7 @@ export default function ChatTabs() {
         <DropdownMenu>
           <DropdownMenuTrigger className="outline-none">
             <Avatar className="h-8 w-8 border border-blue-600/50 hover:border-blue-500">
-              <AvatarImage src="/placeholder.svg" />
+              {/* <AvatarImage src="/placeholder.svg" /> */}
               <AvatarFallback className="bg-blue-950 text-blue-200">AI</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
