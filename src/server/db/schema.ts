@@ -178,7 +178,8 @@ export const channelsRelations = relations(channels, ({ many, one }) => ({
   creator: one(users, {
     fields: [channels.createdById],
     references: [users.id]
-  })
+  }),
+  reactions: many(messageReactions)
 }))
 
 export const messagesRelations = relations(messages, ({ one, many }) => ({
@@ -186,13 +187,43 @@ export const messagesRelations = relations(messages, ({ one, many }) => ({
     fields: [messages.channelId],
     references: [channels.id]
   }),
-  user: one(users, { fields: [messages.userId], references: [users.id] })
+  user: one(users, { fields: [messages.userId], references: [users.id] }),
+  reactions: many(messageReactions)
 }))
 
-export const channelMembersRelations = relations(channelMembers, ({ one }) => ({
+export const channelMembersRelations = relations(channelMembers, ({ one, many }) => ({
   channel: one(channels, {
     fields: [channelMembers.channelId],
     references: [channels.id]
   }),
-  user: one(users, { fields: [channelMembers.userId], references: [users.id] })
+  user: one(users, { fields: [channelMembers.userId], references: [users.id] }),
+  reactions: many(messageReactions) // Add the reactions relation
+}))
+
+export const messageReactions = pgTable(
+  'message_reaction',
+  {
+    messageId: integer('message_id')
+      .notNull()
+      .references(() => messages.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    emoji: varchar('emoji', { length: 32 }).notNull()
+  },
+  (reaction) => [
+    primaryKey({ columns: [reaction.messageId, reaction.userId, reaction.emoji] }),
+    index('message_reaction_message_emoji_idx').on(reaction.messageId, reaction.emoji)
+  ]
+)
+
+export const messageReactionsRelations = relations(messageReactions, ({ one }) => ({
+  message: one(messages, {
+    fields: [messageReactions.messageId],
+    references: [messages.id]
+  }),
+  user: one(users, {
+    fields: [messageReactions.userId],
+    references: [users.id]
+  })
 }))

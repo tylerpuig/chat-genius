@@ -68,6 +68,8 @@ export function ChatContainer() {
     }
   )
 
+  console.log(messages)
+
   return (
     <div className="absolute inset-0 bottom-[73px] flex flex-col overflow-hidden bg-gray-900">
       <div className="scrollbar-overlay flex-1 overflow-y-auto scroll-smooth">

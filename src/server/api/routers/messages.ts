@@ -1,10 +1,11 @@
 import { z } from 'zod'
 import EventEmitter, { on } from 'events'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
-import { eq, and, or, ne } from 'drizzle-orm'
+import { eq, and, or, ne, sql } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import { env } from '~/env'
-import { Pool } from 'pg'
+import { Pool, type PoolClient } from 'pg'
+import { observable } from '@trpc/server/observable'
 
 // PostgreSQL pool
 const pool = new Pool({
@@ -23,25 +24,44 @@ type PostgresChatNotification = {
 }
 
 let postgresInitialized = false
+let listenerClient: PoolClient | null = null
 // Initialize the Postgres listener
 async function initializePostgresListener() {
   if (postgresInitialized) return
-  const client = await pool.connect()
-  try {
-    await client.query('LISTEN new_message')
 
-    client.on('notification', (msg: { payload?: string }) => {
+  // Use a single client for all listeners
+  listenerClient = await pool.connect()
+
+  try {
+    // Listen for all message notifications
+    await listenerClient.query('LISTEN new_message')
+    await listenerClient.query('LISTEN message_reaction')
+
+    listenerClient.on('notification', (msg: { channel?: string; payload?: string }) => {
+      if (!msg.payload) return
       console.log(msg)
-      if (msg.payload) {
-        const payload = JSON.parse(msg.payload)
-        ee.emit('newMessage', payload)
+
+      const payload = JSON.parse(msg.payload)
+
+      // Route different notifications to different events
+      switch (msg.channel) {
+        case 'new_message':
+          ee.emit('newMessage', payload as PostgresChatNotification)
+          break
+        case 'message_reaction':
+          if (payload.type === 'INSERT') {
+            ee.emit('reactionAdded', payload)
+          } else if (payload.type === 'DELETE') {
+            ee.emit('reactionRemoved', payload)
+          }
+          break
       }
     })
 
-    console.log('PostgreSQL listener initialized')
+    console.log('PostgreSQL listeners initialized')
   } catch (err) {
-    console.error('Error setting up PostgreSQL listener:', err)
-    client.release()
+    console.error('Error setting up PostgreSQL listeners:', err)
+    listenerClient.release()
   }
 }
 
@@ -53,14 +73,54 @@ export const messagesRouter = createTRPCRouter({
       })
     )
     .subscription(async function* ({ signal }) {
-      // AsyncIterator for the new message events
+      // return observable<PostgresChatNotification>((emit) => {
+      //   const newMessageHandler = (data: PostgresChatNotification) => {
+      //     emit.next(data)
+      //   }
 
+      //   const reactionAddedHandler = (data: any) => {
+      //     console.log('Reaction added', data)
+      //     emit.next(data)
+      //   }
+
+      //   const reactionRemovedHandler = (data: any) => {
+      //     console.log('Reaction removed', data)
+      //     emit.next(data)
+      //   }
+
+      //   // Subscribe to all events
+      //   ee.on('newMessage', newMessageHandler)
+      //   ee.on('reactionAdded', reactionAddedHandler)
+      //   ee.on('reactionRemoved', reactionRemovedHandler)
+
+      //   // Cleanup function
+      //   return () => {
+      //     ee.off('newMessage', newMessageHandler)
+      //     ee.off('reactionAdded', reactionAddedHandler)
+      //     ee.off('reactionRemoved', reactionRemovedHandler)
+      //   }
+      // })
+      // AsyncIterator for the new message events
       for await (const [data] of on(ee, 'newMessage', {
         signal: signal
       })) {
         const newMessage = data as PostgresChatNotification
         yield newMessage
       }
+      // for await (const [data] of on(ee, 'reactionAdded', {
+      //   signal: signal
+      // })) {
+      //   console.log('Reaction added', data)
+      //   const newMessage = data as PostgresChatNotification
+      //   yield newMessage
+      // }
+      // for await (const [data] of on(ee, 'reactionRemoved', {
+      //   signal: signal
+      // })) {
+      //   console.log('Reaction removed', data)
+      //   const newMessage = data as PostgresChatNotification
+      //   yield newMessage
+      // }
     }),
   sendMessage: protectedProcedure
     .input(z.object({ userId: z.string(), content: z.string(), channelId: z.number() }))
@@ -80,20 +140,48 @@ export const messagesRouter = createTRPCRouter({
     .input(z.object({ channelId: z.number() }))
     .query(async ({ input, ctx }) => {
       const { channelId } = input
-      const messages = await ctx.db
-        .select({
-          id: schema.messages.id,
-          content: schema.messages.content,
-          createdAt: schema.messages.createdAt,
-          user: {
-            name: schema.users.name,
-            avatar: schema.users.image
-          }
-        })
-        .from(schema.messages)
-        .leftJoin(schema.users, eq(schema.messages.userId, schema.users.id))
-        .where(eq(schema.messages.channelId, channelId))
+      const messages = await ctx.db.query.messages.findMany({
+        where: eq(schema.messages.channelId, channelId),
+        with: {
+          user: true,
+          reactions: true
+        }
+      })
       return messages
+    }),
+  createMessageReaction: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.number(),
+        emoji: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const newReaction = await ctx.db
+        .insert(schema.messageReactions)
+        .values({ messageId: input.messageId, emoji: input.emoji, userId: ctx.session.user.id })
+        .returning()
+
+      return newReaction
+    }),
+  removeMessageReaction: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.number(),
+        emoji: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const deletedReaction = await ctx.db
+        .delete(schema.messageReactions)
+        .where(
+          and(
+            eq(schema.messageReactions.messageId, input.messageId),
+            eq(schema.messageReactions.emoji, input.emoji)
+          )
+        )
+
+      return deletedReaction
     }),
   createChannel: protectedProcedure
     .input(
@@ -225,7 +313,6 @@ export const messagesRouter = createTRPCRouter({
           name: schema.users.name
         })
         .from(schema.users)
-        .where(ne(schema.users.id, ctx.session.user.id))
 
       return users
     })
@@ -237,28 +324,51 @@ async function initializePostgresTrigger() {
   try {
     // Create notification trigger
     await client.query(`
-      CREATE OR REPLACE FUNCTION notify_new_message() RETURNS TRIGGER AS $$
-      BEGIN
-        PERFORM pg_notify(
-          'new_message',
-          json_build_object(
-            'id', NEW.id,
-            'content', NEW.content,
-            'channelId', NEW.channel_id,
-            'userId', NEW.user_id,
-            'createdAt', NEW.created_at
-          )::text
-        );
-        RETURN NEW;
-      END;
-      $$ LANGUAGE plpgsql;
+      CREATE OR REPLACE FUNCTION notify_new_message()
+RETURNS trigger AS $$
+DECLARE
+    channel_members_cursor CURSOR FOR
+        SELECT cm.user_id
+        FROM channel_member cm
+        WHERE cm.channel_id = NEW.channel_id;
+    member_user_id varchar(255);
+    message_data json;
+BEGIN
+    -- Construct the message data
+    message_data := json_build_object(
+        'id', NEW.id,
+        'content', NEW.content,
+        'channelId', NEW.channel_id,
+        'userId', NEW.user_id,
+        'createdAt', NEW.created_at
+    );
 
-      DROP TRIGGER IF EXISTS message_notify_trigger ON message;
-      
-      CREATE TRIGGER message_notify_trigger
-        AFTER INSERT ON message
-        FOR EACH ROW
-        EXECUTE FUNCTION notify_new_message();
+    -- Notify each channel member
+    OPEN channel_members_cursor;
+    LOOP
+        FETCH channel_members_cursor INTO member_user_id;
+        EXIT WHEN NOT FOUND;
+
+        -- Don't notify the sender
+        IF member_user_id != NEW.user_id THEN
+            PERFORM pg_notify(
+                'new_message_' || member_user_id,
+                message_data::text
+            );
+        END IF;
+    END LOOP;
+    CLOSE channel_members_cursor;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create the trigger
+CREATE TRIGGER message_inserted
+AFTER INSERT ON message
+FOR EACH ROW
+EXECUTE FUNCTION notify_new_message();
+
     `)
 
     console.log('PostgreSQL trigger initialized')
@@ -270,6 +380,13 @@ async function initializePostgresTrigger() {
 // Initialize everything
 export async function initializeMessaging() {
   // await initializePostgresTrigger()
-  await initializePostgresListener()
+  try {
+    await initializePostgresListener()
+    // await initializeReactionListener()
+  } catch (err) {
+    console.error('Error initializing PostgreSQL listener:', err)
+  } finally {
+    postgresInitialized = true
+  }
 }
 initializeMessaging()

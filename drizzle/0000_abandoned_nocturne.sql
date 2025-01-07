@@ -31,6 +31,13 @@ CREATE TABLE "channel" (
 	"updated_at" timestamp with time zone
 );
 --> statement-breakpoint
+CREATE TABLE "message_reaction" (
+	"message_id" integer NOT NULL,
+	"user_id" varchar(255) NOT NULL,
+	"emoji" varchar(32) NOT NULL,
+	CONSTRAINT "message_reaction_message_id_user_id_emoji_pk" PRIMARY KEY("message_id","user_id","emoji")
+);
+--> statement-breakpoint
 CREATE TABLE "message" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "message_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"content" text NOT NULL,
@@ -53,7 +60,7 @@ CREATE TABLE "user" (
 	"email" varchar(255) NOT NULL,
 	"password" varchar(255),
 	"email_verified" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-	"image" varchar(255)
+	"image" varchar(2048)
 );
 --> statement-breakpoint
 CREATE TABLE "verification_token" (
@@ -67,6 +74,8 @@ ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("
 ALTER TABLE "channel_member" ADD CONSTRAINT "channel_member_channel_id_channel_id_fk" FOREIGN KEY ("channel_id") REFERENCES "public"."channel"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "channel_member" ADD CONSTRAINT "channel_member_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "channel" ADD CONSTRAINT "channel_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "message_reaction" ADD CONSTRAINT "message_reaction_message_id_message_id_fk" FOREIGN KEY ("message_id") REFERENCES "public"."message"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "message_reaction" ADD CONSTRAINT "message_reaction_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "message" ADD CONSTRAINT "message_channel_id_channel_id_fk" FOREIGN KEY ("channel_id") REFERENCES "public"."channel"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "message" ADD CONSTRAINT "message_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -75,6 +84,7 @@ CREATE INDEX "channel_member_channel_id_idx" ON "channel_member" USING btree ("c
 CREATE INDEX "channel_member_user_id_idx" ON "channel_member" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "channel_created_by_idx" ON "channel" USING btree ("created_by");--> statement-breakpoint
 CREATE INDEX "channel_name_idx" ON "channel" USING btree ("name");--> statement-breakpoint
+CREATE INDEX "message_reaction_message_emoji_idx" ON "message_reaction" USING btree ("message_id","emoji");--> statement-breakpoint
 CREATE INDEX "message_channel_id_idx" ON "message" USING btree ("channel_id");--> statement-breakpoint
 CREATE INDEX "message_user_id_idx" ON "message" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "session_user_id_idx" ON "session" USING btree ("user_id");

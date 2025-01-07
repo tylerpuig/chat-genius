@@ -17,8 +17,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '~/components/ui/dropdown-menu'
-// import { type ChatMessage } from '~/server/db/types'
 import { type ChatMessageData } from '~/trpc/types'
+// import EmojiPicker from 'emoji-picker-react'
+import ChatReactions, { EmojiPicker } from './ChatReactions'
 
 type Reaction = {
   emoji: string
@@ -34,12 +35,27 @@ type Reply = {
   timestamp: Date
 }
 
-export function ChatMessage({ content, createdAt, user }: ChatMessageData) {
+const reactions = [
+  { emoji: '👍', count: 3, userHasReacted: true },
+  { emoji: '🚀', count: 2, userHasReacted: false }
+]
+
+const replies = [
+  {
+    id: '1.1',
+    authorName: 'Alex Kim',
+    authorAvatar: '/placeholder.svg?height=40&width=40',
+    content: 'I can take a look at it',
+    timestamp: new Date(Date.now() - 1000 * 60 * 10)
+  }
+]
+
+export function ChatMessage({ content, user, id, reactions }: ChatMessageData) {
   return (
     <div className="group px-4 py-2 hover:bg-gray-800/50">
       <div className="flex gap-4">
         <Avatar className="h-10 w-10">
-          <AvatarImage src={user?.avatar ?? ''} alt={user?.name ?? ''} />
+          <AvatarImage src={user.image ?? ''} alt={user?.name ?? ''} />
           <AvatarFallback>{user?.name?.[0] ?? ''}</AvatarFallback>
         </Avatar>
 
@@ -63,13 +79,14 @@ export function ChatMessage({ content, createdAt, user }: ChatMessageData) {
               >
                 <ReplyIcon className="h-4 w-4" />
               </Button>
-              <Button
+              <EmojiPicker messageId={id} />
+              {/* <Button
                 variant="channel"
                 size="icon"
                 className="h-8 w-8 text-gray-400 hover:text-gray-300"
               >
                 <Repeat2 className="h-4 w-4" />
-              </Button>
+              </Button> */}
               <Button
                 variant="channel"
                 size="icon"
@@ -104,30 +121,16 @@ export function ChatMessage({ content, createdAt, user }: ChatMessageData) {
 
           <div className="mt-1 break-words text-gray-300">{content}</div>
 
-          {/* {reactions.length > 0 && (
-            <div className="mt-2 flex gap-2">
-              {reactions.map((reaction, index) => (
-                <button
-                  key={index}
-                  className={`flex items-center gap-1 rounded-full px-2 py-1 text-sm ${
-                    reaction.userHasReacted
-                      ? 'bg-blue-600/30 text-blue-400'
-                      : 'bg-gray-700/50 text-gray-300'
-                  } transition-colors hover:bg-blue-600/40`}
-                >
-                  <span>{reaction.emoji}</span>
-                  <span>{reaction.count}</span>
-                </button>
-              ))}
-            </div>
-          )} */}
+          <ChatReactions reactions={reactions} id={id} />
 
-          {/* {replies.length > 0 && (
-            <button className="mt-2 flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300">
-              <MessageSquare className="h-4 w-4" />
-              {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
-            </button>
-          )} */}
+          <div className="flex justify-between">
+            {replies.length > 0 && (
+              <button className="mt-2 flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300">
+                <MessageSquare className="h-4 w-4" />
+                {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
