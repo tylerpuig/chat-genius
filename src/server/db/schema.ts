@@ -7,7 +7,8 @@ import {
   primaryKey,
   text,
   timestamp,
-  varchar
+  varchar,
+  pgTable
 } from 'drizzle-orm/pg-core'
 import { type AdapterAccount } from 'next-auth/adapters'
 
@@ -17,9 +18,9 @@ import { type AdapterAccount } from 'next-auth/adapters'
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
-export const createTable = pgTableCreator((name) => `chat-genius_${name}`)
+// export const pgTable = pgTableCreator((name) => `chat-genius_${name}`)
 
-export const users = createTable('user', {
+export const users = pgTable('user', {
   id: varchar('id', { length: 255 })
     .notNull()
     .primaryKey()
@@ -33,7 +34,7 @@ export const users = createTable('user', {
   image: varchar('image', { length: 255 })
 })
 
-export const channels = createTable(
+export const channels = pgTable(
   'channel',
   {
     id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
@@ -48,10 +49,10 @@ export const channels = createTable(
       .notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date())
   },
-  (channel) => ({
-    createdByIdIdx: index('channel_created_by_idx').on(channel.createdById),
-    nameIndex: index('channel_name_idx').on(channel.name)
-  })
+  (channel) => [
+    index('channel_created_by_idx').on(channel.createdById),
+    index('channel_name_idx').on(channel.name)
+  ]
 )
 
 // Add relation to existing users table
@@ -63,7 +64,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 // export const usersRelations = relations(users, ({ many }) => ({}));
 
-export const accounts = createTable(
+export const accounts = pgTable(
   'account',
   {
     userId: varchar('user_id', { length: 255 })
@@ -82,19 +83,19 @@ export const accounts = createTable(
     id_token: text('id_token'),
     session_state: varchar('session_state', { length: 255 })
   },
-  (account) => ({
-    compoundKey: primaryKey({
+  (account) => [
+    primaryKey({
       columns: [account.provider, account.providerAccountId]
     }),
-    userIdIdx: index('account_user_id_idx').on(account.userId)
-  })
+    index('account_user_id_idx').on(account.userId)
+  ]
 )
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, { fields: [accounts.userId], references: [users.id] })
 }))
 
-export const sessions = createTable(
+export const sessions = pgTable(
   'session',
   {
     sessionToken: varchar('session_token', { length: 255 }).notNull().primaryKey(),
@@ -106,16 +107,14 @@ export const sessions = createTable(
       withTimezone: true
     }).notNull()
   },
-  (session) => ({
-    userIdIdx: index('session_user_id_idx').on(session.userId)
-  })
+  (session) => [index('session_user_id_idx').on(session.userId)]
 )
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, { fields: [sessions.userId], references: [users.id] })
 }))
 
-export const verificationTokens = createTable(
+export const verificationTokens = pgTable(
   'verification_token',
   {
     identifier: varchar('identifier', { length: 255 }).notNull(),
@@ -125,15 +124,13 @@ export const verificationTokens = createTable(
       withTimezone: true
     }).notNull()
   },
-  (vt) => ({
-    compoundKey: primaryKey({ columns: [vt.identifier, vt.token] })
-  })
+  (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
 )
 
-export const messages = createTable(
+export const messages = pgTable(
   'message',
   {
-    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+    id: integer('id').unique().primaryKey().generatedAlwaysAsIdentity(),
     content: text('content').notNull(),
     channelId: integer('channel_id')
       .notNull()
@@ -146,13 +143,13 @@ export const messages = createTable(
       .notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date())
   },
-  (message) => ({
-    channelIdIdx: index('message_channel_id_idx').on(message.channelId),
-    userIdIdx: index('message_user_id_idx').on(message.userId)
-  })
+  (message) => [
+    index('message_channel_id_idx').on(message.channelId),
+    index('message_user_id_idx').on(message.userId)
+  ]
 )
 
-export const channelMembers = createTable(
+export const channelMembers = pgTable(
   'channel_member',
   {
     channelId: integer('channel_id')
@@ -166,11 +163,11 @@ export const channelMembers = createTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
   },
-  (member) => ({
-    compoundKey: primaryKey({ columns: [member.channelId, member.userId] }),
-    channelIdIdx: index('channel_member_channel_id_idx').on(member.channelId),
-    userIdIdx: index('channel_member_user_id_idx').on(member.userId)
-  })
+  (member) => [
+    primaryKey({ columns: [member.channelId, member.userId] }),
+    index('channel_member_channel_id_idx').on(member.channelId),
+    index('channel_member_user_id_idx').on(member.userId)
+  ]
 )
 
 // Relations

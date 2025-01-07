@@ -1,11 +1,11 @@
 {
-  "id": "0f0690cf-82a7-441a-aab5-13df94c561d9",
+  "id": "9b6b1f51-eba3-4607-8906-575ff42b52b6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.chat-genius_account": {
-      "name": "chat-genius_account",
+    "public.account": {
+      "name": "account",
       "schema": "",
       "columns": {
         "user_id": {
@@ -93,10 +93,10 @@
         }
       },
       "foreignKeys": {
-        "chat-genius_account_user_id_chat-genius_user_id_fk": {
-          "name": "chat-genius_account_user_id_chat-genius_user_id_fk",
-          "tableFrom": "chat-genius_account",
-          "tableTo": "chat-genius_user",
+        "account_user_id_user_id_fk": {
+          "name": "account_user_id_user_id_fk",
+          "tableFrom": "account",
+          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
@@ -108,18 +108,21 @@
         }
       },
       "compositePrimaryKeys": {
-        "chat-genius_account_provider_provider_account_id_pk": {
-          "name": "chat-genius_account_provider_provider_account_id_pk",
+        "account_provider_provider_account_id_pk": {
+          "name": "account_provider_provider_account_id_pk",
           "columns": [
             "provider",
             "provider_account_id"
           ]
         }
       },
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "public.chat-genius_channel_member": {
-      "name": "chat-genius_channel_member",
+    "public.channel_member": {
+      "name": "channel_member",
       "schema": "",
       "columns": {
         "channel_id": {
@@ -182,10 +185,10 @@
         }
       },
       "foreignKeys": {
-        "chat-genius_channel_member_channel_id_chat-genius_channel_id_fk": {
-          "name": "chat-genius_channel_member_channel_id_chat-genius_channel_id_fk",
-          "tableFrom": "chat-genius_channel_member",
-          "tableTo": "chat-genius_channel",
+        "channel_member_channel_id_channel_id_fk": {
+          "name": "channel_member_channel_id_channel_id_fk",
+          "tableFrom": "channel_member",
+          "tableTo": "channel",
           "columnsFrom": [
             "channel_id"
           ],
@@ -195,10 +198,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "chat-genius_channel_member_user_id_chat-genius_user_id_fk": {
-          "name": "chat-genius_channel_member_user_id_chat-genius_user_id_fk",
-          "tableFrom": "chat-genius_channel_member",
-          "tableTo": "chat-genius_user",
+        "channel_member_user_id_user_id_fk": {
+          "name": "channel_member_user_id_user_id_fk",
+          "tableFrom": "channel_member",
+          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
@@ -210,18 +213,21 @@
         }
       },
       "compositePrimaryKeys": {
-        "chat-genius_channel_member_channel_id_user_id_pk": {
-          "name": "chat-genius_channel_member_channel_id_user_id_pk",
+        "channel_member_channel_id_user_id_pk": {
+          "name": "channel_member_channel_id_user_id_pk",
           "columns": [
             "channel_id",
             "user_id"
           ]
         }
       },
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "public.chat-genius_channel": {
-      "name": "chat-genius_channel",
+    "public.channel": {
+      "name": "channel",
       "schema": "",
       "columns": {
         "id": {
@@ -231,7 +237,7 @@
           "notNull": true,
           "identity": {
             "type": "byDefault",
-            "name": "chat-genius_channel_id_seq",
+            "name": "channel_id_seq",
             "schema": "public",
             "increment": "1",
             "startWith": "1",
@@ -313,10 +319,10 @@
         }
       },
       "foreignKeys": {
-        "chat-genius_channel_created_by_chat-genius_user_id_fk": {
-          "name": "chat-genius_channel_created_by_chat-genius_user_id_fk",
-          "tableFrom": "chat-genius_channel",
-          "tableTo": "chat-genius_user",
+        "channel_created_by_user_id_fk": {
+          "name": "channel_created_by_user_id_fk",
+          "tableFrom": "channel",
+          "tableTo": "user",
           "columnsFrom": [
             "created_by"
           ],
@@ -328,10 +334,13 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "public.chat-genius_message": {
-      "name": "chat-genius_message",
+    "public.message": {
+      "name": "message",
       "schema": "",
       "columns": {
         "id": {
@@ -340,8 +349,8 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
-            "name": "chat-genius_message_id_seq",
+            "type": "always",
+            "name": "message_id_seq",
             "schema": "public",
             "increment": "1",
             "startWith": "1",
@@ -416,10 +425,10 @@
         }
       },
       "foreignKeys": {
-        "chat-genius_message_channel_id_chat-genius_channel_id_fk": {
-          "name": "chat-genius_message_channel_id_chat-genius_channel_id_fk",
-          "tableFrom": "chat-genius_message",
-          "tableTo": "chat-genius_channel",
+        "message_channel_id_channel_id_fk": {
+          "name": "message_channel_id_channel_id_fk",
+          "tableFrom": "message",
+          "tableTo": "channel",
           "columnsFrom": [
             "channel_id"
           ],
@@ -429,10 +438,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "chat-genius_message_user_id_chat-genius_user_id_fk": {
-          "name": "chat-genius_message_user_id_chat-genius_user_id_fk",
-          "tableFrom": "chat-genius_message",
-          "tableTo": "chat-genius_user",
+        "message_user_id_user_id_fk": {
+          "name": "message_user_id_user_id_fk",
+          "tableFrom": "message",
+          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
@@ -444,10 +453,21 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {
+        "message_id_unique": {
+          "name": "message_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "public.chat-genius_session": {
-      "name": "chat-genius_session",
+    "public.session": {
+      "name": "session",
       "schema": "",
       "columns": {
         "session_token": {
@@ -487,10 +507,10 @@
         }
       },
       "foreignKeys": {
-        "chat-genius_session_user_id_chat-genius_user_id_fk": {
-          "name": "chat-genius_session_user_id_chat-genius_user_id_fk",
-          "tableFrom": "chat-genius_session",
-          "tableTo": "chat-genius_user",
+        "session_user_id_user_id_fk": {
+          "name": "session_user_id_user_id_fk",
+          "tableFrom": "session",
+          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
@@ -502,10 +522,13 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "public.chat-genius_user": {
-      "name": "chat-genius_user",
+    "public.user": {
+      "name": "user",
       "schema": "",
       "columns": {
         "id": {
@@ -543,10 +566,13 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "public.chat-genius_verification_token": {
-      "name": "chat-genius_verification_token",
+    "public.verification_token": {
+      "name": "verification_token",
       "schema": "",
       "columns": {
         "identifier": {
@@ -571,20 +597,26 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "chat-genius_verification_token_identifier_token_pk": {
-          "name": "chat-genius_verification_token_identifier_token_pk",
+        "verification_token_identifier_token_pk": {
+          "name": "verification_token_identifier_token_pk",
           "columns": [
             "identifier",
             "token"
           ]
         }
       },
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {},
   "schemas": {},
   "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},
