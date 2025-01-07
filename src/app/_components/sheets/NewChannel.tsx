@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
@@ -15,18 +15,25 @@ import {
 import { Textarea } from '~/components/ui/textarea'
 import { Switch } from '~/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import { api } from '~/trpc/react'
+import { useSession } from 'next-auth/react'
+import { useUI } from '~/app/hooks/ui/useUI'
 
 export function NewChannelSheet() {
+  const session = useSession()
+  const { channelSheetOpen, setChannelSheetOpen } = useUI()
+
   const [isPublic, setIsPublic] = useState(true)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
-  const [sheetIsOpen, setSheetIsOpen] = useState(false)
 
-  //   useEffect(() => {
-  //     const timeout = setTimeout(() => {
-  //       setSheetIsOpen(true)
-  //     }, 1000)
-  //     return () => clearTimeout(timeout)
-  //   }, [])
+  const createChannel = api.messages.createChannel.useMutation({
+    onSuccess: (data) => {
+      if (data) {
+        setChannelSheetOpen(false)
+      }
+      console.log(data)
+    }
+  })
 
   const toggleUser = (userId: string) => {
     setSelectedUsers((prev) =>
@@ -34,19 +41,27 @@ export function NewChannelSheet() {
     )
   }
 
+  const channelNameRef = useRef<HTMLInputElement>(null)
+  const channelDescriptionRef = useRef<HTMLTextAreaElement>(null)
+
   const users: { name: string; id: string }[] = []
 
-  for (let i = 0; i < 100; i++) {
-    users.push({ name: `User ${i}`, id: i.toString() })
+  function createChannelNewChannel(): void {
+    if (
+      channelNameRef.current?.value &&
+      channelDescriptionRef.current?.value &&
+      session.data?.user.id
+    ) {
+      createChannel.mutate({
+        name: channelNameRef.current.value,
+        description: channelDescriptionRef.current.value,
+        userId: session.data?.user.id
+      })
+    }
   }
 
   return (
-    <Sheet open={sheetIsOpen} onOpenChange={(open) => setSheetIsOpen(open)}>
-      {/* <SheetTrigger asChild> */}
-      {/* <Button variant="outline" className="bg-gray-800 text-gray-200 hover:bg-gray-700">
-          Create New Channel
-        </Button> */}
-      {/* </SheetTrigger> */}
+    <Sheet open={channelSheetOpen} onOpenChange={(open) => setChannelSheetOpen(open)}>
       <SheetContent className="scrollbar-overlay overflow-auto border-gray-700 bg-gray-900 text-gray-200">
         <SheetHeader>
           <SheetTitle className="text-gray-200">Create a new channel</SheetTitle>
@@ -60,6 +75,7 @@ export function NewChannelSheet() {
               Name
             </Label>
             <Input
+              ref={channelNameRef}
               id="name"
               placeholder="e.g. marketing"
               className="col-span-3 border-gray-700 bg-gray-800 text-gray-200"
@@ -70,6 +86,7 @@ export function NewChannelSheet() {
               Description
             </Label>
             <Textarea
+              ref={channelDescriptionRef}
               id="description"
               placeholder="What's this channel about?"
               className="col-span-3 border-gray-700 bg-gray-800 text-gray-200"
@@ -121,7 +138,12 @@ export function NewChannelSheet() {
             </div>
           )}
         </div>
-        <Button className="mt-4 w-full bg-blue-600 text-gray-200 hover:bg-blue-700">
+        <Button
+          onClick={() => {
+            createChannelNewChannel()
+          }}
+          className="mt-4 w-full bg-blue-600 text-gray-200 hover:bg-blue-700"
+        >
           Create Channel
         </Button>
       </SheetContent>

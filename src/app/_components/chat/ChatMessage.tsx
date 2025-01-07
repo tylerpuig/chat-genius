@@ -18,6 +18,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '~/components/ui/dropdown-menu'
+// import { type ChatMessage } from '~/server/db/types'
+import { type ChatMessageData } from '~/trpc/types'
 
 type Reaction = {
   emoji: string
@@ -46,32 +48,25 @@ type ChatMessageProps = {
   isPinned?: boolean
 }
 
-export function ChatMessage({
-  author,
-  content,
-  timestamp,
-  reactions = [],
-  replies = [],
-  isPinned = false
-}: ChatMessageProps) {
+export function ChatMessage({ content, createdAt, user }: ChatMessageData) {
   return (
     <div className="group px-4 py-2 hover:bg-gray-800/50">
       <div className="flex gap-4">
         <Avatar className="h-10 w-10">
-          <AvatarImage src={author.avatar} alt={author.name} />
-          <AvatarFallback>{author.name[0]}</AvatarFallback>
+          <AvatarImage src={user?.avatar ?? ''} alt={user?.name ?? ''} />
+          <AvatarFallback>{user?.name?.[0] ?? ''}</AvatarFallback>
         </Avatar>
 
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-100">{author.name}</span>
-              <span className="text-sm text-gray-400">{timestamp.toISOString()}</span>
-              {isPinned && (
+              <span className="font-semibold text-gray-100">{user?.name || ''}</span>
+              {/* <span className="text-sm text-gray-400">{timestamp.toISOString()}</span> */}
+              {/* {isPinned && (
                 <span className="rounded bg-blue-900/30 px-2 py-0.5 text-xs text-blue-400">
                   Pinned
                 </span>
-              )}
+              )} */}
             </div>
 
             <div className="flex flex-shrink-0 items-start gap-1">
@@ -123,7 +118,7 @@ export function ChatMessage({
 
           <div className="mt-1 break-words text-gray-300">{content}</div>
 
-          {reactions.length > 0 && (
+          {/* {reactions.length > 0 && (
             <div className="mt-2 flex gap-2">
               {reactions.map((reaction, index) => (
                 <button
@@ -139,14 +134,14 @@ export function ChatMessage({
                 </button>
               ))}
             </div>
-          )}
+          )} */}
 
-          {replies.length > 0 && (
+          {/* {replies.length > 0 && (
             <button className="mt-2 flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300">
               <MessageSquare className="h-4 w-4" />
               {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
             </button>
-          )}
+          )} */}
         </div>
       </div>
     </div>

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronDown, ChevronRight, Hash, Plus } from 'lucide-react'
 import { Button } from '~/components/ui/button'
-// import { Input } from "";
-// import { ScrollArea } from "@/components/ui/scroll-area";
+import { api } from '~/trpc/react'
+import { useUI } from '~/app/hooks/ui/useUI'
 
-interface Channel {
+type ChannelInfo = {
   id: string
   name: string
 }
@@ -23,10 +23,14 @@ for (let i = 4; i < 5; i++) {
 }
 
 export default function ChannelList() {
-  const [channels, setChannels] = useState<Channel[]>([...CHANNEL_LIST])
+  const { data: channels, refetch: refetchChannels } = api.messages.getChannels.useQuery()
+  const { setChannelSheetOpen, channelSheetOpen } = useUI()
   const [isChannelsExpanded, setIsChannelsExpanded] = useState(true)
   const [isDMsExpanded, setIsDMsExpanded] = useState(true)
-  const [newChannelName, setNewChannelName] = useState('')
+
+  useEffect(() => {
+    refetchChannels()
+  }, [channelSheetOpen])
 
   const toggleChannels = () => {
     setIsChannelsExpanded(!isChannelsExpanded)
@@ -36,11 +40,13 @@ export default function ChannelList() {
     setIsDMsExpanded(!isDMsExpanded)
   }
 
+  if (!channels) return null
+
   const addChannel = () => {
-    if (newChannelName.trim()) {
-      setChannels([...channels, { id: Date.now().toString(), name: newChannelName.trim() }])
-      setNewChannelName('')
-    }
+    // if (newChannelName.trim()) {
+    //   setChannels([...channels, { id: Date.now().toString(), name: newChannelName.trim() }])
+    //   setNewChannelName('')
+    // }
   }
 
   return (
@@ -63,7 +69,7 @@ export default function ChannelList() {
       )}
 
       <Button
-        onClick={addChannel}
+        onClick={() => setChannelSheetOpen(true)}
         variant="sidebar"
         className="w-full justify-start border-gray-700 hover:bg-gray-600"
       >

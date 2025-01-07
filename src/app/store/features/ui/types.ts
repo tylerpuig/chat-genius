@@ -6,4 +6,5 @@ export type UIState = {
   selectedChannelId: string | null
   selectedChannelName: string | null
   selectedDMUserId: string | null
+  channelSheetOpen: boolean
 }

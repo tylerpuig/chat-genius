@@ -19,6 +19,12 @@ type NavItemProps = {
   isActive?: boolean
 }
 
+const TABS: NavItemProps[] = [
+  { icon: <MessagesSquare className="h-4 w-4" />, label: 'Messages', isActive: true },
+  { icon: <FolderOpen className="h-4 w-4" />, label: 'Files' },
+  { icon: <Pin className="h-4 w-4" />, label: 'Pins' }
+]
+
 function NavItem({ icon, label, isActive }: NavItemProps) {
   const { switchTab } = useUI()
   return (
@@ -35,12 +41,6 @@ function NavItem({ icon, label, isActive }: NavItemProps) {
     </button>
   )
 }
-
-const TABS: NavItemProps[] = [
-  { icon: <MessagesSquare className="h-4 w-4" />, label: 'Messages', isActive: true },
-  { icon: <FolderOpen className="h-4 w-4" />, label: 'Files' },
-  { icon: <Pin className="h-4 w-4" />, label: 'Pins' }
-]
 
 export default function ChatTabs() {
   const { currentTab, selectedChannelName } = useUI()
@@ -79,9 +79,6 @@ export default function ChatTabs() {
             isActive={tab.label === currentTab}
           />
         ))}
-        {/* <NavItem icon={<MessagesSquare className="h-4 w-4" />} label="Messages" isActive />
-        <NavItem icon={<FolderOpen className="h-4 w-4" />} label="Files" />
-        <NavItem icon={<Pin className="h-4 w-4" />} label="Pins" /> */}
       </div>
     </div>
   )

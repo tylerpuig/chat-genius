@@ -6,7 +6,8 @@ const initialState: UIState = {
   selectedPostId: null,
   selectedChannelId: null,
   selectedChannelName: null,
-  selectedDMUserId: null
+  selectedDMUserId: null,
+  channelSheetOpen: false
 }
 
 const uiSlice = createSlice({
@@ -32,6 +33,9 @@ const uiSlice = createSlice({
     resetSelections: (state) => {
       state.selectedPostId = null
       state.selectedDMUserId = null
+    },
+    setChannelSheetOpen: (state, action: PayloadAction<boolean>) => {
+      state.channelSheetOpen = action.payload
     }
   }
 })
@@ -42,7 +46,8 @@ export const {
   setSelectedChannelId,
   setSelectedDMUserId,
   setSelectedChannelName,
-  resetSelections
+  resetSelections,
+  setChannelSheetOpen
 } = uiSlice.actions
 
 export default uiSlice.reducer
