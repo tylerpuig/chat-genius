@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/com
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { signIn } from 'next-auth/react'
+import { redirect } from 'next/navigation'
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
   return (
@@ -59,7 +60,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               </div>
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-gray-600">
                 <span className="relative z-10 bg-gray-800 px-2 text-gray-400">
-                  Or continue with
+                  Or continue with email
                 </span>
               </div>
               <div className="grid gap-6">
@@ -96,14 +97,16 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   Login
                 </Button>
               </div>
-              <div className="text-center text-sm text-gray-400">
-                Don&apos;t have an account?{' '}
-                <a
-                  href="#"
+              <div className="flex justify-center gap-2 text-center text-sm text-gray-400">
+                <span>Don&apos;t have an account?</span>
+                <div
+                  onClick={() => {
+                    redirect('/auth/signup')
+                  }}
                   className="text-blue-400 underline underline-offset-4 hover:text-blue-300"
                 >
                   Sign up
-                </a>
+                </div>
               </div>
             </div>
           </form>

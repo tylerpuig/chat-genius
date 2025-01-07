@@ -40,7 +40,7 @@ export const useUI = () => {
     // Actions
     switchTab: (tab: ChatTab) => dispatch(setCurrentTab(tab)),
     selectPost: (postId: string | null) => dispatch(setSelectedPostId(postId)),
-    selectChannel: (channelId: string | null) => dispatch(setSelectedChannelId(channelId)),
+    setSelectedChannelId: (channelId: number) => dispatch(setSelectedChannelId(channelId)),
     setSelectedChannelName: (channelName: string | null) =>
       dispatch(setSelectedChannelName(channelName)),
     selectDMUser: (userId: string | null) => dispatch(setSelectedDMUserId(userId)),

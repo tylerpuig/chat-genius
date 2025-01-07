@@ -7,61 +7,6 @@ import { api } from '../../../trpc/react'
 import { auth } from '~/server/auth'
 import { useSession } from 'next-auth/react'
 
-const SAMPLE_MESSAGES = [
-  {
-    id: '1',
-    author: {
-      name: 'Sarah Chen',
-      avatar: '/placeholder.svg?height=40&width=40'
-    },
-    content: 'Just pushed the new feature to staging. Can someone review the PR?',
-    timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
-    reactions: [
-      { emoji: '👍', count: 3, userHasReacted: true },
-      { emoji: '🚀', count: 2, userHasReacted: false }
-    ],
-    replies: [
-      {
-        id: '1.1',
-        authorName: 'Alex Kim',
-        authorAvatar: '/placeholder.svg?height=40&width=40',
-        content: 'I can take a look at it',
-        timestamp: new Date(Date.now() - 1000 * 60 * 10)
-      }
-    ],
-    isPinned: true
-  },
-  {
-    id: '2',
-    author: {
-      name: 'Marcus Johnson',
-      avatar: '/placeholder.svg?height=40&width=40'
-    },
-    content: 'The new dark theme looks amazing! Great work on the color palette.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-    reactions: [
-      { emoji: '🎨', count: 4, userHasReacted: true },
-      { emoji: '💯', count: 2, userHasReacted: false }
-    ]
-  }
-]
-
-for (let i = 3; i < 5; i++) {
-  SAMPLE_MESSAGES.push({
-    id: i.toString(),
-    author: {
-      name: 'Marcus Johnson',
-      avatar: '/placeholder.svg?height=40&width=40'
-    },
-    content: 'The new dark theme looks amazing! Great work on the color palette.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-    reactions: [
-      { emoji: '🎨', count: 4, userHasReacted: true },
-      { emoji: '💯', count: 2, userHasReacted: false }
-    ]
-  })
-}
-
 export function ChatInput() {
   const sendMessage = api.messages.sendMessage.useMutation({
     onSuccess: (data) => {

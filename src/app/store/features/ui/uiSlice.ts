@@ -4,7 +4,7 @@ import { UIState, ChatTab } from './types'
 const initialState: UIState = {
   currentTab: 'Messages',
   selectedPostId: null,
-  selectedChannelId: null,
+  selectedChannelId: 0,
   selectedChannelName: null,
   selectedDMUserId: null,
   channelSheetOpen: false
@@ -20,7 +20,7 @@ const uiSlice = createSlice({
     setSelectedPostId: (state, action: PayloadAction<string | null>) => {
       state.selectedPostId = action.payload
     },
-    setSelectedChannelId: (state, action: PayloadAction<string | null>) => {
+    setSelectedChannelId: (state, action: PayloadAction<number>) => {
       state.selectedChannelId = action.payload
     },
     setSelectedChannelName: (state, action: PayloadAction<string | null>) => {

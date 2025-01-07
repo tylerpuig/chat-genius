@@ -35,19 +35,6 @@ type Reply = {
   timestamp: Date
 }
 
-type ChatMessageProps = {
-  id: string
-  author: {
-    name: string
-    avatar: string
-  }
-  content: string
-  timestamp: Date
-  reactions?: Reaction[]
-  replies?: Reply[]
-  isPinned?: boolean
-}
-
 export function ChatMessage({ content, createdAt, user }: ChatMessageData) {
   return (
     <div className="group px-4 py-2 hover:bg-gray-800/50">

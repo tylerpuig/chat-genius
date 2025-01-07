@@ -24,9 +24,11 @@ for (let i = 4; i < 5; i++) {
 
 export default function ChannelList() {
   const { data: channels, refetch: refetchChannels } = api.messages.getChannels.useQuery()
-  const { setChannelSheetOpen, channelSheetOpen } = useUI()
+  const { setChannelSheetOpen, channelSheetOpen, selectedChannelId, setSelectedChannelId } = useUI()
   const [isChannelsExpanded, setIsChannelsExpanded] = useState(true)
   const [isDMsExpanded, setIsDMsExpanded] = useState(true)
+
+  console.log(selectedChannelId)
 
   useEffect(() => {
     refetchChannels()
@@ -59,7 +61,14 @@ export default function ChannelList() {
         <>
           {/* <ScrollArea className="mb-4 h-[300px]"> */}
           {channels.map((channel) => (
-            <Button key={channel.id} variant="channel" className="mb-1 w-full justify-start">
+            <Button
+              onClick={() => {
+                setSelectedChannelId(channel.id)
+              }}
+              key={channel.id}
+              variant="channel"
+              className={`mb-1 w-full justify-start ${selectedChannelId === channel.id ? 'bg-gray-700' : ''}`}
+            >
               <Hash className="mr-2 h-4 w-4" />
               {channel.name}
             </Button>
