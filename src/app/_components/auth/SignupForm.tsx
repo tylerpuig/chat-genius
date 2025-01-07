@@ -99,6 +99,17 @@ export function SignupForm({ className, ...props }: React.ComponentPropsWithoutR
                   Sign Up
                 </Button>
               </div>
+              <div className="flex justify-center gap-2 text-center text-sm text-gray-400">
+                <span>Already have an account?</span>
+                <div
+                  onClick={() => {
+                    router.push('/auth/login')
+                  }}
+                  className="cursor-pointer text-blue-400 underline underline-offset-4 hover:text-blue-300"
+                >
+                  Sign in
+                </div>
+              </div>
             </div>
           </form>
         </CardContent>
