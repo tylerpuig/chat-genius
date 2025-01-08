@@ -6,7 +6,8 @@ import {
   selectSelectedChannelId,
   selectSelectedDMUserId,
   selectSelectedChannelName,
-  selectChannelSheetOpen
+  selectChannelSheetOpen,
+  selectUIView
 } from '../../store/features/ui/selectors'
 import {
   setCurrentTab,
@@ -14,9 +15,10 @@ import {
   setSelectedChannelId,
   setSelectedDMUserId,
   setSelectedChannelName,
-  setChannelSheetOpen
+  setChannelSheetOpen,
+  setUIView
 } from '../../store/features/ui/uiSlice'
-import type { ChatTab } from '../../store/features/ui/types'
+import type { ChatTab, UIView } from '../../store/features/ui/types'
 
 export const useUI = () => {
   const dispatch = useAppDispatch()
@@ -27,6 +29,7 @@ export const useUI = () => {
   const selectedChannelName = useSelector(selectSelectedChannelName)
   const selectedDMUserId = useSelector(selectSelectedDMUserId)
   const channelSheetOpen = useSelector(selectChannelSheetOpen)
+  const uiView = useSelector(selectUIView)
 
   return {
     // State
@@ -36,6 +39,7 @@ export const useUI = () => {
     selectedDMUserId,
     selectedChannelName,
     channelSheetOpen,
+    uiView,
 
     // Actions
     switchTab: (tab: ChatTab) => dispatch(setCurrentTab(tab)),
@@ -44,6 +48,7 @@ export const useUI = () => {
     setSelectedChannelName: (channelName: string | null) =>
       dispatch(setSelectedChannelName(channelName)),
     selectDMUser: (userId: string | null) => dispatch(setSelectedDMUserId(userId)),
-    setChannelSheetOpen: (open: boolean) => dispatch(setChannelSheetOpen(open))
+    setChannelSheetOpen: (open: boolean) => dispatch(setChannelSheetOpen(open)),
+    setUIView: (view: UIView) => dispatch(setUIView(view))
   }
 }

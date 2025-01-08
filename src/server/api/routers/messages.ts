@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import EventEmitter, { on } from 'events'
+import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
-import { eq, and, or, ne, sql } from 'drizzle-orm'
+import { eq, and, or, ne, sql, exists, inArray, is } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import {
   UserSubscriptionManager,
@@ -72,9 +73,40 @@ export const messagesRouter = createTRPCRouter({
       return newMessage
     }),
   getMessagesFromChannel: protectedProcedure
-    .input(z.object({ channelId: z.number() }))
+    .input(z.object({ channelId: z.number(), toUserId: z.string().optional() }))
     .query(async ({ input, ctx }) => {
       const { channelId } = input
+
+      // First verify the user has access to this channel
+      const channelAccess = await ctx.db
+        .select()
+        .from(schema.channels)
+        .leftJoin(
+          schema.channelMembers,
+          and(
+            eq(schema.channels.id, schema.channelMembers.channelId),
+            eq(schema.channelMembers.userId, ctx.session.user.id)
+          )
+        )
+        .where(
+          and(
+            eq(schema.channels.id, channelId),
+            or(
+              // User can access if channel is public
+              eq(schema.channels.isPrivate, false),
+              // OR if user is a member of the private channel
+              eq(schema.channelMembers.userId, ctx.session.user.id)
+            )
+          )
+        )
+        .limit(1)
+
+      if (!channelAccess.length) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have access to this channel'
+        })
+      }
       const messages = await ctx.db.query.messages.findMany({
         where: eq(schema.messages.channelId, channelId),
         with: {
@@ -197,10 +229,24 @@ export const messagesRouter = createTRPCRouter({
       .select({
         id: schema.users.id,
         name: schema.users.name,
-        avatar: schema.users.image
+        avatar: schema.users.image,
+        conversationId: schema.conversationsTable.id
       })
       .from(schema.users)
       .where(ne(schema.users.id, ctx.session.user.id))
+      .leftJoin(
+        schema.conversationsTable,
+        or(
+          and(
+            eq(schema.users.id, schema.conversationsTable.user1Id),
+            eq(schema.conversationsTable.user2Id, ctx.session.user.id)
+          ),
+          and(
+            eq(schema.users.id, schema.conversationsTable.user2Id),
+            eq(schema.conversationsTable.user1Id, ctx.session.user.id)
+          )
+        )
+      )
 
     return onlineUsers
   }),
@@ -224,11 +270,15 @@ export const messagesRouter = createTRPCRouter({
         )
       )
       .where(
-        or(
-          // Include channel if it's public
-          eq(schema.channels.isPrivate, false),
-          // OR if user is a member (for private channels)
-          eq(schema.channelMembers.userId, ctx.session.user.id)
+        and(
+          eq(schema.channels.isConversation, false),
+
+          or(
+            // Include channel if it's public
+            eq(schema.channels.isPrivate, false),
+            // OR if user is a member (for private channels)
+            eq(schema.channelMembers.userId, ctx.session.user.id)
+          )
         )
       )
 

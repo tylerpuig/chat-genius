@@ -7,11 +7,6 @@ import { Button } from '~/components/ui/button'
 import { api } from '~/trpc/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 
-type ChannelInfo = {
-  id: string
-  name: string
-}
-
 export default function ChannelList() {
   const { data: channels, refetch: refetchChannels } = api.messages.getChannels.useQuery()
   const {
@@ -92,32 +87,60 @@ type UserStatusProps = {
   imageUrl?: string
   isOnline?: boolean
   className?: string
+  conversationId?: number | null
 }
 
 function OnlineUserList() {
-  const userList = api.messages.getOnlineUsers.useQuery(undefined)
+  const userList = api.messages.getOnlineUsers.useQuery()
+  const { setSelectedChannelId } = useUI()
+
+  const createConversation = api.conversations.createConversation.useMutation({
+    onSuccess: (data) => {
+      if (data?.newConversationId) {
+        setSelectedChannelId(data.newConversationId)
+      }
+    }
+  })
 
   if (!userList.data) return null
 
   return (
     <div className="flex flex-col gap-4">
       {userList.data.map((user) => (
-        <UserStatus
-          key={user.id}
-          name={user.name || ''}
-          imageUrl={user.avatar || ''}
-          isOnline
-          className="flex-shrink-0 rounded-md"
-        />
+        <div
+          onClick={() => {
+            if (!user.conversationId) {
+              createConversation.mutate({ toUserId: user.id })
+            } else {
+              setSelectedChannelId(user.conversationId)
+            }
+          }}
+        >
+          <UserStatus
+            key={user.id}
+            name={user.name || ''}
+            imageUrl={user.avatar || ''}
+            isOnline
+            className="flex-shrink-0 rounded-md"
+            conversationId={user.conversationId}
+          />
+        </div>
       ))}
     </div>
   )
 }
 
-export function UserStatus({ name, imageUrl, isOnline = false, className = '' }: UserStatusProps) {
+export function UserStatus({
+  name,
+  imageUrl,
+  isOnline = false,
+  className = '',
+  conversationId
+}: UserStatusProps) {
+  const { selectedChannelId } = useUI()
   return (
     <div
-      className={`relative flex cursor-pointer items-center px-3 ${className} p-1 hover:bg-gray-700`}
+      className={`relative flex cursor-pointer items-center px-3 ${className} p-1 hover:bg-gray-700 ${selectedChannelId === conversationId ? 'bg-gray-700' : ''}`}
     >
       <div className="relative">
         <Avatar className="h-8 w-8 border-0 border-border">

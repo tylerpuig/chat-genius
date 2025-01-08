@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { UIState, ChatTab } from './types'
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import type { UIState, ChatTab, UIView } from './types'
 
 const initialState: UIState = {
   currentTab: 'Messages',
@@ -7,7 +7,8 @@ const initialState: UIState = {
   selectedChannelId: 0,
   selectedChannelName: null,
   selectedDMUserId: null,
-  channelSheetOpen: false
+  channelSheetOpen: false,
+  uiView: 'channel'
 }
 
 const uiSlice = createSlice({
@@ -36,6 +37,9 @@ const uiSlice = createSlice({
     },
     setChannelSheetOpen: (state, action: PayloadAction<boolean>) => {
       state.channelSheetOpen = action.payload
+    },
+    setUIView: (state, action: PayloadAction<UIView>) => {
+      state.uiView = action.payload
     }
   }
 })
@@ -47,7 +51,8 @@ export const {
   setSelectedDMUserId,
   setSelectedChannelName,
   resetSelections,
-  setChannelSheetOpen
+  setChannelSheetOpen,
+  setUIView
 } = uiSlice.actions
 
 export default uiSlice.reducer

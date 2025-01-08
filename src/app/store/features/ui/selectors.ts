@@ -6,3 +6,4 @@ export const selectSelectedChannelId = (state: RootState) => state.ui.selectedCh
 export const selectSelectedChannelName = (state: RootState) => state.ui.selectedChannelName
 export const selectSelectedDMUserId = (state: RootState) => state.ui.selectedDMUserId
 export const selectChannelSheetOpen = (state: RootState) => state.ui.channelSheetOpen
+export const selectUIView = (state: RootState) => state.ui.uiView
