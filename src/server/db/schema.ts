@@ -42,6 +42,7 @@ export const channels = pgTable(
     name: varchar('name', { length: 256 }).notNull(),
     description: text('description'),
     isPrivate: boolean('is_private').default(false).notNull(),
+    isConversation: boolean('is_conversation').default(false).notNull(),
     createdById: varchar('created_by', { length: 255 })
       .notNull()
       .references(() => users.id),
@@ -56,11 +57,37 @@ export const channels = pgTable(
   ]
 )
 
+export const conversationsTable = pgTable(
+  'conversation',
+  {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    user1Id: varchar('user1_id', { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    user2Id: varchar('user2_id', { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    channelId: integer('channel_id'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date())
+  },
+  (conversation) => [
+    // Index for finding conversations for a specific user
+    index('conversation_user1_idx').on(conversation.user1Id),
+    index('conversation_user2_idx').on(conversation.user2Id)
+  ]
+)
+
 // Add relation to existing users table
 export const usersRelations = relations(users, ({ many }) => ({
   channels: many(channelMembers),
   messages: many(messages),
-  accounts: many(accounts)
+  accounts: many(accounts),
+  conversations: many(conversationsTable)
+  // sentPrivateMessages: many(privateMessages, { relationName: 'fromUser' }),
+  // receivedPrivateMessages: many(privateMessages, { relationName: 'toUser' })
 }))
 
 // export const usersRelations = relations(users, ({ many }) => ({}));
