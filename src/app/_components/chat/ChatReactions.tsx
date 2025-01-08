@@ -8,6 +8,7 @@ import { api } from '~/trpc/react'
 import { type ChatMessageData } from '~/trpc/types'
 import { useSession } from 'next-auth/react'
 import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
+import { useUI } from '~/app/hooks/ui/useUI'
 
 const emojis = [
   '😀',
@@ -34,6 +35,7 @@ export default function ChatReactions({
   reactions: ChatMessageData['reactions']
   id: number
 }) {
+  const { selectedChannelId } = useUI()
   const { data: session } = useSession()
   const { refetchMessages } = useChannelContext()
 
@@ -63,6 +65,15 @@ export default function ChatReactions({
   // Take first 3 reactions with all their data
   const reactionsToRender = Array.from(uniqueReactionsMap.values()).slice(0, 3)
 
+  function hasUserReactedWithEmoji(emoji: string): boolean {
+    try {
+      return reactions.some(
+        (reaction) => reaction.emoji === emoji && reaction.userId === session?.user.id // Changed !== to ===
+      )
+    } catch (err) {}
+
+    return false
+  }
   return (
     <>
       {reactions.length > 0 && (
@@ -70,15 +81,23 @@ export default function ChatReactions({
           {reactionsToRender.map((reaction, index) => (
             <button
               onClick={() => {
-                if (reaction.userId !== session?.user.id) {
-                  addReaction.mutate({ messageId: id, emoji: reaction.emoji })
+                if (!hasUserReactedWithEmoji(reaction.emoji)) {
+                  addReaction.mutate({
+                    messageId: id,
+                    emoji: reaction.emoji,
+                    channelId: selectedChannelId
+                  })
                 } else {
-                  removeReaction.mutate({ messageId: id, emoji: reaction.emoji })
+                  removeReaction.mutate({
+                    messageId: id,
+                    emoji: reaction.emoji,
+                    channelId: selectedChannelId
+                  })
                 }
               }}
               key={index}
               className={`flex items-center gap-1 rounded-full px-2 text-sm ${
-                reaction.userId === session?.user.id
+                hasUserReactedWithEmoji(reaction.emoji)
                   ? 'bg-blue-600/30 text-blue-400'
                   : 'bg-gray-700/50 text-gray-300'
               } transition-colors hover:bg-blue-600/40`}
@@ -96,6 +115,7 @@ export default function ChatReactions({
 
 export function EmojiPicker({ messageId }: { messageId: number }) {
   const [isOpen, setIsOpen] = useState(false)
+  const { selectedChannelId } = useUI()
   const { refetchMessages } = useChannelContext()
 
   const addReaction = api.messages.createMessageReaction.useMutation({
@@ -128,7 +148,11 @@ export function EmojiPicker({ messageId }: { messageId: number }) {
             <button
               key={emoji}
               onClick={() => {
-                addReaction.mutate({ messageId: messageId, emoji: emoji })
+                addReaction.mutate({
+                  messageId: messageId,
+                  emoji: emoji,
+                  channelId: selectedChannelId
+                })
               }}
               className="rounded p-1 text-2xl transition-colors duration-200 hover:bg-gray-700"
             >

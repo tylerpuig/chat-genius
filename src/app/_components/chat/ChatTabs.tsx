@@ -1,6 +1,6 @@
 'use client'
 
-import { MessagesSquare, Book, FolderOpen, Pin, Plus, LogOut } from 'lucide-react'
+import { MessagesSquare, FolderOpen, Pin, LogOut } from 'lucide-react'
 import { cn } from '~/lib/utils'
 import {
   DropdownMenu,
@@ -60,7 +60,9 @@ export default function ChatTabs() {
           <DropdownMenuContent align="end" className="w-40 border-gray-800 bg-gray-900">
             <DropdownMenuItem
               className="cursor-pointer text-white focus:bg-blue-800 focus:text-white"
-              onClick={() => signOut()}
+              onClick={async () => {
+                await signOut()
+              }}
             >
               <LogOut className="mr-2 h-4 w-4" />
               <span>Logout</span>
@@ -69,7 +71,7 @@ export default function ChatTabs() {
         </DropdownMenu>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="-mb-[2px] flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           {TABS.map((tab) => (
             <NavItem
