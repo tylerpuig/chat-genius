@@ -61,14 +61,11 @@ export function ChatContainer() {
       channelId: selectedChannelId
     },
     {
-      onData: (data) => {
-        console.log(data)
+      onData: () => {
         refetchMessages()
       }
     }
   )
-
-  console.log(messages)
 
   return (
     <div className="absolute inset-0 bottom-[73px] flex flex-col overflow-hidden bg-gray-900">

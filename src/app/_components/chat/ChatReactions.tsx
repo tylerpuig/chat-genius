@@ -68,7 +68,7 @@ export default function ChatReactions({
   function hasUserReactedWithEmoji(emoji: string): boolean {
     try {
       return reactions.some(
-        (reaction) => reaction.emoji === emoji && reaction.userId === session?.user.id // Changed !== to ===
+        (reaction) => reaction.emoji === emoji && reaction.userId === session?.user.id
       )
     } catch (err) {}
 

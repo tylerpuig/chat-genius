@@ -13,6 +13,7 @@ import { signOut } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { type ChatTab } from '~/app/store/features/ui/types'
 import { AvatarStack } from './AvatarStack'
+import { Skeleton } from '~/components/ui/skeleton'
 
 type NavItemProps = {
   icon: React.ReactNode
@@ -43,13 +44,30 @@ function NavItem({ icon, label, isActive }: NavItemProps) {
   )
 }
 
+function DisplayCurrentChannelName() {
+  const { selectedChannelName } = useUI()
+
+  return (
+    <>
+      {!selectedChannelName ? (
+        <>
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+            {'# '} <Skeleton className="h-4 w-16" />
+          </h2>
+        </>
+      ) : (
+        <h2 className="text-lg font-semibold text-white">{'# ' + (selectedChannelName || '')}</h2>
+      )}
+    </>
+  )
+}
+
 export default function ChatTabs() {
   const { currentTab, selectedChannelName } = useUI()
   return (
     <div className="flex flex-col gap-1 bg-gray-900/40 p-2">
       <div className="flex items-center justify-between px-3 py-2">
-        <h2 className="text-lg font-semibold text-white">{'# ' + (selectedChannelName || '')}</h2>
-
+        <DisplayCurrentChannelName />
         <DropdownMenu>
           <DropdownMenuTrigger className="outline-none">
             <Avatar className="h-8 w-8 border border-blue-600/50 hover:border-blue-500">
