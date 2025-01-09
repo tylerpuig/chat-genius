@@ -113,7 +113,7 @@ export function NewChannelSheet() {
             <div className="mt-4 grid grid-cols-4 items-start gap-4">
               <Label className="text-right text-gray-400">Add Users</Label>
               {/* <div className="w-full rounded-md border-gray-700 bg-gray-800 p-4 text-gray-200"> */}
-              <div className="scrollbar-overlay col-span-3 max-h-[20rem] space-y-2 overflow-y-auto px-2">
+              <div className="scrollbar-overlay col-span-3 max-h-[20rem] space-y-2 overflow-y-auto px-2 py-1">
                 {userList.data?.map((user) => (
                   <div key={user.id} className="grid grid-cols-[32px_1fr_100px] items-center gap-4">
                     <Avatar className="h-8 w-8">

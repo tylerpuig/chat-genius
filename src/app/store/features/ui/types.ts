@@ -1,4 +1,4 @@
-export type ChatTab = 'Messages' | 'Files' | 'Pins'
+export type ChatTab = 'Messages' | 'Files' | 'Pins' | 'Saved'
 export type UIView = 'channel' | 'conversation'
 
 export type UIState = {

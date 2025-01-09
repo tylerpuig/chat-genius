@@ -1,6 +1,6 @@
 'use client'
 
-import { MessagesSquare, FolderOpen, Pin, LogOut } from 'lucide-react'
+import { MessagesSquare, FolderOpen, Pin, LogOut, Bookmark } from 'lucide-react'
 import { cn } from '~/lib/utils'
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import { useUI } from '~/app/hooks/ui/useUI'
 import { type ChatTab } from '~/app/store/features/ui/types'
 import { AvatarStack } from './AvatarStack'
 import { Skeleton } from '~/components/ui/skeleton'
+import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
 
 type NavItemProps = {
   icon: React.ReactNode
@@ -24,14 +25,20 @@ type NavItemProps = {
 const TABS: NavItemProps[] = [
   { icon: <MessagesSquare className="h-4 w-4" />, label: 'Messages', isActive: true },
   { icon: <FolderOpen className="h-4 w-4" />, label: 'Files' },
-  { icon: <Pin className="h-4 w-4" />, label: 'Pins' }
+  { icon: <Pin className="h-4 w-4" />, label: 'Pins' },
+  { icon: <Bookmark className="h-4 w-4" />, label: 'Saved' }
 ]
 
 function NavItem({ icon, label, isActive }: NavItemProps) {
   const { switchTab } = useUI()
+  const { refetchMessages } = useChannelContext()
   return (
     <button
-      onClick={() => switchTab(label)}
+      onClick={async () => {
+        switchTab(label)
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        refetchMessages()
+      }}
       className={cn(
         'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors',
         'hover:bg-blue-800',

@@ -1,7 +1,13 @@
 'use client'
 
 import React from 'react'
-import { MoreHorizontal, MessageSquare, Bookmark, Reply as ReplyIcon } from 'lucide-react'
+import {
+  MoreHorizontal,
+  MessageSquare,
+  Bookmark,
+  Reply as ReplyIcon,
+  MoreVertical
+} from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 import {
@@ -11,9 +17,11 @@ import {
   DropdownMenuTrigger
 } from '~/components/ui/dropdown-menu'
 import { type ChatMessageData } from '~/trpc/types'
-// import EmojiPicker from 'emoji-picker-react'
 import ChatReactions, { EmojiPicker } from './ChatReactions'
 import { useUI } from '~/app/hooks/ui/useUI'
+import { formatDistanceToNow, format } from 'date-fns'
+import { api } from '~/trpc/react'
+import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
 
 type ChatMessageProps = {
   message: ChatMessageData
@@ -24,7 +32,20 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
   if (!message) return null
   const { content, user, id, reactions, replyCount } = message
 
+  const { selectedChannelId, currentTab } = useUI()
+  // const { refetchMessages } = useChannelContext()
+
   const { setMessageReplySheetOpen, messageReplySheetOpen, setSelectedParentMessageId } = useUI()
+
+  const pinMessage = api.messages.pinMessage.useMutation()
+  const unPinMessage = api.messages.unPinMessage.useMutation()
+  const deleteMessage = api.messages.deleteMessage.useMutation({
+    onSettled: () => {
+      // refetchMessages()
+    }
+  })
+  const saveMessage = api.messages.saveMessage.useMutation()
+  const unSaveMessage = api.messages.unSaveMessage.useMutation()
 
   return (
     <div className="group px-4 py-2 hover:bg-gray-800/50">
@@ -35,10 +56,18 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
         </Avatar>
 
         <div className="flex-1">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-100">{user?.name || ''}</span>
-              {/* <span className="text-sm text-gray-400">{timestamp.toISOString()}</span> */}
+              <span className="... max-w-[100px] truncate font-semibold text-gray-100">
+                {user?.name || ''}
+              </span>
+              <span className="text-sm text-gray-400">
+                {!isReply ? (
+                  <>{formatDistanceToNow(message?.createdAt, { addSuffix: true })}</>
+                ) : (
+                  <>{format(message?.createdAt, 'h:mm a')}</>
+                )}
+              </span>
               {/* {isPinned && (
                 <span className="rounded bg-blue-900/30 px-2 py-0.5 text-xs text-blue-400">
                   Pinned
@@ -46,7 +75,7 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
               )} */}
             </div>
 
-            <div className="flex flex-shrink-0 items-start gap-1">
+            <div className="flex flex-wrap items-start gap-1">
               {!isReply && (
                 <Button
                   onClick={() => {
@@ -64,11 +93,26 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
               <EmojiPicker messageId={id} />
 
               <Button
+                onClick={() => {
+                  if (message?.isSaved) {
+                    unSaveMessage.mutate({
+                      messageId: id,
+                      channelId: selectedChannelId
+                    })
+                  } else {
+                    saveMessage.mutate({
+                      messageId: id,
+                      channelId: selectedChannelId
+                    })
+                  }
+                }}
                 variant="channel"
                 size="icon"
                 className="h-8 w-8 text-gray-400 hover:text-gray-300"
               >
-                <Bookmark className="h-4 w-4" />
+                <Bookmark
+                  className={`h-4 w-4 ${message?.isSaved ? 'fill-blue-400 stroke-blue-400' : ''}`}
+                />
               </Button>
 
               <DropdownMenu>
@@ -78,17 +122,40 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
                     size="icon"
                     className="h-8 w-8 text-gray-400 hover:text-gray-300"
                   >
-                    <MoreHorizontal className="h-4 w-4" />
+                    <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 border-gray-800 bg-gray-900">
                   <DropdownMenuItem className="text-gray-300 hover:text-gray-100">
                     Copy Message Link
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-gray-300 hover:text-gray-100">
-                    Pin to Channel
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (!message?.isPinned) {
+                        pinMessage.mutate({
+                          messageId: id,
+                          channelId: selectedChannelId
+                        })
+                      } else {
+                        unPinMessage.mutate({
+                          messageId: id,
+                          channelId: selectedChannelId
+                        })
+                      }
+                    }}
+                    className="text-gray-300 hover:text-gray-100"
+                  >
+                    {message?.isPinned ? 'Unpin' : 'Pin to Channel'}
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-400 hover:text-red-300">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      deleteMessage.mutate({
+                        messageId: id,
+                        channelId: selectedChannelId
+                      })
+                    }}
+                    className="text-red-400 hover:text-red-300"
+                  >
                     Delete Message
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -96,7 +163,9 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
             </div>
           </div>
 
-          <div className="... mt-1 flex break-words text-gray-300">{content}</div>
+          <div className="mt-1 break-words text-gray-300">
+            <p className="break-all">{content}</p>
+          </div>
 
           <ChatReactions reactions={reactions} id={id} />
 

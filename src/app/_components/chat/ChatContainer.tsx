@@ -55,6 +55,7 @@ export function ChatInput() {
 
 export function ChatContainer() {
   const { messages, refetchMessages } = useChannelContext()
+  // console.log(messages)
   const { selectedChannelId } = useUI()
   api.messages.onMessage.useSubscription(
     {

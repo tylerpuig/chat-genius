@@ -1,14 +1,13 @@
 import { z } from 'zod'
 import EventEmitter, { on } from 'events'
-import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
-import { eq, and, or, ne, sql, notExists, inArray, is } from 'drizzle-orm'
+import { eq, and, or, ne, type SQL } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import {
   UserSubscriptionManager,
   type NewChannelMessage
 } from '~/server/api/utils/subscriptionManager'
-import { getUserChannels } from '~/server/db/utils/queries'
+import { getUserChannels, getMessagesFromChannel } from '~/server/db/utils/queries'
 import { incrementMessageReplyCount } from '~/server/db/utils/insertions'
 
 // Event emitter to bridge Postgres notifications to tRPC
@@ -80,53 +79,15 @@ export const messagesRouter = createTRPCRouter({
       }
     }),
   getMessagesFromChannel: protectedProcedure
-    .input(z.object({ channelId: z.number(), toUserId: z.string().optional() }))
+    .input(
+      z.object({ channelId: z.number(), chatTab: z.enum(['Messages', 'Files', 'Pins', 'Saved']) })
+    )
     .query(async ({ input, ctx }) => {
       const { channelId } = input
 
-      // First verify the user has access to this channel
-      const channelAccess = await ctx.db
-        .select()
-        .from(schema.channels)
-        .leftJoin(
-          schema.channelMembers,
-          and(
-            eq(schema.channels.id, schema.channelMembers.channelId),
-            eq(schema.channelMembers.userId, ctx.session.user.id)
-          )
-        )
-        .where(
-          and(
-            eq(schema.channels.id, channelId),
-            or(
-              // User can access if channel is public
-              eq(schema.channels.isPrivate, false),
-              // OR if user is a member of the private channel
-              eq(schema.channelMembers.userId, ctx.session.user.id)
-            )
-          )
-        )
-        .limit(1)
+      const results = await getMessagesFromChannel(channelId, ctx.session.user.id, input.chatTab)
 
-      if (!channelAccess.length) {
-        return []
-      }
-      const messages = await ctx.db.query.messages.findMany({
-        where: and(eq(schema.messages.channelId, channelId), eq(schema.messages.isReply, false)),
-        with: {
-          user: {
-            columns: {
-              id: true,
-              name: true,
-              image: true
-            }
-          },
-          reactions: true,
-          attachments: true
-        }
-      })
-
-      return messages
+      return results
     }),
   createMessageReaction: protectedProcedure
     .input(
@@ -212,6 +173,7 @@ export const messagesRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      // await new Promise((resolve) => setTimeout(resolve, 4000))
       const mainMessage = await ctx.db.query.messages.findFirst({
         where: eq(schema.messages.id, input.messageId),
         with: {
@@ -245,9 +207,103 @@ export const messagesRouter = createTRPCRouter({
         }
       })
 
-      // console.log(mainMessage, replies)
-
       return { mainMessage, replies }
+    }),
+  pinMessage: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.number(),
+        channelId: z.number()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(schema.messages)
+        .set({ isPinned: true })
+        .where(eq(schema.messages.id, input.messageId))
+
+      ee.emit('newMessage', {
+        id: input.messageId,
+        content: '',
+        channelId: input.channelId,
+        userId: ctx.session.user.id
+      })
+    }),
+  unPinMessage: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.number(),
+        channelId: z.number()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(schema.messages)
+        .set({ isPinned: false })
+        .where(eq(schema.messages.id, input.messageId))
+
+      ee.emit('newMessage', {
+        id: input.messageId,
+        content: '',
+        channelId: input.channelId,
+        userId: ctx.session.user.id
+      })
+    }),
+  deleteMessage: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.number(),
+        channelId: z.number()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.delete(schema.messages).where(eq(schema.messages.id, input.messageId))
+
+      ee.emit('newMessage', {
+        id: input.messageId,
+        content: '',
+        channelId: input.channelId,
+        userId: ctx.session.user.id
+      })
+    }),
+
+  saveMessage: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.number(),
+        channelId: z.number()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .insert(schema.savedMessagesTable)
+        .values({ messageId: input.messageId, userId: ctx.session.user.id })
+
+      ee.emit('newMessage', {
+        id: input.messageId,
+        content: '',
+        channelId: input.channelId,
+        userId: ctx.session.user.id
+      })
+    }),
+  unSaveMessage: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.number(),
+        channelId: z.number()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .delete(schema.savedMessagesTable)
+        .where(eq(schema.savedMessagesTable.messageId, input.messageId))
+
+      ee.emit('newMessage', {
+        id: input.messageId,
+        content: '',
+        channelId: input.channelId,
+        userId: ctx.session.user.id
+      })
     }),
   removeMessageReaction: protectedProcedure
     .input(
