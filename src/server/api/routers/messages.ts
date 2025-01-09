@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import EventEmitter, { on } from 'events'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
-import { eq, and, or, ne, type SQL } from 'drizzle-orm'
+import { eq, and, or, ne, sql, asc } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import {
   UserSubscriptionManager,
@@ -54,7 +54,6 @@ export const messagesRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { userId, content, channelId } = input
       try {
-        console.log('channelId', channelId)
         const newMessage = await ctx.db
           .insert(schema.messages)
           .values({
@@ -179,6 +178,13 @@ export const messagesRouter = createTRPCRouter({
       // await new Promise((resolve) => setTimeout(resolve, 4000))
       const mainMessage = await ctx.db.query.messages.findFirst({
         where: eq(schema.messages.id, input.messageId),
+        extras: {
+          isSaved: sql<boolean>`EXISTS (
+                    SELECT 1 FROM ${schema.savedMessagesTable}
+                    WHERE message_id = ${schema.messages.id}
+                    AND user_id = ${ctx.session.user.id}
+                  )`.as('isSaved')
+        },
         with: {
           user: {
             columns: {
@@ -195,6 +201,13 @@ export const messagesRouter = createTRPCRouter({
         where: eq(schema.messagesToParents.parentId, input.messageId),
         with: {
           message: {
+            extras: {
+              isSaved: sql<boolean>`EXISTS (
+                    SELECT 1 FROM ${schema.savedMessagesTable}
+                    WHERE message_id = ${schema.messages.id}
+                    AND user_id = ${ctx.session.user.id}
+                  )`.as('isSaved')
+            },
             with: {
               user: {
                 columns: {
@@ -260,6 +273,18 @@ export const messagesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Check if the message exists and from the current user
+      const currentMessage = await ctx.db.query.messages.findFirst({
+        where: and(
+          eq(schema.messages.id, input.messageId),
+          eq(schema.messages.userId, ctx.session.user.id)
+        )
+      })
+
+      if (!currentMessage) {
+        return
+      }
+
       await ctx.db.delete(schema.messages).where(eq(schema.messages.id, input.messageId))
 
       ee.emit('newMessage', {
@@ -382,11 +407,12 @@ export const messagesRouter = createTRPCRouter({
     }),
   getOnlineUsers: protectedProcedure.query(async ({ ctx }) => {
     const onlineUsers = await ctx.db
-      .select({
+      .selectDistinct({
         id: schema.users.id,
         name: schema.users.name,
         avatar: schema.users.image,
-        channelId: schema.conversationsTable.channelId
+        channelId: schema.conversationsTable.channelId,
+        createdAt: schema.conversationsTable.createdAt
       })
       .from(schema.users)
       .where(ne(schema.users.id, ctx.session.user.id))
@@ -403,6 +429,17 @@ export const messagesRouter = createTRPCRouter({
           )
         )
       )
+      .orderBy(asc(schema.conversationsTable.createdAt))
+
+    const foundUsers = new Map<string, any>()
+    for (const user of onlineUsers) {
+      if (foundUsers.has(user.id)) {
+        console.log('duplicate user', user)
+        const cachedUser = foundUsers.get(user.id)
+        console.log('cached user', cachedUser)
+      }
+      foundUsers.set(user.id, user)
+    }
 
     return onlineUsers
   }),

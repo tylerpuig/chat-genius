@@ -1,10 +1,4 @@
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarHeader
-} from '~/components/ui/sidebar'
+import { Sidebar, SidebarContent, SidebarFooter } from '~/components/ui/sidebar'
 import ChannelList from './ChannelList'
 import { NavUser } from './NavUser'
 
@@ -19,9 +13,7 @@ export function AppSidebar() {
         </div>
       </SidebarContent>
       <SidebarFooter className="!bg-gray-900">
-        <NavUser
-          user={{ name: 'Marcus Johnson', email: 'm@example.com', avatar: '/placeholder.svg' }}
-        />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   )

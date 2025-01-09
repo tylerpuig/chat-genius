@@ -14,12 +14,12 @@ export const conversationsRouter = createTRPCRouter({
         .where(
           or(
             and(
-              eq(schema.conversationsTable.user2Id, input.toUserId),
-              eq(schema.conversationsTable.user1Id, ctx.session.user.id)
-            ),
-            and(
               eq(schema.conversationsTable.user1Id, ctx.session.user.id),
               eq(schema.conversationsTable.user2Id, input.toUserId)
+            ),
+            and(
+              eq(schema.conversationsTable.user1Id, input.toUserId),
+              eq(schema.conversationsTable.user2Id, ctx.session.user.id)
             )
           )
         )

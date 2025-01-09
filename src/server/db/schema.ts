@@ -194,9 +194,7 @@ export const messagesToParents = pgTable(
       .notNull()
       .references(() => messages.id, { onDelete: 'cascade' })
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.messageId, t.parentId] })
-  })
+  (t) => [primaryKey({ columns: [t.messageId, t.parentId] })]
 )
 
 export const messagesToParentsRelations = relations(messagesToParents, ({ one }) => ({

@@ -21,7 +21,6 @@ export async function getUserChannels(db: any, userId: string): Promise<UserChan
         description: schema.channels.description,
         isPrivate: schema.channels.isPrivate,
         createdAt: schema.channels.createdAt,
-        // Use a left join to get isAdmin, which might be null for public channels
         isAdmin: schema.channelMembers.isAdmin
       })
       .from(schema.channels)

@@ -21,7 +21,7 @@ import ChatReactions, { EmojiPicker } from './ChatReactions'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { formatDistanceToNow, format } from 'date-fns'
 import { api } from '~/trpc/react'
-import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
+import { useSession } from 'next-auth/react'
 
 type ChatMessageProps = {
   message: ChatMessageData
@@ -30,6 +30,7 @@ type ChatMessageProps = {
 
 export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
   if (!message) return null
+  const { data: session } = useSession()
   const { content, user, id, reactions, replyCount } = message
 
   const { selectedChannelId, currentTab } = useUI()
@@ -39,11 +40,7 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
 
   const pinMessage = api.messages.pinMessage.useMutation()
   const unPinMessage = api.messages.unPinMessage.useMutation()
-  const deleteMessage = api.messages.deleteMessage.useMutation({
-    onSettled: () => {
-      // refetchMessages()
-    }
-  })
+  const deleteMessage = api.messages.deleteMessage.useMutation()
   const saveMessage = api.messages.saveMessage.useMutation()
   const unSaveMessage = api.messages.unSaveMessage.useMutation()
 
@@ -58,7 +55,9 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
         <div className="flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="... max-w-[100px] truncate font-semibold text-gray-100">
+              <span
+                className={`... ${isReply ? 'max-w-[100px]' : 'max-w-[200px]'} truncate font-semibold text-gray-100`}
+              >
                 {user?.name || ''}
               </span>
               <span className="text-sm text-gray-400">
@@ -129,35 +128,39 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
                   <DropdownMenuItem className="text-gray-300 hover:text-gray-100">
                     Copy Message Link
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      if (!message?.isPinned) {
-                        pinMessage.mutate({
+                  {!isReply && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (!message?.isPinned) {
+                          pinMessage.mutate({
+                            messageId: id,
+                            channelId: selectedChannelId
+                          })
+                        } else {
+                          unPinMessage.mutate({
+                            messageId: id,
+                            channelId: selectedChannelId
+                          })
+                        }
+                      }}
+                      className="text-gray-300 hover:text-gray-100"
+                    >
+                      {message?.isPinned ? 'Unpin' : 'Pin to Channel'}
+                    </DropdownMenuItem>
+                  )}
+                  {session?.user?.id === message?.userId && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        deleteMessage.mutate({
                           messageId: id,
                           channelId: selectedChannelId
                         })
-                      } else {
-                        unPinMessage.mutate({
-                          messageId: id,
-                          channelId: selectedChannelId
-                        })
-                      }
-                    }}
-                    className="text-gray-300 hover:text-gray-100"
-                  >
-                    {message?.isPinned ? 'Unpin' : 'Pin to Channel'}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      deleteMessage.mutate({
-                        messageId: id,
-                        channelId: selectedChannelId
-                      })
-                    }}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    Delete Message
-                  </DropdownMenuItem>
+                      }}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      Delete Message
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
