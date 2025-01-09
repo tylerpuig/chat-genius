@@ -1,14 +1,7 @@
 'use client'
 
 import React from 'react'
-import {
-  MoreHorizontal,
-  MessageSquare,
-  Bookmark,
-  Repeat2,
-  ThumbsUp,
-  Reply as ReplyIcon
-} from 'lucide-react'
+import { MoreHorizontal, MessageSquare, Bookmark, Reply as ReplyIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 import {
@@ -20,37 +13,19 @@ import {
 import { type ChatMessageData } from '~/trpc/types'
 // import EmojiPicker from 'emoji-picker-react'
 import ChatReactions, { EmojiPicker } from './ChatReactions'
+import { useUI } from '~/app/hooks/ui/useUI'
 
-type Reaction = {
-  emoji: string
-  count: number
-  userHasReacted: boolean
+type ChatMessageProps = {
+  message: ChatMessageData
+  isReply?: boolean
 }
 
-type Reply = {
-  id: string
-  authorName: string
-  authorAvatar: string
-  content: string
-  timestamp: Date
-}
+export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
+  if (!message) return null
+  const { content, user, id, reactions, replyCount } = message
 
-const reactions = [
-  { emoji: '👍', count: 3, userHasReacted: true },
-  { emoji: '🚀', count: 2, userHasReacted: false }
-]
+  const { setMessageReplySheetOpen, messageReplySheetOpen, setSelectedParentMessageId } = useUI()
 
-const replies = [
-  {
-    id: '1.1',
-    authorName: 'Alex Kim',
-    authorAvatar: '/placeholder.svg?height=40&width=40',
-    content: 'I can take a look at it',
-    timestamp: new Date(Date.now() - 1000 * 60 * 10)
-  }
-]
-
-export function ChatMessage({ content, user, id, reactions }: ChatMessageData) {
   return (
     <div className="group px-4 py-2 hover:bg-gray-800/50">
       <div className="flex gap-4">
@@ -72,21 +47,22 @@ export function ChatMessage({ content, user, id, reactions }: ChatMessageData) {
             </div>
 
             <div className="flex flex-shrink-0 items-start gap-1">
-              <Button
-                variant="channel"
-                size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-gray-300"
-              >
-                <ReplyIcon className="h-4 w-4" />
-              </Button>
+              {!isReply && (
+                <Button
+                  onClick={() => {
+                    if (messageReplySheetOpen) return
+                    setSelectedParentMessageId(id)
+                    setMessageReplySheetOpen(true)
+                  }}
+                  variant="channel"
+                  size="icon"
+                  className="h-8 w-8 text-gray-400 hover:text-gray-300"
+                >
+                  <ReplyIcon className="h-4 w-4" />
+                </Button>
+              )}
               <EmojiPicker messageId={id} />
-              {/* <Button
-                variant="channel"
-                size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-gray-300"
-              >
-                <Repeat2 className="h-4 w-4" />
-              </Button> */}
+
               <Button
                 variant="channel"
                 size="icon"
@@ -94,6 +70,7 @@ export function ChatMessage({ content, user, id, reactions }: ChatMessageData) {
               >
                 <Bookmark className="h-4 w-4" />
               </Button>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -119,18 +96,26 @@ export function ChatMessage({ content, user, id, reactions }: ChatMessageData) {
             </div>
           </div>
 
-          <div className="mt-1 break-words text-gray-300">{content}</div>
+          <div className="... mt-1 flex break-words text-gray-300">{content}</div>
 
           <ChatReactions reactions={reactions} id={id} />
 
-          <div className="flex justify-between">
-            {replies.length > 0 && (
-              <button className="mt-2 flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300">
+          {!isReply && replyCount > 0 && (
+            <div className="flex justify-between">
+              <button
+                onClick={() => {
+                  if (messageReplySheetOpen) return
+                  setSelectedParentMessageId(id)
+
+                  setMessageReplySheetOpen(true)
+                }}
+                className="mt-2 flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300"
+              >
                 <MessageSquare className="h-4 w-4" />
-                {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+                {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -94,7 +94,6 @@ export const authConfig = {
           image: user.image
         }
 
-        console.log('user', userData)
         return {
           id: user.id,
           email: user.email,

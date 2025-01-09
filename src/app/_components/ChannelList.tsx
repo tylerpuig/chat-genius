@@ -18,6 +18,7 @@ export default function ChannelList() {
   } = useUI()
   const [isChannelsExpanded, setIsChannelsExpanded] = useState(true)
   const [isDMsExpanded, setIsDMsExpanded] = useState(true)
+  const seedDB = api.auth.seedDB.useMutation()
 
   useEffect(() => {
     refetchChannels()
@@ -78,6 +79,18 @@ export default function ChannelList() {
           <OnlineUserList />
         </>
       )}
+
+      <Button
+        onClick={() => {
+          seedDB.mutate()
+        }}
+        className="w-full justify-start border-gray-700 hover:bg-gray-600"
+      >
+        <div className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          <div>Seed DB</div>
+        </div>
+      </Button>
     </div>
   )
 }
@@ -87,17 +100,19 @@ type UserStatusProps = {
   imageUrl?: string
   isOnline?: boolean
   className?: string
-  conversationId?: number | null
+  channelId?: number | null
 }
 
 function OnlineUserList() {
   const userList = api.messages.getOnlineUsers.useQuery()
-  const { setSelectedChannelId } = useUI()
+  const { setSelectedChannelId, selectedChannelId } = useUI()
+  console.log(selectedChannelId)
 
   const createConversation = api.conversations.createConversation.useMutation({
     onSuccess: (data) => {
       if (data?.newConversationId) {
         setSelectedChannelId(data.newConversationId)
+        userList.refetch()
       }
     }
   })
@@ -109,10 +124,10 @@ function OnlineUserList() {
       {userList.data.map((user) => (
         <div
           onClick={() => {
-            if (!user.conversationId) {
+            if (!user.channelId) {
               createConversation.mutate({ toUserId: user.id })
             } else {
-              setSelectedChannelId(user.conversationId)
+              setSelectedChannelId(user.channelId)
             }
           }}
         >
@@ -122,7 +137,7 @@ function OnlineUserList() {
             imageUrl={user.avatar || ''}
             isOnline
             className="flex-shrink-0 rounded-md"
-            conversationId={user.conversationId}
+            channelId={user.channelId}
           />
         </div>
       ))}
@@ -135,12 +150,12 @@ export function UserStatus({
   imageUrl,
   isOnline = false,
   className = '',
-  conversationId
+  channelId
 }: UserStatusProps) {
   const { selectedChannelId } = useUI()
   return (
     <div
-      className={`relative flex cursor-pointer items-center px-3 ${className} p-1 hover:bg-gray-700 ${selectedChannelId === conversationId ? 'bg-gray-700' : ''}`}
+      className={`relative flex cursor-pointer items-center px-3 ${className} p-1 hover:bg-gray-700 ${selectedChannelId === channelId ? 'bg-gray-700' : ''}`}
     >
       <div className="relative">
         <Avatar className="h-8 w-8 border-0 border-border">

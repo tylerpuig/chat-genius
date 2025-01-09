@@ -25,7 +25,7 @@ export const conversationsRouter = createTRPCRouter({
         )
         .limit(1)
 
-      let conversationId: number = conversation[0]?.id || 0
+      let conversationId: number = conversation[0]?.channelId || 0
 
       if (!conversation?.length) {
         // create a new channel

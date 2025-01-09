@@ -4,6 +4,8 @@ import { users } from '~/server/db/schema'
 import { eq } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
 import { AvatarGenerator } from 'random-avatar-generator'
+import { faker } from '@faker-js/faker'
+import { type User } from '~/server/db/types'
 
 export const authRouter = createTRPCRouter({
   emailSignUp: publicProcedure
@@ -37,5 +39,21 @@ export const authRouter = createTRPCRouter({
         success: true,
         user: newUser[0]
       }
-    })
+    }),
+  seedDB: protectedProcedure.mutation(async ({ ctx }) => {
+    const createUsers: Omit<User, 'id' | 'emailVerified'>[] = []
+
+    for (let i = 0; i < 10; i++) {
+      const newUser: Omit<User, 'id' | 'emailVerified'> = {
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+        password: bcrypt.hashSync('testing', 10),
+        image: faker.image.avatar()
+      }
+
+      createUsers.push(newUser)
+    }
+
+    await ctx.db.insert(users).values(createUsers)
+  })
 })

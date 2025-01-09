@@ -73,7 +73,7 @@ export function ChatContainer() {
         {messages && (
           <>
             {messages.map((message) => (
-              <ChatMessage key={message.id} {...message} />
+              <ChatMessage key={message.id} message={message} />
             ))}
           </>
         )}

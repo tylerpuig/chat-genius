@@ -2,12 +2,14 @@ import { z } from 'zod'
 import EventEmitter, { on } from 'events'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
-import { eq, and, or, ne, sql, exists, inArray, is } from 'drizzle-orm'
+import { eq, and, or, ne, sql, notExists, inArray, is } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import {
   UserSubscriptionManager,
   type NewChannelMessage
 } from '~/server/api/utils/subscriptionManager'
+import { getUserChannels } from '~/server/db/utils/queries'
+import { incrementMessageReplyCount } from '~/server/db/utils/insertions'
 
 // Event emitter to bridge Postgres notifications to tRPC
 const ee = new EventEmitter()
@@ -49,28 +51,33 @@ export const messagesRouter = createTRPCRouter({
     .input(z.object({ userId: z.string(), content: z.string(), channelId: z.number() }))
     .mutation(async ({ input, ctx }) => {
       const { userId, content, channelId } = input
-      const newMessage = await ctx.db
-        .insert(schema.messages)
-        .values({
-          userId,
-          content,
-          channelId
-        })
-        .returning()
+      try {
+        console.log('channelId', channelId)
+        const newMessage = await ctx.db
+          .insert(schema.messages)
+          .values({
+            userId,
+            content,
+            channelId
+          })
+          .returning()
 
-      if (!newMessage?.[0]?.id) return []
-      // Emit the new message event
-      // The subscription above will handle filtering to only subscribed users
-      const subscriptionMessage: NewChannelMessage = {
-        id: newMessage?.[0]?.id,
-        content: input.content,
-        channelId: input.channelId,
-        userId: ctx.session.user.id,
-        createdAt: new Date()
+        if (!newMessage?.[0]?.id) return []
+        // Emit the new message event
+        // The subscription above will handle filtering to only subscribed users
+        const subscriptionMessage: NewChannelMessage = {
+          id: newMessage?.[0]?.id,
+          content: input.content,
+          channelId: input.channelId,
+          userId: ctx.session.user.id,
+          createdAt: new Date()
+        }
+
+        ee.emit('newMessage', subscriptionMessage)
+        return newMessage
+      } catch (err) {
+        console.error('Error creating new message:', err)
       }
-
-      ee.emit('newMessage', subscriptionMessage)
-      return newMessage
     }),
   getMessagesFromChannel: protectedProcedure
     .input(z.object({ channelId: z.number(), toUserId: z.string().optional() }))
@@ -102,18 +109,23 @@ export const messagesRouter = createTRPCRouter({
         .limit(1)
 
       if (!channelAccess.length) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'You do not have access to this channel'
-        })
+        return []
       }
       const messages = await ctx.db.query.messages.findMany({
-        where: eq(schema.messages.channelId, channelId),
+        where: and(eq(schema.messages.channelId, channelId), eq(schema.messages.isReply, false)),
         with: {
-          user: true,
-          reactions: true
+          user: {
+            columns: {
+              id: true,
+              name: true,
+              image: true
+            }
+          },
+          reactions: true,
+          attachments: true
         }
       })
+
       return messages
     }),
   createMessageReaction: protectedProcedure
@@ -151,6 +163,91 @@ export const messagesRouter = createTRPCRouter({
       })
 
       return newReaction
+    }),
+  createMessageReply: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.number(),
+        content: z.string(),
+        channelId: z.number()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.transaction(async (tx) => {
+        const newMessage = await tx
+          .insert(schema.messages)
+          .values({
+            content: input.content,
+            channelId: input.channelId,
+            userId: ctx.session.user.id,
+            isReply: true
+          })
+          .returning()
+
+        if (!newMessage?.[0]?.id) {
+          return { success: false }
+        }
+
+        await tx.insert(schema.messagesToParents).values({
+          messageId: newMessage[0].id,
+          parentId: input.messageId
+        })
+      })
+
+      await incrementMessageReplyCount(input.messageId)
+
+      ee.emit('newMessage', {
+        id: '',
+        content: '',
+        channelId: input.channelId,
+        userId: ctx.session.user.id
+      })
+
+      return { success: true }
+    }),
+  getMessageReplies: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.number()
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const mainMessage = await ctx.db.query.messages.findFirst({
+        where: eq(schema.messages.id, input.messageId),
+        with: {
+          user: {
+            columns: {
+              id: true,
+              name: true,
+              image: true
+            }
+          },
+          reactions: true,
+          attachments: true
+        }
+      })
+      const replies = await ctx.db.query.messagesToParents.findMany({
+        where: eq(schema.messagesToParents.parentId, input.messageId),
+        with: {
+          message: {
+            with: {
+              user: {
+                columns: {
+                  id: true,
+                  name: true,
+                  image: true
+                }
+              },
+              reactions: true,
+              attachments: true
+            }
+          }
+        }
+      })
+
+      // console.log(mainMessage, replies)
+
+      return { mainMessage, replies }
     }),
   removeMessageReaction: protectedProcedure
     .input(
@@ -230,7 +327,7 @@ export const messagesRouter = createTRPCRouter({
         id: schema.users.id,
         name: schema.users.name,
         avatar: schema.users.image,
-        conversationId: schema.conversationsTable.id
+        channelId: schema.conversationsTable.channelId
       })
       .from(schema.users)
       .where(ne(schema.users.id, ctx.session.user.id))
@@ -251,36 +348,32 @@ export const messagesRouter = createTRPCRouter({
     return onlineUsers
   }),
   getChannels: protectedProcedure.query(async ({ ctx }) => {
-    const userChannels = await ctx.db
-      .select({
-        id: schema.channels.id,
-        name: schema.channels.name,
-        description: schema.channels.description,
-        isPrivate: schema.channels.isPrivate,
-        createdAt: schema.channels.createdAt,
-        // Use a left join to get isAdmin, which might be null for public channels
-        isAdmin: schema.channelMembers.isAdmin
-      })
-      .from(schema.channels)
-      .leftJoin(
-        schema.channelMembers,
-        and(
-          eq(schema.channels.id, schema.channelMembers.channelId),
-          eq(schema.channelMembers.userId, ctx.session.user.id)
-        )
-      )
-      .where(
-        and(
-          eq(schema.channels.isConversation, false),
+    let userChannels = await getUserChannels(ctx.db, ctx.session.user.id)
+    if (!userChannels.length) {
+      await ctx.db.transaction(async (tx) => {
+        const [newChannel] = await tx
+          .insert(schema.channels)
+          .values({
+            name: 'Home',
+            createdById: ctx.session.user.id,
+            description: '',
+            isPrivate: false
+          })
+          .returning()
+        if (!newChannel) {
+          return []
+        }
 
-          or(
-            // Include channel if it's public
-            eq(schema.channels.isPrivate, false),
-            // OR if user is a member (for private channels)
-            eq(schema.channelMembers.userId, ctx.session.user.id)
-          )
-        )
-      )
+        // Add creator as channel member and admin
+        await tx.insert(schema.channelMembers).values({
+          channelId: newChannel.id,
+          userId: ctx.session.user.id,
+          isAdmin: true // Creator should probably be an admin
+        })
+      })
+
+      userChannels = await getUserChannels(ctx.db, ctx.session.user.id)
+    }
 
     return userChannels
   }),
