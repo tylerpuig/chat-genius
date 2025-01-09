@@ -15,6 +15,7 @@ import { type ChatTab } from '~/app/store/features/ui/types'
 import { AvatarStack } from './AvatarStack'
 import { Skeleton } from '~/components/ui/skeleton'
 import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
+import { SidebarTrigger } from '~/components/ui/sidebar'
 
 type NavItemProps = {
   icon: React.ReactNode
@@ -55,17 +56,19 @@ function DisplayCurrentChannelName() {
   const { selectedChannelName } = useUI()
 
   return (
-    <>
-      {!selectedChannelName ? (
-        <>
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
-            {'# '} <Skeleton className="h-4 w-16" />
-          </h2>
-        </>
-      ) : (
-        <h2 className="text-lg font-semibold text-white">{'# ' + (selectedChannelName || '')}</h2>
-      )}
-    </>
+    <div>
+      <div className="flex items-center gap-2">
+        {!selectedChannelName ? (
+          <>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+              {'# '} <Skeleton className="h-4 w-16" />
+            </h2>
+          </>
+        ) : (
+          <h2 className="text-lg font-semibold text-white">{'# ' + (selectedChannelName || '')}</h2>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -73,10 +76,10 @@ export default function ChatTabs() {
   const { currentTab, selectedChannelName } = useUI()
   return (
     <div className="flex flex-col gap-1 bg-gray-900/40 p-2">
-      <div className="flex items-center justify-between px-3 py-2">
-        <DisplayCurrentChannelName />
+      <div className="flex items-center justify-between pb-3">
+        <SidebarTrigger variant="sidebarTrigger" className=""></SidebarTrigger>
         <DropdownMenu>
-          <DropdownMenuTrigger className="outline-none">
+          <DropdownMenuTrigger className="pr-2 outline-none">
             <Avatar className="h-8 w-8 border border-blue-600/50 hover:border-blue-500">
               {/* <AvatarImage src="/placeholder.svg" /> */}
               <AvatarFallback className="bg-blue-950 text-blue-200">AI</AvatarFallback>
@@ -95,6 +98,8 @@ export default function ChatTabs() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <DisplayCurrentChannelName />
 
       <div className="-mb-[2px] flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">

@@ -16,6 +16,9 @@ const ee = new EventEmitter()
 const subscriptionManager = new UserSubscriptionManager()
 
 export const messagesRouter = createTRPCRouter({
+  testS3Connection: protectedProcedure.mutation(async ({ ctx }) => {
+    // await listBucketContents()
+  }),
   onMessage: protectedProcedure
     .input(
       z.object({
