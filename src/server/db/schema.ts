@@ -1,15 +1,6 @@
 import { relations, sql } from 'drizzle-orm'
 import { boolean } from 'drizzle-orm/pg-core'
-import {
-  index,
-  integer,
-  pgTableCreator,
-  primaryKey,
-  text,
-  timestamp,
-  varchar,
-  pgTable
-} from 'drizzle-orm/pg-core'
+import { index, integer, primaryKey, text, timestamp, varchar, pgTable } from 'drizzle-orm/pg-core'
 import { type AdapterAccount } from 'next-auth/adapters'
 
 /**
@@ -183,7 +174,8 @@ export const messages = pgTable(
       .notNull(),
     isPinned: boolean('is_pinned').default(false).notNull(),
     isReply: boolean('is_reply').default(false).notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date())
+    updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date()),
+    replyCount: integer('reply_count').default(0).notNull()
   },
   (message) => [
     index('message_channel_id_idx').on(message.channelId),

@@ -66,6 +66,7 @@ CREATE TABLE "message" (
 	"is_pinned" boolean DEFAULT false NOT NULL,
 	"is_reply" boolean DEFAULT false NOT NULL,
 	"updated_at" timestamp with time zone,
+	"reply_count" integer DEFAULT 0 NOT NULL,
 	CONSTRAINT "message_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
