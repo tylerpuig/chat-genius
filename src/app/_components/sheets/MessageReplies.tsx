@@ -1,30 +1,24 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
 import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle
-} from '~/components/ui/sheet'
-import { Textarea } from '~/components/ui/textarea'
-import { Switch } from '~/components/ui/switch'
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import { Sheet, SheetContent } from '~/components/ui/sheet'
 import { api } from '~/trpc/react'
 import { useSession } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { ChatMessage } from '~/app/_components/chat/ChatMessage'
 import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
+import { Skeleton } from '~/components/ui/skeleton'
 
 export function ViewMessageRepliesSheet() {
   const { messageReplySheetOpen, setMessageReplySheetOpen, selectedParentMessageId } = useUI()
   const { messages } = useChannelContext()
 
-  const { data: replies, refetch } = api.messages.getMessageReplies.useQuery({
+  const {
+    data: messageData,
+    refetch,
+    isPending
+  } = api.messages.getMessageReplies.useQuery({
     messageId: selectedParentMessageId || 0
   })
 
@@ -40,29 +34,51 @@ export function ViewMessageRepliesSheet() {
           setMessageReplySheetOpen(open)
         }}
       >
-        <SheetContent className="scrollbar-overlay overflow-x-hidden border-gray-700 bg-gray-900 px-0 py-0 text-gray-200">
-          {/* <SheetHeader>
-          <SheetTitle className="text-gray-200">Create a new channel</SheetTitle>
-          <SheetDescription className="text-gray-400">
-            Set up a new channel for your team to collaborate.
-          </SheetDescription>
-        </SheetHeader> */}
-          {replies?.mainMessage && (
-            <div className="pt-4">
-              <ChatMessage key={replies?.mainMessage?.id} message={replies?.mainMessage} isReply />
-            </div>
-          )}
-          <ReplySeparator replyCount={replies?.mainMessage?.replyCount || 0} />
-          {replies?.replies && (
-            <div className="pt-2">
-              {replies?.replies.map((message) => (
-                <ChatMessage key={message.messageId} message={message.message} isReply />
-              ))}
-            </div>
-          )}
+        <SheetContent
+          useXButton={false}
+          className="scrollbar-overlay flex h-full flex-col break-words border-gray-700 bg-gray-900 p-0 text-gray-200"
+        >
+          <div className="scrollbar-overlay flex-1 overflow-y-auto">
+            {!isPending ? (
+              <div>
+                {messageData?.mainMessage && (
+                  <div className="">
+                    <ChatMessage
+                      key={messageData?.mainMessage?.id}
+                      message={messageData?.mainMessage}
+                      isReply
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <MainMessageLoader />
+            )}
+
+            <ReplySeparator replyCount={messageData?.mainMessage?.replyCount || 0} />
+            {messageData?.replies && (
+              <div className="pt-2">
+                {messageData?.replies.map((message) => (
+                  <ChatMessage key={message.messageId} message={message.message} isReply />
+                ))}
+              </div>
+            )}
+          </div>
           <ChatInput />
         </SheetContent>
       </Sheet>
+    </div>
+  )
+}
+
+function MainMessageLoader() {
+  return (
+    <div className="flex items-center space-x-4 p-4">
+      <Skeleton className="h-12 w-12 rounded-full" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-[250px]" />
+        <Skeleton className="h-4 w-[200px]" />
+      </div>
     </div>
   )
 }
@@ -84,7 +100,7 @@ export function ChatInput() {
   const messageContentRef = useRef<HTMLInputElement>(null)
   const session = useSession()
   return (
-    <div className="sticky bottom-0 left-0 right-0 border-t border-gray-800 bg-gray-900 p-4">
+    <div className="sticky bottom-0 left-0 right-0 -mt-3 border-t border-gray-800 bg-gray-900 p-4">
       <div className="flex items-center gap-4">
         <input
           ref={messageContentRef}
@@ -118,7 +134,7 @@ export function ChatInput() {
 
 function ReplySeparator({ replyCount }: { replyCount: number }) {
   return (
-    <div className="my-4 flex items-center">
+    <div className="flex items-center">
       <div className="h-px flex-grow bg-gray-700" />
       <span className="px-4 text-sm text-gray-400">
         {replyCount} {replyCount === 1 ? 'reply' : 'replies'}

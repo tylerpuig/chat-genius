@@ -14,7 +14,7 @@ const MessagesContext = createContext<ChannelContext>({
 })
 
 export function ChannelProvider({ children }: { children: ReactNode }) {
-  const { selectedChannelId, setSelectedChannelId, setSelectedChannelName } = useUI()
+  const { selectedChannelId, setSelectedChannelId, setSelectedChannelName, currentTab } = useUI()
 
   const channels = api.messages.getChannels.useQuery(undefined, {
     enabled: !selectedChannelId
@@ -28,7 +28,8 @@ export function ChannelProvider({ children }: { children: ReactNode }) {
   }, [channels.data])
 
   const { data: messages, refetch } = api.messages.getMessagesFromChannel.useQuery({
-    channelId: selectedChannelId
+    channelId: selectedChannelId,
+    chatTab: currentTab
   })
 
   function refetchMessages(): void {

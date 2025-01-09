@@ -63,7 +63,7 @@ export default function ChatReactions({
   const uniqueReactionsMap = new Map(reactions.map((reaction) => [reaction.emoji, reaction]))
 
   // Take first 3 reactions with all their data
-  const reactionsToRender = Array.from(uniqueReactionsMap.values()).slice(0, 3)
+  const reactionsToRender = Array.from(uniqueReactionsMap.values())
 
   function hasUserReactedWithEmoji(emoji: string): boolean {
     try {
@@ -75,9 +75,9 @@ export default function ChatReactions({
     return false
   }
   return (
-    <>
+    <div className="w-full">
       {reactions.length > 0 && (
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex flex-wrap gap-2">
           {reactionsToRender.map((reaction, index) => (
             <button
               onClick={() => {
@@ -108,8 +108,7 @@ export default function ChatReactions({
           ))}
         </div>
       )}
-      {/* <EmojiPicker messageId={id} /> */}
-    </>
+    </div>
   )
 }
 
