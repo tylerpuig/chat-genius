@@ -8,7 +8,9 @@ const initialState: UIState = {
   selectedChannelName: null,
   selectedDMUserId: null,
   channelSheetOpen: false,
-  uiView: 'channel'
+  messageReplySheetOpen: false,
+  uiView: 'channel',
+  selectedParentMessageId: null
 }
 
 const uiSlice = createSlice({
@@ -40,6 +42,12 @@ const uiSlice = createSlice({
     },
     setUIView: (state, action: PayloadAction<UIView>) => {
       state.uiView = action.payload
+    },
+    setMessageReplySheetOpen: (state, action: PayloadAction<boolean>) => {
+      state.messageReplySheetOpen = action.payload
+    },
+    setSelectedParentMessageId: (state, action: PayloadAction<number | null>) => {
+      state.selectedParentMessageId = action.payload
     }
   }
 })
@@ -52,7 +60,9 @@ export const {
   setSelectedChannelName,
   resetSelections,
   setChannelSheetOpen,
-  setUIView
+  setUIView,
+  setMessageReplySheetOpen,
+  setSelectedParentMessageId
 } = uiSlice.actions
 
 export default uiSlice.reducer

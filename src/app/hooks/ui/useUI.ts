@@ -1,35 +1,21 @@
 import { useSelector } from 'react-redux'
 import { useAppDispatch } from '../useAppDispatch'
-import {
-  selectCurrentTab,
-  selectSelectedPostId,
-  selectSelectedChannelId,
-  selectSelectedDMUserId,
-  selectSelectedChannelName,
-  selectChannelSheetOpen,
-  selectUIView
-} from '../../store/features/ui/selectors'
-import {
-  setCurrentTab,
-  setSelectedPostId,
-  setSelectedChannelId,
-  setSelectedDMUserId,
-  setSelectedChannelName,
-  setChannelSheetOpen,
-  setUIView
-} from '../../store/features/ui/uiSlice'
+import * as uiSelectors from '../../store/features/ui/selectors'
+import * as uiSlice from '../../store/features/ui/uiSlice'
 import type { ChatTab, UIView } from '../../store/features/ui/types'
 
 export const useUI = () => {
   const dispatch = useAppDispatch()
 
-  const currentTab = useSelector(selectCurrentTab)
-  const selectedPostId = useSelector(selectSelectedPostId)
-  const selectedChannelId = useSelector(selectSelectedChannelId)
-  const selectedChannelName = useSelector(selectSelectedChannelName)
-  const selectedDMUserId = useSelector(selectSelectedDMUserId)
-  const channelSheetOpen = useSelector(selectChannelSheetOpen)
-  const uiView = useSelector(selectUIView)
+  const currentTab = useSelector(uiSelectors.selectCurrentTab)
+  const selectedPostId = useSelector(uiSelectors.selectSelectedPostId)
+  const selectedChannelId = useSelector(uiSelectors.selectSelectedChannelId)
+  const selectedChannelName = useSelector(uiSelectors.selectSelectedChannelName)
+  const selectedDMUserId = useSelector(uiSelectors.selectSelectedDMUserId)
+  const channelSheetOpen = useSelector(uiSelectors.selectChannelSheetOpen)
+  const uiView = useSelector(uiSelectors.selectUIView)
+  const messageReplySheetOpen = useSelector(uiSelectors.selectMessageReplySheetOpen)
+  const selectedParentMessageId = useSelector(uiSelectors.selectSelectedParentMessageId)
 
   return {
     // State
@@ -40,15 +26,20 @@ export const useUI = () => {
     selectedChannelName,
     channelSheetOpen,
     uiView,
+    messageReplySheetOpen,
+    selectedParentMessageId,
 
     // Actions
-    switchTab: (tab: ChatTab) => dispatch(setCurrentTab(tab)),
-    selectPost: (postId: string | null) => dispatch(setSelectedPostId(postId)),
-    setSelectedChannelId: (channelId: number) => dispatch(setSelectedChannelId(channelId)),
+    switchTab: (tab: ChatTab) => dispatch(uiSlice.setCurrentTab(tab)),
+    selectPost: (postId: string | null) => dispatch(uiSlice.setSelectedPostId(postId)),
+    setSelectedChannelId: (channelId: number) => dispatch(uiSlice.setSelectedChannelId(channelId)),
     setSelectedChannelName: (channelName: string | null) =>
-      dispatch(setSelectedChannelName(channelName)),
-    selectDMUser: (userId: string | null) => dispatch(setSelectedDMUserId(userId)),
-    setChannelSheetOpen: (open: boolean) => dispatch(setChannelSheetOpen(open)),
-    setUIView: (view: UIView) => dispatch(setUIView(view))
+      dispatch(uiSlice.setSelectedChannelName(channelName)),
+    selectDMUser: (userId: string | null) => dispatch(uiSlice.setSelectedDMUserId(userId)),
+    setChannelSheetOpen: (open: boolean) => dispatch(uiSlice.setChannelSheetOpen(open)),
+    setUIView: (view: UIView) => dispatch(uiSlice.setUIView(view)),
+    setMessageReplySheetOpen: (open: boolean) => dispatch(uiSlice.setMessageReplySheetOpen(open)),
+    setSelectedParentMessageId: (messageId: number | null) =>
+      dispatch(uiSlice.setSelectedParentMessageId(messageId))
   }
 }
