@@ -86,11 +86,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   messages: many(messages),
   accounts: many(accounts),
   conversations: many(conversationsTable)
-  // sentPrivateMessages: many(privateMessages, { relationName: 'fromUser' }),
-  // receivedPrivateMessages: many(privateMessages, { relationName: 'toUser' })
 }))
-
-// export const usersRelations = relations(users, ({ many }) => ({}));
 
 export const accounts = pgTable(
   'account',
@@ -155,6 +151,22 @@ export const verificationTokens = pgTable(
   (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
 )
 
+export const messageAttachmentsTable = pgTable(
+  'message_attachment',
+  {
+    id: integer('id').unique().primaryKey().generatedAlwaysAsIdentity(),
+    messageId: integer('message_id')
+      .notNull()
+      .references(() => messages.id),
+    downloadUrl: text('download_url').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date())
+  },
+  (attachment) => [index('attachment_message_id_idx').on(attachment.messageId)]
+)
+
 export const messages = pgTable(
   'message',
   {
@@ -169,6 +181,8 @@ export const messages = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
+    isPinned: boolean('is_pinned').default(false).notNull(),
+    isReply: boolean('is_reply').default(false).notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date())
   },
   (message) => [
@@ -176,6 +190,34 @@ export const messages = pgTable(
     index('message_user_id_idx').on(message.userId)
   ]
 )
+
+export const messagesToParents = pgTable(
+  'messages_to_parents',
+  {
+    messageId: integer('message_id')
+      .notNull()
+      .references(() => messages.id),
+    parentId: integer('parent_id')
+      .notNull()
+      .references(() => messages.id)
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.messageId, t.parentId] })
+  })
+)
+
+export const messagesToParentsRelations = relations(messagesToParents, ({ one }) => ({
+  message: one(messages, {
+    fields: [messagesToParents.messageId],
+    references: [messages.id],
+    relationName: 'childMessage'
+  }),
+  parent: one(messages, {
+    fields: [messagesToParents.parentId],
+    references: [messages.id],
+    relationName: 'parentMessage'
+  })
+}))
 
 export const channelMembers = pgTable(
   'channel_member',
@@ -198,6 +240,23 @@ export const channelMembers = pgTable(
   ]
 )
 
+export const messageReactions = pgTable(
+  'message_reaction',
+  {
+    messageId: integer('message_id')
+      .notNull()
+      .references(() => messages.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    emoji: varchar('emoji', { length: 32 }).notNull()
+  },
+  (reaction) => [
+    primaryKey({ columns: [reaction.messageId, reaction.userId, reaction.emoji] }),
+    index('message_reaction_message_emoji_idx').on(reaction.messageId, reaction.emoji)
+  ]
+)
+
 // Relations
 export const channelsRelations = relations(channels, ({ many, one }) => ({
   members: many(channelMembers),
@@ -215,7 +274,21 @@ export const messagesRelations = relations(messages, ({ one, many }) => ({
     references: [channels.id]
   }),
   user: one(users, { fields: [messages.userId], references: [users.id] }),
-  reactions: many(messageReactions)
+  reactions: many(messageReactions),
+  childMessages: many(messagesToParents, {
+    relationName: 'childMessage'
+  }),
+  parentMessages: many(messagesToParents, {
+    relationName: 'parentMessage'
+  }),
+  attachments: many(messageAttachmentsTable)
+}))
+
+export const messageAttachmentsRelations = relations(messageAttachmentsTable, ({ one }) => ({
+  message: one(messages, {
+    fields: [messageAttachmentsTable.messageId],
+    references: [messages.id]
+  })
 }))
 
 export const channelMembersRelations = relations(channelMembers, ({ one, many }) => ({
@@ -226,23 +299,6 @@ export const channelMembersRelations = relations(channelMembers, ({ one, many })
   user: one(users, { fields: [channelMembers.userId], references: [users.id] }),
   reactions: many(messageReactions) // Add the reactions relation
 }))
-
-export const messageReactions = pgTable(
-  'message_reaction',
-  {
-    messageId: integer('message_id')
-      .notNull()
-      .references(() => messages.id, { onDelete: 'cascade' }),
-    userId: varchar('user_id', { length: 255 })
-      .notNull()
-      .references(() => users.id),
-    emoji: varchar('emoji', { length: 32 }).notNull()
-  },
-  (reaction) => [
-    primaryKey({ columns: [reaction.messageId, reaction.userId, reaction.emoji] }),
-    index('message_reaction_message_emoji_idx').on(reaction.messageId, reaction.emoji)
-  ]
-)
 
 export const messageReactionsRelations = relations(messageReactions, ({ one }) => ({
   message: one(messages, {
