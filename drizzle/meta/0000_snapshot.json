@@ -1,5 +1,5 @@
 {
-  "id": "480a7be2-1ee9-4a2c-b36a-274954712b18",
+  "id": "eed4fcd2-d92f-4de3-b3e6-61272104dcd7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -195,7 +195,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "channel_member_user_id_user_id_fk": {
@@ -540,7 +540,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -719,6 +719,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "attachment_count": {
+          "name": "attachment_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         }
       },
       "indexes": {
@@ -764,7 +771,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "message_user_id_user_id_fk": {
@@ -824,7 +831,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "messages_to_parents_parent_id_message_id_fk": {
@@ -837,7 +844,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -847,6 +854,66 @@
           "columns": [
             "message_id",
             "parent_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.saved_message": {
+      "name": "saved_message",
+      "schema": "",
+      "columns": {
+        "message_id": {
+          "name": "message_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "saved_message_message_id_message_id_fk": {
+          "name": "saved_message_message_id_message_id_fk",
+          "tableFrom": "saved_message",
+          "tableTo": "message",
+          "columnsFrom": [
+            "message_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "saved_message_user_id_user_id_fk": {
+          "name": "saved_message_user_id_user_id_fk",
+          "tableFrom": "saved_message",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "saved_message_message_id_user_id_pk": {
+          "name": "saved_message_message_id_user_id_pk",
+          "columns": [
+            "message_id",
+            "user_id"
           ]
         }
       },

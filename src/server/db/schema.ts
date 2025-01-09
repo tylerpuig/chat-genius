@@ -148,7 +148,7 @@ export const messageAttachmentsTable = pgTable(
     id: integer('id').unique().primaryKey().generatedAlwaysAsIdentity(),
     messageId: integer('message_id')
       .notNull()
-      .references(() => messages.id),
+      .references(() => messages.id, { onDelete: 'cascade' }),
     downloadUrl: text('download_url').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -165,7 +165,7 @@ export const messages = pgTable(
     content: text('content').notNull(),
     channelId: integer('channel_id')
       .notNull()
-      .references(() => channels.id),
+      .references(() => channels.id, { onDelete: 'cascade' }),
     userId: varchar('user_id', { length: 255 })
       .notNull()
       .references(() => users.id),
@@ -175,7 +175,8 @@ export const messages = pgTable(
     isPinned: boolean('is_pinned').default(false).notNull(),
     isReply: boolean('is_reply').default(false).notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date()),
-    replyCount: integer('reply_count').default(0).notNull()
+    replyCount: integer('reply_count').default(0).notNull(),
+    attachmentCount: integer('attachment_count').default(0).notNull()
   },
   (message) => [
     index('message_channel_id_idx').on(message.channelId),
@@ -188,10 +189,10 @@ export const messagesToParents = pgTable(
   {
     messageId: integer('message_id')
       .notNull()
-      .references(() => messages.id),
+      .references(() => messages.id, { onDelete: 'cascade' }),
     parentId: integer('parent_id')
       .notNull()
-      .references(() => messages.id)
+      .references(() => messages.id, { onDelete: 'cascade' })
   },
   (t) => ({
     pk: primaryKey({ columns: [t.messageId, t.parentId] })
@@ -211,12 +212,36 @@ export const messagesToParentsRelations = relations(messagesToParents, ({ one })
   })
 }))
 
+export const savedMessagesTable = pgTable(
+  'saved_message',
+  {
+    messageId: integer('message_id')
+      .notNull()
+      .references(() => messages.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 255 })
+      .notNull()
+      .references(() => users.id)
+  },
+  (t) => [primaryKey({ columns: [t.messageId, t.userId] })]
+)
+
+export const savedMessagesRelations = relations(savedMessagesTable, ({ one }) => ({
+  message: one(messages, {
+    fields: [savedMessagesTable.messageId],
+    references: [messages.id]
+  }),
+  user: one(users, {
+    fields: [savedMessagesTable.userId],
+    references: [users.id]
+  })
+}))
+
 export const channelMembers = pgTable(
   'channel_member',
   {
     channelId: integer('channel_id')
       .notNull()
-      .references(() => channels.id),
+      .references(() => channels.id, { onDelete: 'cascade' }),
     userId: varchar('user_id', { length: 255 })
       .notNull()
       .references(() => users.id),
