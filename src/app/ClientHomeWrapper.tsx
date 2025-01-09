@@ -31,18 +31,18 @@ function ChannelView() {
 export default function ClientHomeWrapper() {
   return (
     <div className="flex h-screen">
-      <WorkspaceSidebar />
+      {/* <WorkspaceSidebar /> */}
       <div className="flex-1">
-        <Layout>
-          <div className="flex h-full flex-col">
-            <ChatTabs />
-            <div className="relative flex flex-1 flex-col overflow-hidden">
-              <HomeComponentToRender />
-            </div>
+        {/* <Layout> */}
+        <div className="flex h-full flex-col">
+          <ChatTabs />
+          <div className="relative flex flex-1 flex-col overflow-hidden">
+            <HomeComponentToRender />
           </div>
-          <NewChannelSheet />
-          <ViewMessageRepliesSheet />
-        </Layout>
+        </div>
+        <NewChannelSheet />
+        <ViewMessageRepliesSheet />
+        {/* </Layout> */}
       </div>
     </div>
   )
