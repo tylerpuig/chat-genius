@@ -12,3 +12,5 @@ export const selectSelectedParentMessageId = (state: RootState) => state.ui.sele
 export const selectFileUploadModalOpen = (state: RootState) => state.ui.fileUploadModalOpen
 export const selectMessageAttachmentsSheetOpen = (state: RootState) =>
   state.ui.messageAttachmentsSheetOpen
+export const selectConversationUser = (state: RootState) => state.ui.conversationUser
+export const selectIsConversation = (state: RootState) => state.ui.isConversation

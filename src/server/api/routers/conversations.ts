@@ -8,6 +8,12 @@ export const conversationsRouter = createTRPCRouter({
   createConversation: protectedProcedure
     .input(z.object({ toUserId: z.string() }))
     .mutation(async ({ input, ctx }) => {
+      const [toUser] = await ctx.db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.id, input.toUserId))
+        .limit(1)
+      console.log('toUser', toUser)
       const conversation = await ctx.db
         .select()
         .from(schema.conversationsTable)
@@ -25,6 +31,8 @@ export const conversationsRouter = createTRPCRouter({
         )
         .limit(1)
 
+      console.log('conversation', conversation)
+
       let conversationId: number = conversation[0]?.channelId || 0
 
       if (!conversation?.length) {
@@ -40,37 +48,47 @@ export const conversationsRouter = createTRPCRouter({
               isConversation: true
             })
             .returning()
-          if (!newChannel) {
+          if (!newChannel?.id) {
             throw new Error('Failed to create channel')
           }
 
-          // Add creator as channel member and admin
-          await tx.insert(schema.channelMembers).values({
-            channelId: newChannel.id,
-            userId: ctx.session.user.id,
-            isAdmin: true // Creator should probably be an admin
+          // Add both channel members in parallel
+          await Promise.all([
+            tx.insert(schema.channelMembers).values({
+              channelId: newChannel.id,
+              userId: ctx.session.user.id,
+              isAdmin: true
+            }),
+            tx.insert(schema.channelMembers).values({
+              channelId: newChannel.id,
+              userId: input.toUserId,
+              isAdmin: true
+            })
+          ]).catch((error) => {
+            throw new Error(`Failed to create channel members: ${error.message}`)
           })
 
-          // Add other users as channel members
-          await tx.insert(schema.channelMembers).values({
-            channelId: newChannel.id,
-            userId: input.toUserId,
-            isAdmin: true
-          })
-
-          // create new conversation
-          await tx.insert(schema.conversationsTable).values({
-            user1Id: ctx.session.user.id,
-            user2Id: input.toUserId,
-            channelId: newChannel.id
-          })
+          const [newConversation] = await tx
+            .insert(schema.conversationsTable)
+            .values({
+              user1Id: ctx.session.user.id,
+              user2Id: input.toUserId,
+              channelId: newChannel.id
+            })
+            .returning()
+          if (!newConversation) {
+            throw new Error('Failed to create conversation')
+          }
 
           conversationId = newChannel.id
         })
         // create a new conversation
 
+        console.log('conversationId', conversationId)
+
         return { newConversationId: conversationId }
       }
+      console.log('conversationId', conversationId)
 
       return { newConversationId: conversationId }
     })

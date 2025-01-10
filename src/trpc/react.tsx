@@ -70,7 +70,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             transformer: SuperJSON
           }),
           false: httpBatchLink({
-            url: `/api/trpc`,
+            url: `${getBaseUrl()}/api/trpc`,
             transformer: SuperJSON
           })
         })

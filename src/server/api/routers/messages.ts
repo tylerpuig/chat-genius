@@ -413,9 +413,9 @@ export const messagesRouter = createTRPCRouter({
       .selectDistinct({
         id: schema.users.id,
         name: schema.users.name,
-        avatar: schema.users.image,
+        image: schema.users.image,
         channelId: schema.conversationsTable.channelId,
-        createdAt: schema.conversationsTable.createdAt,
+        // createdAt: schema.conversationsTable.createdAt,
         lastOnline: schema.users.lastOnline
       })
       .from(schema.users)

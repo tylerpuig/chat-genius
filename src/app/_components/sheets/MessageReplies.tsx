@@ -63,7 +63,7 @@ export function ViewMessageRepliesSheet() {
   }
 
   return (
-    <div className="">
+    <div className="scrollbar-overlay">
       <Sheet
         open={messageReplySheetOpen}
         onOpenChange={(open) => {
@@ -74,7 +74,7 @@ export function ViewMessageRepliesSheet() {
           useXButton={false}
           className="scrollbar-overlay flex h-full flex-col break-words border-gray-700 bg-gray-900 p-0 text-gray-200"
         >
-          <div className="scrollbar-overlay flex-1 overflow-y-auto">
+          <div className="scrollbar-overlay flex-1 overflow-auto pb-20">
             {!isPending ? (
               <div>
                 {messageData?.mainMessage && (

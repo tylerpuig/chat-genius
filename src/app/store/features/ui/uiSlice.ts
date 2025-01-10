@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { UIState, ChatTab, UIView } from './types'
+import { type ConversationUser } from '~/server/db/types'
 
 const initialState: UIState = {
   currentTab: 'Messages',
@@ -12,7 +13,9 @@ const initialState: UIState = {
   uiView: 'channel',
   selectedParentMessageId: null,
   fileUploadModalOpen: false,
-  messageAttachmentsSheetOpen: false
+  messageAttachmentsSheetOpen: false,
+  conversationUser: null,
+  isConversation: false
 }
 
 const uiSlice = createSlice({
@@ -55,6 +58,12 @@ const uiSlice = createSlice({
     },
     setMessageAttachmentsSheetOpen: (state, action: PayloadAction<boolean>) => {
       state.messageAttachmentsSheetOpen = action.payload
+    },
+    setConversationUser: (state, action: PayloadAction<ConversationUser | null>) => {
+      state.conversationUser = action.payload
+    },
+    setIsConversation: (state, action: PayloadAction<boolean>) => {
+      state.isConversation = action.payload
     }
   }
 })
@@ -71,7 +80,9 @@ export const {
   setMessageReplySheetOpen,
   setSelectedParentMessageId,
   setFileUploadModalOpen,
-  setMessageAttachmentsSheetOpen
+  setMessageAttachmentsSheetOpen,
+  setConversationUser,
+  setIsConversation
 } = uiSlice.actions
 
 export default uiSlice.reducer

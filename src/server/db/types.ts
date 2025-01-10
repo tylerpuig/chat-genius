@@ -3,3 +3,7 @@ import * as schema from '~/server/db/schema'
 
 export type ChatMessage = InferSelectModel<typeof schema.messages>
 export type User = InferSelectModel<typeof schema.users>
+export type ConversationUser = Omit<
+  InferSelectModel<typeof schema.users>,
+  'password' | 'emailVerified' | 'email'
+> & { channelId: number | null }

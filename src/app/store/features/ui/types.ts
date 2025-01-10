@@ -1,5 +1,6 @@
 export type ChatTab = 'Messages' | 'Files' | 'Pins' | 'Saved'
 export type UIView = 'channel' | 'conversation'
+import { type ConversationUser } from '~/server/db/types'
 
 export type UIState = {
   currentTab: ChatTab
@@ -13,4 +14,6 @@ export type UIState = {
   selectedParentMessageId: number | null
   fileUploadModalOpen: boolean
   messageAttachmentsSheetOpen: boolean
+  conversationUser: ConversationUser | null
+  isConversation: boolean
 }

@@ -3,6 +3,7 @@ import { useAppDispatch } from '../useAppDispatch'
 import * as uiSelectors from '../../store/features/ui/selectors'
 import * as uiSlice from '../../store/features/ui/uiSlice'
 import type { ChatTab, UIView } from '../../store/features/ui/types'
+import { type ConversationUser } from '~/server/db/types'
 
 export const useUI = () => {
   const dispatch = useAppDispatch()
@@ -18,6 +19,8 @@ export const useUI = () => {
   const selectedParentMessageId = useSelector(uiSelectors.selectSelectedParentMessageId)
   const fileUploadModalOpen = useSelector(uiSelectors.selectFileUploadModalOpen)
   const messageAttachmentsSheetOpen = useSelector(uiSelectors.selectMessageAttachmentsSheetOpen)
+  const conversationUser = useSelector(uiSelectors.selectConversationUser)
+  const isConversation = useSelector(uiSelectors.selectIsConversation)
 
   return {
     // State
@@ -32,6 +35,8 @@ export const useUI = () => {
     selectedParentMessageId,
     fileUploadModalOpen,
     messageAttachmentsSheetOpen,
+    conversationUser,
+    isConversation,
 
     // Actions
     switchTab: (tab: ChatTab) => dispatch(uiSlice.setCurrentTab(tab)),
@@ -47,6 +52,10 @@ export const useUI = () => {
       dispatch(uiSlice.setSelectedParentMessageId(messageId)),
     setFileUploadModalOpen: (open: boolean) => dispatch(uiSlice.setFileUploadModalOpen(open)),
     setMessageAttachmentsSheetOpen: (open: boolean) =>
-      dispatch(uiSlice.setMessageAttachmentsSheetOpen(open))
+      dispatch(uiSlice.setMessageAttachmentsSheetOpen(open)),
+    setConversationUser: (user: ConversationUser | null) =>
+      dispatch(uiSlice.setConversationUser(user)),
+    setIsConversation: (isConversation: boolean) =>
+      dispatch(uiSlice.setIsConversation(isConversation))
   }
 }
