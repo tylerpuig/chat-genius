@@ -12,7 +12,7 @@ export function AvatarStack() {
 
   return (
     <div className="flex px-3">
-      <div className="flex items-center rounded-md bg-gray-700">
+      <div className="flex items-center rounded-md bg-gray-700 hover:bg-gray-600">
         <div className="flex -space-x-3 py-[.30rem] pl-2">
           {isLoading &&
             !channelUsers &&

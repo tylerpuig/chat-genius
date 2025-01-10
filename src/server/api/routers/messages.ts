@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import EventEmitter, { on } from 'events'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
-import { eq, and, or, ne, sql, asc, desc } from 'drizzle-orm'
+import { eq, and, or, ne, sql, desc } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import {
   UserSubscriptionManager,
