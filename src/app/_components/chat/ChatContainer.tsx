@@ -7,95 +7,48 @@ import { api } from '../../../trpc/react'
 import { useSession } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
-import { Plus, Gift, Smile, Paperclip, Grid } from 'lucide-react'
+import { Gift, Smile, Paperclip, Grid } from 'lucide-react'
 import { Textarea } from '~/components/ui/textarea'
 import { useFileAttachmentContext } from '~/app/hooks/ui/useFileAttachmentContext'
 
 export function MessageInput() {
-  const [content, setContent] = useState('')
-  const [isUploading, setIsUploading] = useState(false)
-  const { files, setFiles } = useFileAttachmentContext()
+  const [messageContent, setMessageContent] = useState('')
+  const { files, handleFileChange, uploadToS3 } = useFileAttachmentContext()
+  const { data: session } = useSession()
 
-  // const [files, setFiles] = useState<File[]>([])
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
-  const { setFileUploadModalOpen, fileUploadModalOpen } = useUI()
+  const { setFileUploadModalOpen, fileUploadModalOpen, selectedChannelId } = useUI()
 
-  // Get tRPC utils
-  const getUploadUrl = api.messages.getSignedS3UploadUrl.useMutation()
-
-  const uploadToS3 = async () => {
-    if (!files.length) return
-
-    setIsUploading(true)
-    const uploadedFileUrls: string[] = []
-
-    try {
-      await Promise.all(
-        files.map(async (file) => {
-          // Get pre-signed URL
-          const data = await getUploadUrl.mutateAsync({
-            fileName: file.name,
-            fileType: file.type
-          })
-
-          if (!data) {
-            throw new Error('Failed to get pre-signed URL')
-          }
-
-          console.log(data)
-
-          // Upload to S3
-          const uploadResponse = await fetch(data.uploadUrl, {
-            method: 'PUT',
-            body: file,
-            headers: {
-              'Content-Type': file.type
-            }
-          })
-
-          if (!uploadResponse.ok) {
-            throw new Error(`Failed to upload ${file.name}`)
-          }
-
-          console.log(uploadResponse)
-
-          uploadedFileUrls.push(data.fileUrl)
-        })
-      )
-
-      setUploadedUrls(uploadedFileUrls)
-      setFiles([]) // Clear files after successful upload
-    } catch (error) {
-      console.error('Upload failed:', error)
-    } finally {
-      setIsUploading(false)
+  const createMessage = api.messages.sendMessage.useMutation({
+    onSettled: () => {
+      setMessageContent('')
     }
-  }
-
-  console.log('uploadedUrls', uploadedUrls)
+  })
 
   // For the send message function
-  const sendMessage = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      if (files.length) {
-        await uploadToS3()
+  async function sendMessage(e: React.KeyboardEvent<HTMLTextAreaElement>): Promise<void> {
+    try {
+      if (!session?.user.id || !messageContent) return
+
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        const newMessage = await createMessage.mutateAsync({
+          content: messageContent,
+          channelId: selectedChannelId,
+          userId: session?.user.id
+        })
+        if (!newMessage?.[0]?.id) return
+        if (files.length) {
+          await uploadToS3(newMessage?.[0]?.id)
+        }
       }
+    } catch (error) {
+      console.error('Error sending message:', error)
     }
   }
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    console.log('Selected files:', files)
-    if (!files) return
-
-    for (const file of files) {
-      setFiles((prev) => [...prev, file])
-    }
-  }
 
   return (
     <div className="absolute bottom-0 left-0 right-0 border-t border-gray-800 bg-gray-800 p-0">
@@ -103,7 +56,6 @@ export function MessageInput() {
         <Button
           variant="ghost"
           onClick={() => setFileUploadModalOpen(true)}
-          // onClick={handleButtonClick}
           size="icon"
           className="relative text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
         >
@@ -120,8 +72,8 @@ export function MessageInput() {
           <Textarea
             ref={inputRef}
             contentEditable={true}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            value={messageContent}
+            onChange={(e) => setMessageContent(e.target.value)}
             placeholder="Message #startups"
             className="!border-1 min-h-[40px] resize-none overflow-hidden !border-gray-700 bg-zinc-800 p-2 text-zinc-100 placeholder:text-zinc-400 focus-visible:ring-0"
             onKeyDown={sendMessage}

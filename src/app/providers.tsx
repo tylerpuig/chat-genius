@@ -7,7 +7,6 @@ import { SessionProvider } from 'next-auth/react'
 import { TRPCReactProvider } from '~/trpc/react'
 import { ChannelProvider } from '~/app/hooks/ui/useChannelContext'
 import { SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar'
-import { AppSidebar } from './_components/AppSidebar'
 import { FileAttachmentProvider } from '~/app/hooks/ui/useFileAttachmentContext'
 
 export function Providers({ children }: { children: React.ReactNode }) {

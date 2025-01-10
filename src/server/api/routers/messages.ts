@@ -535,5 +535,30 @@ export const messagesRouter = createTRPCRouter({
       const uploadData = await generatePresignedUrl(fileName)
 
       return uploadData
+    }),
+  saveMessageAttachments: protectedProcedure
+    .input(
+      z.object({
+        files: z.array(
+          z.object({
+            fileKey: z.string(),
+            fileName: z.string(),
+            fileType: z.string(),
+            fileSize: z.number(),
+            messageId: z.number()
+          })
+        ),
+        channelId: z.number()
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      await ctx.db.insert(schema.messageAttachmentsTable).values(input.files)
+
+      ee.emit('newMessage', {
+        id: input.channelId,
+        content: '',
+        channelId: input.channelId,
+        userId: ctx.session.user.id
+      })
     })
 })

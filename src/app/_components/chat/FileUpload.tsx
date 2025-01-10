@@ -2,15 +2,9 @@
 
 import { useState, useCallback } from 'react'
 import { Button } from '~/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from '~/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~/components/ui/dialog'
 import { useDropzone } from 'react-dropzone'
-import { Upload, FileIcon } from 'lucide-react'
+import { Upload, FileIcon, Trash2 } from 'lucide-react'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { useFileAttachmentContext } from '~/app/hooks/ui/useFileAttachmentContext'
 
@@ -19,14 +13,6 @@ export function FileUploadModal() {
   const { files, setFiles } = useFileAttachmentContext()
 
   const { setFileUploadModalOpen, fileUploadModalOpen } = useUI()
-
-  const handleFileUpload = (newFiles: File[]) => {
-    setFiles((prevFiles) => [...prevFiles, ...newFiles])
-  }
-
-  const handleFileSelect = (file: File) => {
-    setSelectedFile(file)
-  }
 
   const [uploading, setUploading] = useState(false)
 
@@ -45,8 +31,18 @@ export function FileUploadModal() {
 
         <>
           {files.map((el) => (
-            <div className="mt-4 flex justify-center gap-2">
+            <div className="mt-4 flex items-center justify-center gap-2">
               <FileIcon className="text-gray-400" /> {el.name}
+              <Trash2
+                className="cursor-pointer text-gray-400 hover:text-red-500"
+                onClick={() => {
+                  try {
+                    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== el.name))
+                  } catch (error) {
+                    console.error('Error deleting file:', error)
+                  }
+                }}
+              />
             </div>
           ))}
           <div

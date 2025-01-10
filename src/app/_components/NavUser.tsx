@@ -28,7 +28,7 @@ export function NavUser() {
             <Button
               variant="channel"
               size="lg"
-              className="bg-gray-600 text-slate-100 hover:bg-gray-700 hover:text-slate-100"
+              className="bg-gray-700 text-slate-100 hover:bg-gray-600 hover:text-slate-100"
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={session?.user?.image || ''} alt={session?.user?.name || ''} />

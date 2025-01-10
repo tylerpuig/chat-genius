@@ -1,13 +1,7 @@
 'use client'
 
 import React from 'react'
-import {
-  MoreHorizontal,
-  MessageSquare,
-  Bookmark,
-  Reply as ReplyIcon,
-  MoreVertical
-} from 'lucide-react'
+import { MessageSquare, Bookmark, Reply as ReplyIcon, MoreVertical, FileIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 import {
@@ -34,7 +28,6 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
   const { content, user, id, reactions, replyCount } = message
 
   const { selectedChannelId, currentTab } = useUI()
-  // const { refetchMessages } = useChannelContext()
 
   const { setMessageReplySheetOpen, messageReplySheetOpen, setSelectedParentMessageId } = useUI()
 
@@ -171,23 +164,41 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
           </div>
 
           <ChatReactions reactions={reactions} id={id} />
+          <div className="flex space-x-4">
+            {!isReply && replyCount > 0 && (
+              <div className="flex justify-between">
+                <button
+                  onClick={() => {
+                    if (messageReplySheetOpen) return
+                    setSelectedParentMessageId(id)
 
-          {!isReply && replyCount > 0 && (
-            <div className="flex justify-between">
-              <button
-                onClick={() => {
-                  if (messageReplySheetOpen) return
-                  setSelectedParentMessageId(id)
+                    setMessageReplySheetOpen(true)
+                  }}
+                  className="mt-2 flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+                </button>
+              </div>
+            )}
+            {message?.attachments?.length > 0 && (
+              <div className="flex justify-between">
+                <button
+                  onClick={() => {
+                    if (messageReplySheetOpen) return
+                    setSelectedParentMessageId(id)
 
-                  setMessageReplySheetOpen(true)
-                }}
-                className="mt-2 flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300"
-              >
-                <MessageSquare className="h-4 w-4" />
-                {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
-              </button>
-            </div>
-          )}
+                    setMessageReplySheetOpen(true)
+                  }}
+                  className="mt-2 flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300"
+                >
+                  <FileIcon className="h-4 w-4" />
+                  {message?.attachments?.length}{' '}
+                  {message?.attachments?.length === 1 ? 'attachment' : 'attachments'}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
