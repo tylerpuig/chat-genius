@@ -78,7 +78,7 @@ export default function UserProfileManager() {
                 id="name"
                 value={userInfo?.name ?? ''}
                 onChange={(e) => {
-                  if (!userInfo || !e.target?.value) return
+                  if (!userInfo) return
                   setUserInfo((prev) => {
                     if (!prev) return
                     return { ...prev, name: e.target.value }

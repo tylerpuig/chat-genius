@@ -84,7 +84,7 @@ export function NewChannelSheet() {
               ref={channelNameRef}
               id="name"
               placeholder="e.g. marketing"
-              className="col-span-3 border-gray-700 bg-gray-800 text-gray-200"
+              className="col-span-3 border-0 border-gray-700 bg-gray-800 text-gray-200"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -95,7 +95,7 @@ export function NewChannelSheet() {
               ref={channelDescriptionRef}
               id="description"
               placeholder="What's this channel about?"
-              className="col-span-3 border-gray-700 bg-gray-800 text-gray-200"
+              className="col-span-3 border-0 border-gray-700 bg-gray-800 text-gray-200"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
