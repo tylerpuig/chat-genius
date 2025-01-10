@@ -17,4 +17,5 @@ export type UIState = {
   conversationUser: ConversationUser | null
   isConversation: boolean
   manageUserProfileSheetOpen: boolean
+  workspaceSearchOpen: boolean
 }

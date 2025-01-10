@@ -16,7 +16,8 @@ const initialState: UIState = {
   messageAttachmentsSheetOpen: false,
   conversationUser: null,
   isConversation: false,
-  manageUserProfileSheetOpen: false
+  manageUserProfileSheetOpen: false,
+  workspaceSearchOpen: false
 }
 
 const uiSlice = createSlice({
@@ -68,6 +69,9 @@ const uiSlice = createSlice({
     },
     setManageUserProfileSheetOpen: (state, action: PayloadAction<boolean>) => {
       state.manageUserProfileSheetOpen = action.payload
+    },
+    setWorkspaceSearchOpen: (state, action: PayloadAction<boolean>) => {
+      state.workspaceSearchOpen = action.payload
     }
   }
 })
@@ -87,7 +91,8 @@ export const {
   setMessageAttachmentsSheetOpen,
   setConversationUser,
   setIsConversation,
-  setManageUserProfileSheetOpen
+  setManageUserProfileSheetOpen,
+  setWorkspaceSearchOpen
 } = uiSlice.actions
 
 export default uiSlice.reducer

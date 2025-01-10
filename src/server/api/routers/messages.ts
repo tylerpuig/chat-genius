@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import EventEmitter, { on } from 'events'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
-import { eq, and, or, ne, sql, desc } from 'drizzle-orm'
+import { eq, and, or, ne, sql, desc, ilike, asc } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import {
   UserSubscriptionManager,
@@ -437,16 +437,6 @@ export const messagesRouter = createTRPCRouter({
       )
       .orderBy(desc(schema.users.lastOnline))
 
-    // const foundUsers = new Map<string, any>()
-    // for (const user of onlineUsers) {
-    //   if (foundUsers.has(user.id)) {
-    //     console.log('duplicate user', user)
-    //     const cachedUser = foundUsers.get(user.id)
-    //     console.log('cached user', cachedUser)
-    //   }
-    //   foundUsers.set(user.id, user)
-    // }
-
     return onlineUsers
   }),
   getChannels: protectedProcedure.query(async ({ ctx }) => {
@@ -599,5 +589,85 @@ export const messagesRouter = createTRPCRouter({
 
       const url = await generateDownloadUrl(attachment.fileKey)
       return { downloadUrl: url }
+    }),
+  getWorkspaceSearchResults: protectedProcedure
+    .input(
+      z.object({
+        query: z.string()
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      if (!input.query)
+        return {
+          users: [],
+          messages: [],
+          files: []
+        }
+
+      const users = await ctx.db
+        .selectDistinct({
+          id: schema.users.id,
+          name: schema.users.name,
+          image: schema.users.image,
+          channelId: schema.conversationsTable.channelId,
+          userVisibility: schema.users.userVisibility,
+          userStatus: schema.users.userStatus,
+          // createdAt: schema.conversationsTable.createdAt,
+          lastOnline: schema.users.lastOnline
+        })
+        .from(schema.users)
+        .where(
+          and(
+            ne(schema.users.id, ctx.session.user.id),
+            ilike(schema.users.name, '%' + input.query + '%')
+          )
+        )
+        .leftJoin(
+          schema.conversationsTable,
+          or(
+            and(
+              eq(schema.users.id, schema.conversationsTable.user1Id),
+              eq(schema.conversationsTable.user2Id, ctx.session.user.id)
+            ),
+            and(
+              eq(schema.users.id, schema.conversationsTable.user2Id),
+              eq(schema.conversationsTable.user1Id, ctx.session.user.id)
+            )
+          )
+        )
+
+      const messages = await ctx.db.query.messages.findMany({
+        where: ilike(schema.messages.content, '%' + input.query + '%'),
+        with: {
+          user: {
+            columns: {
+              id: true,
+              name: true,
+              image: true
+            }
+          },
+          reactions: true,
+          attachments: true
+        }
+      })
+
+      const files = await ctx.db.query.messageAttachmentsTable.findMany({
+        where: ilike(schema.messageAttachmentsTable.fileName, '%' + input.query + '%'),
+        with: {
+          message: {
+            columns: {
+              id: true,
+              content: true
+            }
+          }
+        },
+        orderBy: asc(schema.messageAttachmentsTable.createdAt)
+      })
+
+      return {
+        users: users,
+        messages: messages,
+        files: files
+      }
     })
 })

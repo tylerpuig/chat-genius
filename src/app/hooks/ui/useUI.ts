@@ -22,6 +22,7 @@ export const useUI = () => {
   const conversationUser = useSelector(uiSelectors.selectConversationUser)
   const isConversation = useSelector(uiSelectors.selectIsConversation)
   const manageUserProfileSheetOpen = useSelector(uiSelectors.selectManageUserProfileSheetOpen)
+  const workspaceSearchOpen = useSelector(uiSelectors.selectWorkspaceSearchOpen)
 
   return {
     // State
@@ -39,6 +40,7 @@ export const useUI = () => {
     conversationUser,
     isConversation,
     manageUserProfileSheetOpen,
+    workspaceSearchOpen,
 
     // Actions
     switchTab: (tab: ChatTab) => dispatch(uiSlice.setCurrentTab(tab)),
@@ -60,6 +62,7 @@ export const useUI = () => {
     setIsConversation: (isConversation: boolean) =>
       dispatch(uiSlice.setIsConversation(isConversation)),
     setManageUserProfileSheetOpen: (open: boolean) =>
-      dispatch(uiSlice.setManageUserProfileSheetOpen(open))
+      dispatch(uiSlice.setManageUserProfileSheetOpen(open)),
+    setWorkspaceSearchOpen: (open: boolean) => dispatch(uiSlice.setWorkspaceSearchOpen(open))
   }
 }

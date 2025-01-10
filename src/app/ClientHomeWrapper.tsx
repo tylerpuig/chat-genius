@@ -13,6 +13,7 @@ import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import { api } from '~/trpc/react'
 import UserProfileManager from './_components/user/profile/UserProfileManager'
+import { WorkspaceSearchDialog } from './_components/chat/WorkspaceSearch'
 
 const homeComponents: Record<UIView, JSX.Element> = {
   channel: <ChannelView />,
@@ -81,6 +82,7 @@ export default function ClientHomeWrapper() {
         <FileUploadModal />
         <MessageAttachmentsSheet />
         <UserProfileManager />
+        <WorkspaceSearchDialog />
       </div>
     </div>
   )

@@ -35,7 +35,7 @@ function formatFileSizeToKB(bytes: number | null): string {
   }
 }
 
-async function downloadFile(downloadUrl: string, fileName: string): Promise<void> {
+export async function downloadFile(downloadUrl: string, fileName: string): Promise<void> {
   try {
     // Method 1: Open in new tab
     // window.open(downloadUrl);

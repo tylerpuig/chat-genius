@@ -108,8 +108,13 @@ type UserStatusProps = {
 
 function OnlineUserList() {
   const userList = api.messages.getOnlineUsers.useQuery()
-  const { setSelectedChannelId, setSelectedChannelName, setConversationUser, setIsConversation } =
-    useUI()
+  const {
+    setSelectedChannelId,
+    setSelectedChannelName,
+    setConversationUser,
+    setIsConversation,
+    isConversation
+  } = useUI()
 
   const createConversation = api.conversations.createConversation.useMutation({
     onSuccess: (data) => {
@@ -119,6 +124,12 @@ function OnlineUserList() {
       }
     }
   })
+
+  useEffect(() => {
+    if (isConversation) {
+      userList.refetch()
+    }
+  }, [isConversation])
 
   if (!userList.data) return null
 

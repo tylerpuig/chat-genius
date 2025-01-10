@@ -48,7 +48,7 @@ export function MessageInput({
   }
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 border-t border-gray-300 bg-gray-800 p-0">
+    <div className="absolute bottom-0 left-0 right-0 border-t border-gray-700 bg-gray-800 p-0">
       <div className="flex items-center gap-2 bg-gray-800 px-4 py-2">
         <Button
           variant="channel"
@@ -72,7 +72,7 @@ export function MessageInput({
             value={messageContent}
             onChange={(e) => setMessageContent(e.target.value)}
             placeholder={`Message #${selectedChannelName}`}
-            className="!border-1 h-[56px] min-h-0 resize-none overflow-hidden !border-gray-300 bg-zinc-800 px-2 py-1 !text-base text-zinc-100 placeholder:text-zinc-400 focus-visible:ring-0"
+            className="!border-1 h-[56px] min-h-0 resize-none overflow-hidden !border-gray-700 bg-zinc-800 px-2 py-1 !text-base text-zinc-100 placeholder:text-zinc-400 focus-visible:ring-0"
             onKeyDown={async (e) => await handleMessage(e)}
           />
         </div>
@@ -174,7 +174,7 @@ export function ChatContainer() {
 
   return (
     <div className="absolute inset-0 bottom-[73px] flex flex-col overflow-hidden bg-gray-900">
-      <div className="scrollbar-overlay flex-1 overflow-y-auto scroll-smooth">
+      <div className="!scrollbar-overlay flex-1 overflow-y-auto scroll-smooth">
         {messages && (
           <>
             {messages.map((message) => (

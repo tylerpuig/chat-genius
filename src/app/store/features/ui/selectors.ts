@@ -16,3 +16,4 @@ export const selectConversationUser = (state: RootState) => state.ui.conversatio
 export const selectIsConversation = (state: RootState) => state.ui.isConversation
 export const selectManageUserProfileSheetOpen = (state: RootState) =>
   state.ui.manageUserProfileSheetOpen
+export const selectWorkspaceSearchOpen = (state: RootState) => state.ui.workspaceSearchOpen
