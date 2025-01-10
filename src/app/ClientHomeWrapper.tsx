@@ -1,12 +1,13 @@
 'use client'
 
-import { ChatContainer, ChatInput } from './_components/chat/ChatContainer'
+import { ChatContainer, ChatInput, MessageInput } from './_components/chat/ChatContainer'
 import { NewChannelSheet } from './_components/sheets/NewChannel'
 import { ViewMessageRepliesSheet } from './_components/sheets/MessageReplies'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { type UIView } from '~/app/store/features/ui/types'
 import ChatTabs from './_components/chat/ChatTabs'
 import { AppSidebar } from './_components/AppSidebar'
+import { FileUploadModal } from './_components/chat/FileUpload'
 
 const homeComponents: Record<UIView, JSX.Element> = {
   channel: <ChannelView />,
@@ -22,7 +23,8 @@ function ChannelView() {
   return (
     <>
       <ChatContainer />
-      <ChatInput />
+      <MessageInput />
+      {/* <ChatInput /> */}
     </>
   )
 }
@@ -40,6 +42,7 @@ export default function ClientHomeWrapper() {
         </div>
         <NewChannelSheet />
         <ViewMessageRepliesSheet />
+        <FileUploadModal />
       </div>
     </div>
   )

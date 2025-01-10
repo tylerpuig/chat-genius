@@ -50,7 +50,7 @@ export default function ChannelList() {
               }}
               key={channel.id}
               variant="channel"
-              className={`mb-1 w-full justify-start ${selectedChannelId === channel.id ? 'bg-gray-700' : ''}`}
+              className={`mb-2 w-full justify-start ${selectedChannelId === channel.id ? 'bg-gray-700' : ''}`}
             >
               <Hash className="mr-2 h-4 w-4" />
               {channel.name}
@@ -62,7 +62,7 @@ export default function ChannelList() {
       <Button
         onClick={() => setChannelSheetOpen(true)}
         variant="sidebar"
-        className="w-full justify-start border-gray-700 hover:bg-gray-600"
+        className="mb-2 w-full justify-start border-gray-700 hover:bg-gray-600"
       >
         <div className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
@@ -101,12 +101,12 @@ type UserStatusProps = {
   isOnline?: boolean
   className?: string
   channelId?: number | null
+  lastOnline: Date
 }
 
 function OnlineUserList() {
   const userList = api.messages.getOnlineUsers.useQuery()
-  const { setSelectedChannelId, selectedChannelId } = useUI()
-  console.log(selectedChannelId)
+  const { setSelectedChannelId, setSelectedChannelName } = useUI()
 
   const createConversation = api.conversations.createConversation.useMutation({
     onSuccess: (data) => {
@@ -129,12 +129,14 @@ function OnlineUserList() {
             } else {
               setSelectedChannelId(user.channelId)
             }
+            setSelectedChannelName(user.name)
           }}
         >
           <UserStatus
             key={user.id}
             name={user.name || ''}
             imageUrl={user.avatar || ''}
+            lastOnline={user.lastOnline}
             isOnline
             className="flex-shrink-0 rounded-md"
             channelId={user.channelId}
@@ -145,14 +147,18 @@ function OnlineUserList() {
   )
 }
 
+const LAST_ONLINE_THRESHOLD = 1000 * 60 * 3 // 3 minutes
 export function UserStatus({
   name,
   imageUrl,
   isOnline = false,
   className = '',
-  channelId
+  channelId,
+  lastOnline
 }: UserStatusProps) {
   const { selectedChannelId } = useUI()
+
+  const isOnlineNow = new Date().getTime() - lastOnline.getTime() < LAST_ONLINE_THRESHOLD
   return (
     <div
       className={`relative flex cursor-pointer items-center px-3 ${className} p-1 hover:bg-gray-700 ${selectedChannelId === channelId ? 'bg-gray-700' : ''}`}
@@ -164,7 +170,7 @@ export function UserStatus({
         </Avatar>
         <div
           className={`absolute -bottom-0 -right-0 h-2.5 w-2.5 rounded-full ${
-            isOnline ? 'bg-emerald-500' : 'bg-zinc-500'
+            isOnlineNow ? 'bg-emerald-500' : 'bg-zinc-500'
           }`}
           aria-hidden="true"
         />
