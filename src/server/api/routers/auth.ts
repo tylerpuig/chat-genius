@@ -41,15 +41,16 @@ export const authRouter = createTRPCRouter({
       }
     }),
   seedDB: protectedProcedure.mutation(async ({ ctx }) => {
-    const createUsers: Omit<User, 'id' | 'emailVerified'>[] = []
+    const createUsers: Omit<User, 'id' | 'emailVerified' | 'userVisibility'>[] = []
 
     for (let i = 0; i < 10; i++) {
-      const newUser: Omit<User, 'id' | 'emailVerified'> = {
+      const newUser: Omit<User, 'id' | 'emailVerified' | 'userVisibility'> = {
         name: faker.person.fullName(),
         email: faker.internet.email().toLowerCase(),
         password: bcrypt.hashSync('testing', 10),
         image: faker.image.avatar(),
-        lastOnline: new Date()
+        lastOnline: new Date(),
+        userStatus: faker.lorem.sentence()
       }
 
       createUsers.push(newUser)
