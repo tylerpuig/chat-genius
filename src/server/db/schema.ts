@@ -18,6 +18,8 @@ export const users = pgTable('user', {
     .$defaultFn(() => crypto.randomUUID()),
   name: varchar('name', { length: 255 }),
   email: varchar('email', { length: 255 }).notNull(),
+  userVisibility: varchar('user_visibility', { length: 255 }).default('public'),
+  userStatus: varchar('user_status', { length: 255 }).default('active'),
   password: varchar('password', { length: 255 }),
   emailVerified: timestamp('email_verified', {
     mode: 'date',

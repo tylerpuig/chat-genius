@@ -96,6 +96,8 @@ CREATE TABLE "user" (
 	"id" varchar(255) PRIMARY KEY NOT NULL,
 	"name" varchar(255),
 	"email" varchar(255) NOT NULL,
+	"user_visibility" varchar(255) DEFAULT 'public',
+	"user_status" varchar(255) DEFAULT 'active',
 	"password" varchar(255),
 	"email_verified" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
 	"last_online" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
