@@ -39,6 +39,7 @@ export const authConfig = {
   session: {
     strategy: 'jwt'
   },
+  trustHost: true,
   callbacks: {
     session: ({ session, token }) => {
       if (!token) return session
