@@ -9,6 +9,10 @@ import ChatTabs from './_components/chat/ChatTabs'
 import { AppSidebar } from './_components/AppSidebar'
 import { FileUploadModal } from './_components/chat/FileUpload'
 import { MessageAttachmentsSheet } from './_components/sheets/MessageAttachments'
+import { useSession } from 'next-auth/react'
+import { useState } from 'react'
+import { api } from '~/trpc/react'
+import { useFileAttachmentContext } from '~/app/hooks/ui/useFileAttachmentContext'
 
 const homeComponents: Record<UIView, JSX.Element> = {
   channel: <ChannelView />,
@@ -21,10 +25,40 @@ function HomeComponentToRender() {
 }
 
 function ChannelView() {
+  const { selectedChannelId } = useUI()
+  const { data: session } = useSession()
+  const [messageContent, setMessageContent] = useState('')
+
+  const createMessage = api.messages.sendMessage.useMutation({
+    onSettled: () => {
+      setMessageContent('')
+    }
+  })
+
+  async function sendMessage(): Promise<number> {
+    try {
+      if (!session?.user.id || !messageContent) return 0
+      const newMessage = await createMessage.mutateAsync({
+        content: messageContent,
+        channelId: selectedChannelId,
+        userId: session?.user.id
+      })
+
+      return newMessage?.[0]?.id || 0
+    } catch (error) {
+      console.error('Error sending message:', error)
+    }
+
+    return 0
+  }
   return (
     <>
       <ChatContainer />
-      <MessageInput />
+      <MessageInput
+        sendMessage={sendMessage}
+        messageContent={messageContent}
+        setMessageContent={setMessageContent}
+      />
       {/* <ChatInput /> */}
     </>
   )

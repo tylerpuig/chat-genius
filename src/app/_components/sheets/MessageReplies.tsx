@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { Sheet, SheetContent } from '~/components/ui/sheet'
 import { api } from '~/trpc/react'
@@ -9,10 +9,29 @@ import { useUI } from '~/app/hooks/ui/useUI'
 import { ChatMessage } from '~/app/_components/chat/ChatMessage'
 import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
 import { Skeleton } from '~/components/ui/skeleton'
+import { MessageInput } from '../chat/ChatContainer'
 
 export function ViewMessageRepliesSheet() {
-  const { messageReplySheetOpen, setMessageReplySheetOpen, selectedParentMessageId } = useUI()
+  const {
+    messageReplySheetOpen,
+    setMessageReplySheetOpen,
+    selectedParentMessageId,
+    selectedChannelId
+  } = useUI()
   const { messages } = useChannelContext()
+  const { data: session } = useSession()
+  const [replyContent, setReplyContent] = useState('')
+
+  const { refetchMessages } = useChannelContext()
+
+  const createMessageReplyMutation = api.messages.createMessageReply.useMutation({
+    onSuccess: () => {
+      refetchMessages()
+    },
+    onSettled: () => {
+      setReplyContent('')
+    }
+  })
 
   const {
     data: messageData,
@@ -25,6 +44,23 @@ export function ViewMessageRepliesSheet() {
   useEffect(() => {
     refetch()
   }, [messages])
+
+  async function sendMessage(): Promise<number> {
+    try {
+      if (!session?.user.id || !replyContent || !selectedParentMessageId) return 0
+
+      const newMessage = await createMessageReplyMutation.mutateAsync({
+        content: replyContent,
+        channelId: selectedChannelId,
+        messageId: selectedParentMessageId
+      })
+
+      return newMessage?.messageId || 0
+    } catch (error) {
+      console.error('Error sending message:', error)
+    }
+    return 0
+  }
 
   return (
     <div className="">
@@ -64,7 +100,12 @@ export function ViewMessageRepliesSheet() {
               </div>
             )}
           </div>
-          <ChatInput />
+          {/* <ChatInput /> */}
+          <MessageInput
+            sendMessage={sendMessage}
+            messageContent={replyContent}
+            setMessageContent={setReplyContent}
+          />
         </SheetContent>
       </Sheet>
     </div>

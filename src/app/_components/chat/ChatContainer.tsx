@@ -7,37 +7,39 @@ import { api } from '../../../trpc/react'
 import { useSession } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
-import { Gift, Smile, Paperclip, Grid } from 'lucide-react'
+import { Paperclip } from 'lucide-react'
 import { Textarea } from '~/components/ui/textarea'
 import { useFileAttachmentContext } from '~/app/hooks/ui/useFileAttachmentContext'
 
-export function MessageInput() {
-  const [messageContent, setMessageContent] = useState('')
+export function MessageInput({
+  sendMessage,
+  setMessageContent,
+  messageContent
+}: {
+  sendMessage: () => Promise<number>
+  setMessageContent: React.Dispatch<React.SetStateAction<string>>
+  messageContent: string
+}) {
+  // const [messageContent, setMessageContent] = useState('')
   const { files, handleFileChange, uploadToS3 } = useFileAttachmentContext()
   const { data: session } = useSession()
 
-  const { setFileUploadModalOpen, selectedChannelId, selectedChannelName } = useUI()
+  const { setFileUploadModalOpen, selectedChannelName } = useUI()
 
-  const createMessage = api.messages.sendMessage.useMutation({
-    onSettled: () => {
-      setMessageContent('')
-    }
-  })
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  async function sendMessage(e: React.KeyboardEvent<HTMLTextAreaElement>): Promise<void> {
+  async function handleMessage(e: React.KeyboardEvent<HTMLTextAreaElement>): Promise<void> {
     try {
       if (!session?.user.id || !messageContent) return
 
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
-        const newMessage = await createMessage.mutateAsync({
-          content: messageContent,
-          channelId: selectedChannelId,
-          userId: session?.user.id
-        })
-        if (!newMessage?.[0]?.id) return
+        const newMessage = await sendMessage()
+
+        if (!newMessage) return
         if (files.length) {
-          await uploadToS3(newMessage?.[0]?.id)
+          await uploadToS3(newMessage)
         }
       }
     } catch (error) {
@@ -45,17 +47,14 @@ export function MessageInput() {
     }
   }
 
-  const inputRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
   return (
     <div className="absolute bottom-0 left-0 right-0 border-t border-gray-800 bg-gray-800 p-0">
       <div className="flex items-center gap-2 bg-gray-800 px-4 py-2">
         <Button
-          variant="ghost"
+          variant="channel"
           onClick={() => setFileUploadModalOpen(true)}
           size="icon"
-          className="relative text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+          className="relative text-zinc-200 hover:text-zinc-100"
         >
           <input type="file" onChange={handleFileChange} ref={fileInputRef} className="hidden" />
           <Paperclip className="!h-5 !w-5" />
@@ -73,13 +72,13 @@ export function MessageInput() {
             value={messageContent}
             onChange={(e) => setMessageContent(e.target.value)}
             placeholder={`Message #${selectedChannelName}`}
-            className="!border-1 min-h-[40px] resize-none overflow-hidden !border-gray-700 bg-zinc-800 p-2 text-zinc-100 placeholder:text-zinc-400 focus-visible:ring-0"
-            onKeyDown={sendMessage}
+            className="!border-1 min-h-[32px] resize-none overflow-hidden !border-gray-700 bg-zinc-800 px-2 py-0 !text-xl text-zinc-100 placeholder:text-zinc-400 focus-visible:ring-0"
+            onKeyDown={async (e) => await handleMessage(e)}
           />
         </div>
 
         <div className="flex items-center gap-1">
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             className="text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
@@ -92,7 +91,7 @@ export function MessageInput() {
             className="text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
           >
             <Smile className="h-5 w-5" />
-          </Button>
+          </Button> */}
           {/* <Button
             variant="ghost"
             size="icon"
@@ -100,13 +99,13 @@ export function MessageInput() {
           >
             <Paperclip className="h-5 w-5" />
           </Button> */}
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             className="text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
           >
             <Grid className="h-5 w-5" />
-          </Button>
+          </Button> */}
         </div>
       </div>
     </div>
