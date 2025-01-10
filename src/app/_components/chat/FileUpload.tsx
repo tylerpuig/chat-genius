@@ -25,7 +25,7 @@ export function FileUploadModal() {
     <Dialog open={fileUploadModalOpen} onOpenChange={setFileUploadModalOpen}>
       <DialogContent className="border-0 bg-gray-800 text-white sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>File Management</DialogTitle>
+          <DialogTitle>Attach Files</DialogTitle>
         </DialogHeader>
 
         <>

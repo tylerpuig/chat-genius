@@ -21,6 +21,7 @@ export const useUI = () => {
   const messageAttachmentsSheetOpen = useSelector(uiSelectors.selectMessageAttachmentsSheetOpen)
   const conversationUser = useSelector(uiSelectors.selectConversationUser)
   const isConversation = useSelector(uiSelectors.selectIsConversation)
+  const manageUserProfileSheetOpen = useSelector(uiSelectors.selectManageUserProfileSheetOpen)
 
   return {
     // State
@@ -37,6 +38,7 @@ export const useUI = () => {
     messageAttachmentsSheetOpen,
     conversationUser,
     isConversation,
+    manageUserProfileSheetOpen,
 
     // Actions
     switchTab: (tab: ChatTab) => dispatch(uiSlice.setCurrentTab(tab)),
@@ -56,6 +58,8 @@ export const useUI = () => {
     setConversationUser: (user: ConversationUser | null) =>
       dispatch(uiSlice.setConversationUser(user)),
     setIsConversation: (isConversation: boolean) =>
-      dispatch(uiSlice.setIsConversation(isConversation))
+      dispatch(uiSlice.setIsConversation(isConversation)),
+    setManageUserProfileSheetOpen: (open: boolean) =>
+      dispatch(uiSlice.setManageUserProfileSheetOpen(open))
   }
 }

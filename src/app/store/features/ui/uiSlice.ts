@@ -15,7 +15,8 @@ const initialState: UIState = {
   fileUploadModalOpen: false,
   messageAttachmentsSheetOpen: false,
   conversationUser: null,
-  isConversation: false
+  isConversation: false,
+  manageUserProfileSheetOpen: false
 }
 
 const uiSlice = createSlice({
@@ -64,6 +65,9 @@ const uiSlice = createSlice({
     },
     setIsConversation: (state, action: PayloadAction<boolean>) => {
       state.isConversation = action.payload
+    },
+    setManageUserProfileSheetOpen: (state, action: PayloadAction<boolean>) => {
+      state.manageUserProfileSheetOpen = action.payload
     }
   }
 })
@@ -82,7 +86,8 @@ export const {
   setFileUploadModalOpen,
   setMessageAttachmentsSheetOpen,
   setConversationUser,
-  setIsConversation
+  setIsConversation,
+  setManageUserProfileSheetOpen
 } = uiSlice.actions
 
 export default uiSlice.reducer

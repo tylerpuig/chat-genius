@@ -40,7 +40,9 @@ export function ConversationAvatar() {
       <div>
         <p className="text-lg font-medium text-gray-200">{name}</p>
         <p className="text-sm text-gray-400">{isOnline ? 'Online' : 'Offline'}</p>
-        {/* {status && <p className="text-xs text-gray-500">{status}</p>} */}
+        {conversationUser?.userStatus && (
+          <p className="text-xs text-gray-500">{conversationUser?.userStatus}</p>
+        )}
       </div>
     </div>
     // </div>

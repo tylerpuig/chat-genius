@@ -415,6 +415,8 @@ export const messagesRouter = createTRPCRouter({
         name: schema.users.name,
         image: schema.users.image,
         channelId: schema.conversationsTable.channelId,
+        userVisibility: schema.users.userVisibility,
+        userStatus: schema.users.userStatus,
         // createdAt: schema.conversationsTable.createdAt,
         lastOnline: schema.users.lastOnline
       })

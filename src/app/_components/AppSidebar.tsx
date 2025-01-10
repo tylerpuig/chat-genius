@@ -1,8 +1,12 @@
+'use client'
 import { Sidebar, SidebarContent, SidebarFooter } from '~/components/ui/sidebar'
 import ChannelList from './ChannelList'
 import { NavUser } from './NavUser'
+import { useSession } from 'next-auth/react'
 
 export function AppSidebar() {
+  const { data: session } = useSession()
+  if (!session || !session.user) return null
   return (
     <Sidebar className="border-gray-800 bg-gray-900">
       <SidebarContent className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-700 !h-full !overflow-y-auto !overflow-x-hidden bg-gray-900">

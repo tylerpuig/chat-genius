@@ -2,14 +2,6 @@
 
 import { MessagesSquare, FolderOpen, Pin, LogOut, Bookmark } from 'lucide-react'
 import { cn } from '~/lib/utils'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '~/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
-import { signOut } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { type ChatTab } from '~/app/store/features/ui/types'
 import { AvatarStack } from './AvatarStack'

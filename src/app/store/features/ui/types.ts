@@ -16,4 +16,5 @@ export type UIState = {
   messageAttachmentsSheetOpen: boolean
   conversationUser: ConversationUser | null
   isConversation: boolean
+  manageUserProfileSheetOpen: boolean
 }

@@ -14,3 +14,5 @@ export const selectMessageAttachmentsSheetOpen = (state: RootState) =>
   state.ui.messageAttachmentsSheetOpen
 export const selectConversationUser = (state: RootState) => state.ui.conversationUser
 export const selectIsConversation = (state: RootState) => state.ui.isConversation
+export const selectManageUserProfileSheetOpen = (state: RootState) =>
+  state.ui.manageUserProfileSheetOpen

@@ -15,10 +15,13 @@ import { SidebarMenu, SidebarMenuItem, useSidebar } from '~/components/ui/sideba
 import { Button } from '~/components/ui/button'
 import { useSession } from 'next-auth/react'
 import { signOut } from 'next-auth/react'
+import { useUI } from '~/app/hooks/ui/useUI'
 
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { data: session } = useSession()
+
+  const { setManageUserProfileSheetOpen } = useUI()
 
   return (
     <SidebarMenu className="">
@@ -59,16 +62,10 @@ export function NavUser() {
                 </div>
               </div>
             </DropdownMenuLabel>
+
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setManageUserProfileSheetOpen(true)}>
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>

@@ -12,11 +12,12 @@ import { MessageAttachmentsSheet } from './_components/sheets/MessageAttachments
 import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import { api } from '~/trpc/react'
-import { useFileAttachmentContext } from '~/app/hooks/ui/useFileAttachmentContext'
+import UserProfileManager from './_components/user/profile/UserProfileManager'
 
 const homeComponents: Record<UIView, JSX.Element> = {
   channel: <ChannelView />,
   conversation: <></>
+  // profile: <UserProfileManager />
 }
 
 function HomeComponentToRender() {
@@ -79,6 +80,7 @@ export default function ClientHomeWrapper() {
         <ViewMessageRepliesSheet />
         <FileUploadModal />
         <MessageAttachmentsSheet />
+        <UserProfileManager />
       </div>
     </div>
   )
