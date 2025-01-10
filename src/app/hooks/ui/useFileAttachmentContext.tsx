@@ -17,8 +17,6 @@ const FileAttachmentContext = createContext<FileAttachmentContext>({
 })
 
 export function FileAttachmentProvider({ children }: { children: ReactNode }) {
-  //   const { selectedChannelId, setSelectedChannelId, setSelectedChannelName, currentTab } = useUI()
-
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
   const [files, setFiles] = useState<File[]>([])
   const { selectedChannelId } = useUI()
@@ -50,57 +48,55 @@ export function FileAttachmentProvider({ children }: { children: ReactNode }) {
     }[] = []
 
     try {
-      await Promise.all(
-        files.map(async (file) => {
-          // Get pre-signed URL
-          const data = await getUploadUrl.mutateAsync({
-            fileName: file.name,
-            fileType: file.type
-          })
-
-          if (!data) {
-            throw new Error('Failed to get pre-signed URL')
-          }
-
-          const fileKey = new URL(data.fileUrl).pathname.slice(1)
-
-          // Upload to S3
-          const uploadResponse = await fetch(data.uploadUrl, {
-            method: 'PUT',
-            body: file,
-            headers: {
-              'Content-Type': file.type
-            }
-          })
-
-          if (!uploadResponse.ok) {
-            throw new Error(`Failed to upload ${file.name}`)
-          }
-
-          uploadedFiles.push({
-            fileKey,
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            messageId
-          })
-
-          //   console.log(uploadResponse)
-          await saveMessageAttachments.mutateAsync({
-            files: uploadedFiles,
-            channelId: selectedChannelId
-          })
-
-          uploadedFileUrls.push(data.fileUrl)
+      for (const file of files) {
+        // Get pre-signed URL
+        const data = await getUploadUrl.mutateAsync({
+          fileName: file.name,
+          fileType: file.type
         })
-      )
+
+        if (!data) {
+          throw new Error('Failed to get pre-signed URL')
+        }
+
+        const fileKey = new URL(data.fileUrl).pathname.slice(1)
+
+        // Upload to S3
+        const uploadResponse = await fetch(data.uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type
+          }
+        })
+
+        if (!uploadResponse.ok) {
+          throw new Error(`Failed to upload ${file.name}`)
+        }
+
+        uploadedFiles.push({
+          fileKey,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          messageId
+        })
+
+        //   console.log(uploadResponse)
+
+        uploadedFileUrls.push(data.fileUrl)
+      }
+      await saveMessageAttachments.mutateAsync({
+        files: uploadedFiles,
+        channelId: selectedChannelId,
+        messageId
+      })
 
       setUploadedUrls(uploadedFileUrls)
-      setFiles([]) // Clear files after successful upload
     } catch (error) {
       console.error('Upload failed:', error)
     } finally {
-      //   setIsUploading(false)
+      setFiles([])
     }
   }
 

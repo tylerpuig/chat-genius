@@ -16,8 +16,7 @@ export function MessageInput() {
   const { files, handleFileChange, uploadToS3 } = useFileAttachmentContext()
   const { data: session } = useSession()
 
-  const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
-  const { setFileUploadModalOpen, fileUploadModalOpen, selectedChannelId } = useUI()
+  const { setFileUploadModalOpen, selectedChannelId, selectedChannelName } = useUI()
 
   const createMessage = api.messages.sendMessage.useMutation({
     onSettled: () => {
@@ -25,7 +24,6 @@ export function MessageInput() {
     }
   })
 
-  // For the send message function
   async function sendMessage(e: React.KeyboardEvent<HTMLTextAreaElement>): Promise<void> {
     try {
       if (!session?.user.id || !messageContent) return
@@ -52,7 +50,7 @@ export function MessageInput() {
 
   return (
     <div className="absolute bottom-0 left-0 right-0 border-t border-gray-800 bg-gray-800 p-0">
-      <div className="flex items-center gap-2 bg-gray-800 p-4">
+      <div className="flex items-center gap-2 bg-gray-800 px-4 py-2">
         <Button
           variant="ghost"
           onClick={() => setFileUploadModalOpen(true)}
@@ -74,7 +72,7 @@ export function MessageInput() {
             contentEditable={true}
             value={messageContent}
             onChange={(e) => setMessageContent(e.target.value)}
-            placeholder="Message #startups"
+            placeholder={`Message #${selectedChannelName}`}
             className="!border-1 min-h-[40px] resize-none overflow-hidden !border-gray-700 bg-zinc-800 p-2 text-zinc-100 placeholder:text-zinc-400 focus-visible:ring-0"
             onKeyDown={sendMessage}
           />
@@ -95,13 +93,13 @@ export function MessageInput() {
           >
             <Smile className="h-5 w-5" />
           </Button>
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             className="text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
           >
             <Paperclip className="h-5 w-5" />
-          </Button>
+          </Button> */}
           <Button
             variant="ghost"
             size="icon"

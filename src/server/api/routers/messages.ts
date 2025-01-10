@@ -8,7 +8,7 @@ import {
   type NewChannelMessage
 } from '~/server/api/utils/subscriptionManager'
 import { getUserChannels, getMessagesFromChannel } from '~/server/db/utils/queries'
-import { incrementMessageReplyCount } from '~/server/db/utils/insertions'
+import { incrementMessageReplyCount, setMessageAttachmentCount } from '~/server/db/utils/insertions'
 import { generatePresignedUrl } from '~/server/db/utils/s3'
 
 // Event emitter to bridge Postgres notifications to tRPC
@@ -548,11 +548,14 @@ export const messagesRouter = createTRPCRouter({
             messageId: z.number()
           })
         ),
-        channelId: z.number()
+        channelId: z.number(),
+        messageId: z.number()
       })
     )
     .mutation(async ({ input, ctx }) => {
       await ctx.db.insert(schema.messageAttachmentsTable).values(input.files)
+
+      await setMessageAttachmentCount(input.messageId, input.files.length)
 
       ee.emit('newMessage', {
         id: input.channelId,
