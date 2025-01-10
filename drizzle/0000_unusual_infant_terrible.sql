@@ -95,6 +95,7 @@ CREATE TABLE "user" (
 	"email" varchar(255) NOT NULL,
 	"password" varchar(255),
 	"email_verified" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+	"last_online" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"image" varchar(2048)
 );
 --> statement-breakpoint

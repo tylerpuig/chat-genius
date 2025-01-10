@@ -1,5 +1,5 @@
 {
-  "id": "eed4fcd2-d92f-4de3-b3e6-61272104dcd7",
+  "id": "05c21e6f-e945-4233-96a1-782aa79fb51f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1016,6 +1016,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "last_online": {
+          "name": "last_online",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
           "default": "CURRENT_TIMESTAMP"
         },
         "image": {

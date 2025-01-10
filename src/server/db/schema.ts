@@ -23,6 +23,9 @@ export const users = pgTable('user', {
     mode: 'date',
     withTimezone: true
   }).default(sql`CURRENT_TIMESTAMP`),
+  lastOnline: timestamp('last_online', { withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
   image: varchar('image', { length: 2048 })
 })
 
