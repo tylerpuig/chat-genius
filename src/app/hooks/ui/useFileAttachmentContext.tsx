@@ -57,7 +57,7 @@ export function FileAttachmentProvider({ children }: { children: ReactNode }) {
           throw new Error('Failed to get pre-signed URL')
         }
 
-        const fileKey = new URL(data.fileUrl).pathname.slice(1)
+        const fileKey = decodeURIComponent(new URL(data.fileUrl).pathname.slice(1))
 
         // Upload to S3
         const uploadResponse = await fetch(data.uploadUrl, {

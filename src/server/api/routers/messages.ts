@@ -9,7 +9,7 @@ import {
 } from '~/server/api/utils/subscriptionManager'
 import { getUserChannels, getMessagesFromChannel } from '~/server/db/utils/queries'
 import { incrementMessageReplyCount, setMessageAttachmentCount } from '~/server/db/utils/insertions'
-import { generatePresignedUrl } from '~/server/db/utils/s3'
+import { generatePresignedUrl, generateDownloadUrl } from '~/server/db/utils/s3'
 
 // Event emitter to bridge Postgres notifications to tRPC
 const ee = new EventEmitter()
@@ -17,9 +17,6 @@ const ee = new EventEmitter()
 const subscriptionManager = new UserSubscriptionManager()
 
 export const messagesRouter = createTRPCRouter({
-  testS3Connection: protectedProcedure.mutation(async ({ ctx }) => {
-    // await listBucketContents()
-  }),
   onMessage: protectedProcedure
     .input(
       z.object({
@@ -137,6 +134,7 @@ export const messagesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      let newMesageId: number = 0
       await ctx.db.transaction(async (tx) => {
         const newMessage = await tx
           .insert(schema.messages)
@@ -149,13 +147,15 @@ export const messagesRouter = createTRPCRouter({
           .returning()
 
         if (!newMessage?.[0]?.id) {
-          return { success: false }
+          return { messageId: newMesageId }
         }
 
         await tx.insert(schema.messagesToParents).values({
           messageId: newMessage[0].id,
           parentId: input.messageId
         })
+
+        newMesageId = newMessage[0].id
       })
 
       await incrementMessageReplyCount(input.messageId)
@@ -167,7 +167,7 @@ export const messagesRouter = createTRPCRouter({
         userId: ctx.session.user.id
       })
 
-      return { success: true }
+      return { messageId: newMesageId }
     }),
   getMessageReplies: protectedProcedure
     .input(
@@ -229,11 +229,12 @@ export const messagesRouter = createTRPCRouter({
   pinMessage: protectedProcedure
     .input(
       z.object({
-        messageId: z.number(),
+        messageId: z.number().nullable(),
         channelId: z.number()
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!input.messageId) return
       await ctx.db
         .update(schema.messages)
         .set({ isPinned: true })
@@ -249,11 +250,12 @@ export const messagesRouter = createTRPCRouter({
   unPinMessage: protectedProcedure
     .input(
       z.object({
-        messageId: z.number(),
+        messageId: z.number().nullable(),
         channelId: z.number()
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!input.messageId) return
       await ctx.db
         .update(schema.messages)
         .set({ isPinned: false })
@@ -563,5 +565,37 @@ export const messagesRouter = createTRPCRouter({
         channelId: input.channelId,
         userId: ctx.session.user.id
       })
+    }),
+  getMessageAttachments: protectedProcedure
+    .input(z.object({ messageId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const attachments = await ctx.db
+        .select({
+          id: schema.messageAttachmentsTable.id,
+          fileName: schema.messageAttachmentsTable.fileName,
+          fileSize: schema.messageAttachmentsTable.fileSize,
+          fileType: schema.messageAttachmentsTable.fileType
+        })
+        .from(schema.messageAttachmentsTable)
+        .where(eq(schema.messageAttachmentsTable.messageId, input.messageId))
+
+      return attachments
+    }),
+  getMessageAttachmentDownloadUrl: protectedProcedure
+    .input(z.object({ attachmentId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const attachment = await ctx.db.query.messageAttachmentsTable.findFirst({
+        where: eq(schema.messageAttachmentsTable.id, input.attachmentId),
+        columns: {
+          fileKey: true
+        }
+      })
+
+      if (!attachment || !attachment?.fileKey) {
+        return { downloadUrl: '' }
+      }
+
+      const url = await generateDownloadUrl(attachment.fileKey)
+      return { downloadUrl: url }
     })
 })

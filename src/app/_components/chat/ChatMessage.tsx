@@ -34,7 +34,12 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
     setSelectedMessageId
   } = useUI()
 
-  const { setMessageReplySheetOpen, messageReplySheetOpen, setSelectedParentMessageId } = useUI()
+  const {
+    setMessageReplySheetOpen,
+    messageReplySheetOpen,
+    setSelectedParentMessageId,
+    selectedParentMessageId
+  } = useUI()
 
   const pinMessage = api.messages.pinMessage.useMutation()
   const unPinMessage = api.messages.unPinMessage.useMutation()
@@ -126,26 +131,37 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
                   <DropdownMenuItem className="text-gray-300 hover:text-gray-100">
                     Copy Message Link
                   </DropdownMenuItem>
-                  {!isReply && (
-                    <DropdownMenuItem
-                      onClick={() => {
-                        if (!message?.isPinned) {
-                          pinMessage.mutate({
-                            messageId: id,
-                            channelId: selectedChannelId
-                          })
-                        } else {
-                          unPinMessage.mutate({
-                            messageId: id,
-                            channelId: selectedChannelId
-                          })
-                        }
-                      }}
-                      className="text-gray-300 hover:text-gray-100"
-                    >
-                      {message?.isPinned ? 'Unpin' : 'Pin to Channel'}
-                    </DropdownMenuItem>
-                  )}
+                  {/* {!isReply && ( */}
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (!message?.isPinned) {
+                        pinMessage.mutate({
+                          messageId: isReply ? selectedParentMessageId : id,
+                          channelId: selectedChannelId
+                        })
+                      } else {
+                        unPinMessage.mutate({
+                          messageId: isReply ? selectedParentMessageId : id,
+                          channelId: selectedChannelId
+                        })
+                      }
+                      // if (!message?.isPinned) {
+                      //   pinMessage.mutate({
+                      //     messageId: id,
+                      //     channelId: selectedChannelId
+                      //   })
+                      // } else {
+                      //   unPinMessage.mutate({
+                      //     messageId: id,
+                      //     channelId: selectedChannelId
+                      //   })
+                      // }
+                    }}
+                    className="text-gray-300 hover:text-gray-100"
+                  >
+                    {message?.isPinned ? 'Unpin' : 'Pin to Channel'}
+                  </DropdownMenuItem>
+                  {/* )} */}
                   {session?.user?.id === message?.userId && (
                     <DropdownMenuItem
                       onClick={() => {

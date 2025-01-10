@@ -3,7 +3,7 @@ import type { UIState, ChatTab, UIView } from './types'
 
 const initialState: UIState = {
   currentTab: 'Messages',
-  selectedPostId: null,
+  selectedMessageId: 0,
   selectedChannelId: 0,
   selectedChannelName: null,
   selectedDMUserId: null,
@@ -11,7 +11,8 @@ const initialState: UIState = {
   messageReplySheetOpen: false,
   uiView: 'channel',
   selectedParentMessageId: null,
-  fileUploadModalOpen: false
+  fileUploadModalOpen: false,
+  messageAttachmentsSheetOpen: false
 }
 
 const uiSlice = createSlice({
@@ -21,8 +22,8 @@ const uiSlice = createSlice({
     setCurrentTab: (state, action: PayloadAction<ChatTab>) => {
       state.currentTab = action.payload
     },
-    setSelectedPostId: (state, action: PayloadAction<string | null>) => {
-      state.selectedPostId = action.payload
+    setSelectedMessageId: (state, action: PayloadAction<number>) => {
+      state.selectedMessageId = action.payload
     },
     setSelectedChannelId: (state, action: PayloadAction<number>) => {
       state.selectedChannelId = action.payload
@@ -35,7 +36,6 @@ const uiSlice = createSlice({
     },
     // Reset all selections
     resetSelections: (state) => {
-      state.selectedPostId = null
       state.selectedDMUserId = null
     },
     setChannelSheetOpen: (state, action: PayloadAction<boolean>) => {
@@ -52,13 +52,16 @@ const uiSlice = createSlice({
     },
     setFileUploadModalOpen: (state, action: PayloadAction<boolean>) => {
       state.fileUploadModalOpen = action.payload
+    },
+    setMessageAttachmentsSheetOpen: (state, action: PayloadAction<boolean>) => {
+      state.messageAttachmentsSheetOpen = action.payload
     }
   }
 })
 
 export const {
   setCurrentTab,
-  setSelectedPostId,
+  setSelectedMessageId,
   setSelectedChannelId,
   setSelectedDMUserId,
   setSelectedChannelName,
@@ -67,7 +70,8 @@ export const {
   setUIView,
   setMessageReplySheetOpen,
   setSelectedParentMessageId,
-  setFileUploadModalOpen
+  setFileUploadModalOpen,
+  setMessageAttachmentsSheetOpen
 } = uiSlice.actions
 
 export default uiSlice.reducer

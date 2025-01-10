@@ -8,7 +8,7 @@ export const useUI = () => {
   const dispatch = useAppDispatch()
 
   const currentTab = useSelector(uiSelectors.selectCurrentTab)
-  const selectedPostId = useSelector(uiSelectors.selectSelectedPostId)
+  const selectedMessageId = useSelector(uiSelectors.selectSelectedMessageId)
   const selectedChannelId = useSelector(uiSelectors.selectSelectedChannelId)
   const selectedChannelName = useSelector(uiSelectors.selectSelectedChannelName)
   const selectedDMUserId = useSelector(uiSelectors.selectSelectedDMUserId)
@@ -17,11 +17,12 @@ export const useUI = () => {
   const messageReplySheetOpen = useSelector(uiSelectors.selectMessageReplySheetOpen)
   const selectedParentMessageId = useSelector(uiSelectors.selectSelectedParentMessageId)
   const fileUploadModalOpen = useSelector(uiSelectors.selectFileUploadModalOpen)
+  const messageAttachmentsSheetOpen = useSelector(uiSelectors.selectMessageAttachmentsSheetOpen)
 
   return {
     // State
     currentTab,
-    selectedPostId,
+    selectedMessageId,
     selectedChannelId,
     selectedDMUserId,
     selectedChannelName,
@@ -30,10 +31,11 @@ export const useUI = () => {
     messageReplySheetOpen,
     selectedParentMessageId,
     fileUploadModalOpen,
+    messageAttachmentsSheetOpen,
 
     // Actions
     switchTab: (tab: ChatTab) => dispatch(uiSlice.setCurrentTab(tab)),
-    selectPost: (postId: string | null) => dispatch(uiSlice.setSelectedPostId(postId)),
+    setSelectedMessageId: (messageId: number) => dispatch(uiSlice.setSelectedMessageId(messageId)),
     setSelectedChannelId: (channelId: number) => dispatch(uiSlice.setSelectedChannelId(channelId)),
     setSelectedChannelName: (channelName: string | null) =>
       dispatch(uiSlice.setSelectedChannelName(channelName)),
@@ -43,6 +45,8 @@ export const useUI = () => {
     setMessageReplySheetOpen: (open: boolean) => dispatch(uiSlice.setMessageReplySheetOpen(open)),
     setSelectedParentMessageId: (messageId: number | null) =>
       dispatch(uiSlice.setSelectedParentMessageId(messageId)),
-    setFileUploadModalOpen: (open: boolean) => dispatch(uiSlice.setFileUploadModalOpen(open))
+    setFileUploadModalOpen: (open: boolean) => dispatch(uiSlice.setFileUploadModalOpen(open)),
+    setMessageAttachmentsSheetOpen: (open: boolean) =>
+      dispatch(uiSlice.setMessageAttachmentsSheetOpen(open))
   }
 }
