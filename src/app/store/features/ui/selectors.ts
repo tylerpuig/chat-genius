@@ -9,3 +9,4 @@ export const selectChannelSheetOpen = (state: RootState) => state.ui.channelShee
 export const selectUIView = (state: RootState) => state.ui.uiView
 export const selectMessageReplySheetOpen = (state: RootState) => state.ui.messageReplySheetOpen
 export const selectSelectedParentMessageId = (state: RootState) => state.ui.selectedParentMessageId
+export const selectFileUploadModalOpen = (state: RootState) => state.ui.fileUploadModalOpen

@@ -16,6 +16,7 @@ export const useUI = () => {
   const uiView = useSelector(uiSelectors.selectUIView)
   const messageReplySheetOpen = useSelector(uiSelectors.selectMessageReplySheetOpen)
   const selectedParentMessageId = useSelector(uiSelectors.selectSelectedParentMessageId)
+  const fileUploadModalOpen = useSelector(uiSelectors.selectFileUploadModalOpen)
 
   return {
     // State
@@ -28,6 +29,7 @@ export const useUI = () => {
     uiView,
     messageReplySheetOpen,
     selectedParentMessageId,
+    fileUploadModalOpen,
 
     // Actions
     switchTab: (tab: ChatTab) => dispatch(uiSlice.setCurrentTab(tab)),
@@ -40,6 +42,7 @@ export const useUI = () => {
     setUIView: (view: UIView) => dispatch(uiSlice.setUIView(view)),
     setMessageReplySheetOpen: (open: boolean) => dispatch(uiSlice.setMessageReplySheetOpen(open)),
     setSelectedParentMessageId: (messageId: number | null) =>
-      dispatch(uiSlice.setSelectedParentMessageId(messageId))
+      dispatch(uiSlice.setSelectedParentMessageId(messageId)),
+    setFileUploadModalOpen: (open: boolean) => dispatch(uiSlice.setFileUploadModalOpen(open))
   }
 }

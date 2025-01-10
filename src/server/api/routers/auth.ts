@@ -29,7 +29,7 @@ export const authRouter = createTRPCRouter({
         .insert(users)
         .values({
           name: input.name,
-          email: input.email,
+          email: input.email.toLowerCase(),
           password: hashedPassword,
           image: randomAvatar
         })
@@ -46,9 +46,10 @@ export const authRouter = createTRPCRouter({
     for (let i = 0; i < 10; i++) {
       const newUser: Omit<User, 'id' | 'emailVerified'> = {
         name: faker.person.fullName(),
-        email: faker.internet.email(),
+        email: faker.internet.email().toLowerCase(),
         password: bcrypt.hashSync('testing', 10),
-        image: faker.image.avatar()
+        image: faker.image.avatar(),
+        lastOnline: new Date()
       }
 
       createUsers.push(newUser)

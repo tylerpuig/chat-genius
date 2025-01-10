@@ -10,7 +10,8 @@ const initialState: UIState = {
   channelSheetOpen: false,
   messageReplySheetOpen: false,
   uiView: 'channel',
-  selectedParentMessageId: null
+  selectedParentMessageId: null,
+  fileUploadModalOpen: false
 }
 
 const uiSlice = createSlice({
@@ -48,6 +49,9 @@ const uiSlice = createSlice({
     },
     setSelectedParentMessageId: (state, action: PayloadAction<number | null>) => {
       state.selectedParentMessageId = action.payload
+    },
+    setFileUploadModalOpen: (state, action: PayloadAction<boolean>) => {
+      state.fileUploadModalOpen = action.payload
     }
   }
 })
@@ -62,7 +66,8 @@ export const {
   setChannelSheetOpen,
   setUIView,
   setMessageReplySheetOpen,
-  setSelectedParentMessageId
+  setSelectedParentMessageId,
+  setFileUploadModalOpen
 } = uiSlice.actions
 
 export default uiSlice.reducer

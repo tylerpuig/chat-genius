@@ -11,4 +11,5 @@ export type UIState = {
   messageReplySheetOpen: boolean
   uiView: UIView
   selectedParentMessageId: number | null
+  fileUploadModalOpen: boolean
 }
