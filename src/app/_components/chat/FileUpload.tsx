@@ -9,7 +9,6 @@ import { useUI } from '~/app/hooks/ui/useUI'
 import { useFileAttachmentContext } from '~/app/hooks/ui/useFileAttachmentContext'
 
 export function FileUploadModal() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const { files, setFiles } = useFileAttachmentContext()
 
   const { setFileUploadModalOpen, fileUploadModalOpen } = useUI()
@@ -57,7 +56,8 @@ export function FileUploadModal() {
               Drag & drop files here, or click to select files
             </p>
             <Button variant="blue" disabled={uploading} className="mt-4">
-              {uploading ? 'Uploading...' : 'Upload Files'}
+              {/* {uploading ? 'Uploading...' : 'Upload Files'} */}
+              Attach Files
             </Button>
           </div>
         </>

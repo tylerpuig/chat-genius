@@ -27,7 +27,12 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
   const { data: session } = useSession()
   const { content, user, id, reactions, replyCount } = message
 
-  const { selectedChannelId, currentTab } = useUI()
+  const {
+    selectedChannelId,
+    setMessageAttachmentsSheetOpen,
+    messageAttachmentsSheetOpen,
+    setSelectedMessageId
+  } = useUI()
 
   const { setMessageReplySheetOpen, messageReplySheetOpen, setSelectedParentMessageId } = useUI()
 
@@ -185,10 +190,10 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
               <div className="flex justify-between">
                 <button
                   onClick={() => {
-                    if (messageReplySheetOpen) return
-                    setSelectedParentMessageId(id)
+                    if (messageAttachmentsSheetOpen) return
+                    setMessageAttachmentsSheetOpen(true)
 
-                    setMessageReplySheetOpen(true)
+                    setSelectedMessageId(id)
                   }}
                   className="mt-2 flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300"
                 >

@@ -17,7 +17,6 @@ const FileAttachmentContext = createContext<FileAttachmentContext>({
 })
 
 export function FileAttachmentProvider({ children }: { children: ReactNode }) {
-  const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
   const [files, setFiles] = useState<File[]>([])
   const { selectedChannelId } = useUI()
 
@@ -37,7 +36,6 @@ export function FileAttachmentProvider({ children }: { children: ReactNode }) {
   async function uploadToS3(messageId: number): Promise<void> {
     if (!files.length) return
 
-    // setIsUploading(true)
     const uploadedFileUrls: string[] = []
     const uploadedFiles: {
       fileKey: string
@@ -91,8 +89,6 @@ export function FileAttachmentProvider({ children }: { children: ReactNode }) {
         channelId: selectedChannelId,
         messageId
       })
-
-      setUploadedUrls(uploadedFileUrls)
     } catch (error) {
       console.error('Upload failed:', error)
     } finally {

@@ -8,6 +8,7 @@ import { type UIView } from '~/app/store/features/ui/types'
 import ChatTabs from './_components/chat/ChatTabs'
 import { AppSidebar } from './_components/AppSidebar'
 import { FileUploadModal } from './_components/chat/FileUpload'
+import { MessageAttachmentsSheet } from './_components/sheets/MessageAttachments'
 
 const homeComponents: Record<UIView, JSX.Element> = {
   channel: <ChannelView />,
@@ -43,6 +44,7 @@ export default function ClientHomeWrapper() {
         <NewChannelSheet />
         <ViewMessageRepliesSheet />
         <FileUploadModal />
+        <MessageAttachmentsSheet />
       </div>
     </div>
   )
