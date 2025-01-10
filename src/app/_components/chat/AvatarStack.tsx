@@ -6,7 +6,7 @@ import { Skeleton } from '~/components/ui/skeleton'
 const MAX_AVATARS = 3
 export function AvatarStack() {
   const { selectedChannelId } = useUI()
-  const { data: channelUsers, isLoading } = api.messages.getUsersInChannel.useQuery({
+  const { data: channelUsers, isPending } = api.messages.getUsersInChannel.useQuery({
     channelId: selectedChannelId
   })
 
@@ -14,7 +14,7 @@ export function AvatarStack() {
     <div className="flex px-3">
       <div className="flex items-center rounded-md bg-gray-700 hover:bg-gray-600">
         <div className="flex -space-x-3 py-[.30rem] pl-2">
-          {isLoading &&
+          {isPending &&
             !channelUsers &&
             Array.from({ length: MAX_AVATARS }).map((_, i) => (
               <Skeleton

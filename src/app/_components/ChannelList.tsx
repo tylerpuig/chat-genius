@@ -14,7 +14,8 @@ export default function ChannelList() {
     channelSheetOpen,
     selectedChannelId,
     setSelectedChannelId,
-    setSelectedChannelName
+    setSelectedChannelName,
+    setIsConversation
   } = useUI()
   const [isChannelsExpanded, setIsChannelsExpanded] = useState(true)
   const [isDMsExpanded, setIsDMsExpanded] = useState(true)
@@ -47,6 +48,7 @@ export default function ChannelList() {
               onClick={() => {
                 setSelectedChannelId(channel.id)
                 setSelectedChannelName(channel.name)
+                setIsConversation(false)
               }}
               key={channel.id}
               variant="channel"
@@ -106,7 +108,8 @@ type UserStatusProps = {
 
 function OnlineUserList() {
   const userList = api.messages.getOnlineUsers.useQuery()
-  const { setSelectedChannelId, setSelectedChannelName } = useUI()
+  const { setSelectedChannelId, setSelectedChannelName, setConversationUser, setIsConversation } =
+    useUI()
 
   const createConversation = api.conversations.createConversation.useMutation({
     onSuccess: (data) => {
@@ -123,19 +126,22 @@ function OnlineUserList() {
     <div className="flex flex-col gap-4">
       {userList.data.map((user) => (
         <div
-          onClick={() => {
+          key={user.id}
+          onClick={async () => {
+            console.log('user', user)
             if (!user.channelId) {
-              createConversation.mutate({ toUserId: user.id })
+              await createConversation.mutateAsync({ toUserId: user.id })
             } else {
               setSelectedChannelId(user.channelId)
             }
             setSelectedChannelName(user.name)
+            setIsConversation(true)
+            setConversationUser(user)
           }}
         >
           <UserStatus
-            key={user.id}
             name={user.name || ''}
-            imageUrl={user.avatar || ''}
+            imageUrl={user.image || ''}
             lastOnline={user.lastOnline}
             isOnline
             className="flex-shrink-0 rounded-md"
