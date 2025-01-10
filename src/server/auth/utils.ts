@@ -5,7 +5,8 @@ import { User } from '~/server/db/types'
 
 export async function getUserByEmail(email: string): Promise<User | undefined> {
   try {
-    const result = await db.select().from(users).where(eq(users.email, email))
+    const formattedEmail = email.toLowerCase()
+    const result = await db.select().from(users).where(eq(users.email, formattedEmail))
     return result[0]
   } catch (err) {
     console.log(err)

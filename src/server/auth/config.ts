@@ -87,13 +87,6 @@ export const authConfig = {
           return null
         }
 
-        const userData = {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image
-        }
-
         return {
           id: user.id,
           email: user.email,

@@ -1,4 +1,4 @@
-import { eq, and, or, type SQL, sql, is } from 'drizzle-orm'
+import { eq, and, or, type SQL, sql, gt } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import { db } from '~/server/db'
 import { type ChatTab } from '~/app/store/features/ui/types'
@@ -91,6 +91,10 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
       conditions.push(eq(schema.messages.isPinned, true))
     }
 
+    if (chatTab === 'Files') {
+      conditions.push(gt(schema.messages.attachmentCount, 0))
+    }
+
     if (chatTab === 'Saved') {
       return await getSavedMessages(userId)
     }
@@ -117,10 +121,6 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
         attachments: true
       }
     })
-
-    // if (chatTab === 'Files') {
-    //   conditions.push(eq(schema.messages, true))
-    // }
   } catch (err) {
     console.error('Error getting messages from channel:', err)
   }

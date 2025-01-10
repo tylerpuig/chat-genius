@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import EventEmitter, { on } from 'events'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
-import { eq, and, or, ne, sql, asc } from 'drizzle-orm'
+import { eq, and, or, ne, sql, asc, desc } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import {
   UserSubscriptionManager,
@@ -9,6 +9,7 @@ import {
 } from '~/server/api/utils/subscriptionManager'
 import { getUserChannels, getMessagesFromChannel } from '~/server/db/utils/queries'
 import { incrementMessageReplyCount } from '~/server/db/utils/insertions'
+import { generatePresignedUrl } from '~/server/db/utils/s3'
 
 // Event emitter to bridge Postgres notifications to tRPC
 const ee = new EventEmitter()
@@ -35,10 +36,10 @@ export const messagesRouter = createTRPCRouter({
         // Create an observable for message events
         for await (const [data] of on(ee, 'newMessage', { signal })) {
           const newMessage = data as NewChannelMessage
-          console.log(newMessage, 'onMessage')
+          // console.log(newMessage, 'onMessage')
 
           // Only yield messages for channels this user is subscribed to
-          if (subscriptionManager.isSubscribed(userId, newMessage.channelId)) {
+          if (await subscriptionManager.isSubscribed(userId, newMessage.channelId)) {
             yield newMessage
           }
         }
@@ -412,7 +413,8 @@ export const messagesRouter = createTRPCRouter({
         name: schema.users.name,
         avatar: schema.users.image,
         channelId: schema.conversationsTable.channelId,
-        createdAt: schema.conversationsTable.createdAt
+        createdAt: schema.conversationsTable.createdAt,
+        lastOnline: schema.users.lastOnline
       })
       .from(schema.users)
       .where(ne(schema.users.id, ctx.session.user.id))
@@ -429,17 +431,17 @@ export const messagesRouter = createTRPCRouter({
           )
         )
       )
-      .orderBy(asc(schema.conversationsTable.createdAt))
+      .orderBy(desc(schema.users.lastOnline))
 
-    const foundUsers = new Map<string, any>()
-    for (const user of onlineUsers) {
-      if (foundUsers.has(user.id)) {
-        console.log('duplicate user', user)
-        const cachedUser = foundUsers.get(user.id)
-        console.log('cached user', cachedUser)
-      }
-      foundUsers.set(user.id, user)
-    }
+    // const foundUsers = new Map<string, any>()
+    // for (const user of onlineUsers) {
+    //   if (foundUsers.has(user.id)) {
+    //     console.log('duplicate user', user)
+    //     const cachedUser = foundUsers.get(user.id)
+    //     console.log('cached user', cachedUser)
+    //   }
+    //   foundUsers.set(user.id, user)
+    // }
 
     return onlineUsers
   }),
@@ -520,5 +522,18 @@ export const messagesRouter = createTRPCRouter({
         .from(schema.users)
 
       return users
+    }),
+  getSignedS3UploadUrl: protectedProcedure
+    .input(
+      z.object({
+        fileName: z.string(),
+        fileType: z.string()
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { fileName, fileType } = input
+      const uploadData = await generatePresignedUrl(fileName)
+
+      return uploadData
     })
 })

@@ -1,3 +1,7 @@
+import { db } from '~/server/db'
+import { eq, count, sql } from 'drizzle-orm'
+import { users } from '~/server/db/schema'
+
 type UserSubscriptions = {
   channels: Set<number>
   privateMessages: Set<number>
@@ -53,12 +57,56 @@ export class UserSubscriptionManager {
   }
 
   // Check if a user is subscribed to a channel
-  isSubscribed(userId: string, channelId: number): boolean {
-    return this.subscriptions.get(userId)?.channels?.has(channelId) ?? false
+  async isSubscribed(userId: string, channelId: number): Promise<boolean> {
+    const isSubbed = this.subscriptions.get(userId)?.channels?.has(channelId) ?? false
+    if (isSubbed) {
+      await updateUserLastOnline(userId)
+    }
+
+    return isSubbed
   }
 
   // Get all channels a user is subscribed to
   getUserChannels(userId: string): number[] {
     return Array.from(this.subscriptions.get(userId)?.channels ?? [])
+  }
+}
+
+async function updateUserLastOnline(userId: string): Promise<void> {
+  try {
+    // const backInTime = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7)
+    await db.update(users).set({ lastOnline: new Date() }).where(eq(users.id, userId))
+  } catch (err) {
+    console.error('Error updating user online status:', err)
+  }
+}
+
+// Run every every minute to mark a random user as online
+// setInterval(async () => {
+//   await markRandomUserOnline()
+// }, 5_000)
+
+async function markRandomUserOnline(): Promise<void> {
+  try {
+    const userCount = await db
+      .select({
+        count: count(users.id)
+      })
+      .from(users)
+
+    if (!userCount?.[0]?.count) return
+    const randomUserId = Math.floor(Math.random() * userCount?.[0]?.count)
+
+    const allUsers = await db
+      .select({
+        id: users.id
+      })
+      .from(users)
+
+    if (!allUsers?.length || allUsers.length < randomUserId || !allUsers?.[randomUserId]?.id) return
+
+    await updateUserLastOnline(allUsers?.[randomUserId]?.id)
+  } catch (err) {
+    console.error('Error updating user online status:', err)
   }
 }
