@@ -152,7 +152,10 @@ export const messageAttachmentsTable = pgTable(
     messageId: integer('message_id')
       .notNull()
       .references(() => messages.id, { onDelete: 'cascade' }),
-    downloadUrl: text('download_url').notNull(),
+    fileKey: text('file_key').notNull(),
+    fileName: text('file_name').notNull(),
+    fileType: text('file_type').notNull(),
+    fileSize: integer('file_size'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),

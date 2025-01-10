@@ -1,5 +1,5 @@
 {
-  "id": "05c21e6f-e945-4233-96a1-782aa79fb51f",
+  "id": "2e419767-64d0-46e3-b776-86c8b74de730",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -492,11 +492,29 @@
           "primaryKey": false,
           "notNull": true
         },
-        "download_url": {
-          "name": "download_url",
+        "file_key": {
+          "name": "file_key",
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "file_name": {
+          "name": "file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_type": {
+          "name": "file_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_size": {
+          "name": "file_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",

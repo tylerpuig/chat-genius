@@ -44,7 +44,10 @@ CREATE TABLE "conversation" (
 CREATE TABLE "message_attachment" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "message_attachment_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"message_id" integer NOT NULL,
-	"download_url" text NOT NULL,
+	"file_key" text NOT NULL,
+	"file_name" text NOT NULL,
+	"file_type" text NOT NULL,
+	"file_size" integer,
 	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"updated_at" timestamp with time zone,
 	CONSTRAINT "message_attachment_id_unique" UNIQUE("id")
