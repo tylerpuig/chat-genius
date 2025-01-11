@@ -77,36 +77,7 @@ export function MessageInput({
           />
         </div>
 
-        <div className="flex items-center gap-1">
-          {/* <Button
-            variant="ghost"
-            size="icon"
-            className="text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
-          >
-            <Gift className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
-          >
-            <Smile className="h-5 w-5" />
-          </Button> */}
-          {/* <Button
-            variant="ghost"
-            size="icon"
-            className="text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
-          >
-            <Paperclip className="h-5 w-5" />
-          </Button> */}
-          {/* <Button
-            variant="ghost"
-            size="icon"
-            className="text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
-          >
-            <Grid className="h-5 w-5" />
-          </Button> */}
-        </div>
+        <div className="flex items-center gap-1"></div>
       </div>
     </div>
   )
@@ -183,7 +154,7 @@ export function ChatContainer() {
   }
 
   return (
-    <div className="absolute inset-0 bottom-[73px] flex flex-col overflow-hidden bg-gray-900">
+    <div className="absolute inset-0 flex flex-col overflow-hidden bg-gray-900">
       <div className="!scrollbar-overlay flex-1 overflow-y-auto scroll-smooth">
         {messages && (
           <>

@@ -14,6 +14,7 @@ import { useState } from 'react'
 import { api } from '~/trpc/react'
 import UserProfileManager from './_components/user/profile/UserProfileManager'
 import { WorkspaceSearchDialog } from './_components/chat/WorkspaceSearch'
+import RichTextEditor from './_components/chat/MessageInput/RichTextEditor'
 
 const homeComponents: Record<UIView, JSX.Element> = {
   channel: <ChannelView />,
@@ -56,11 +57,12 @@ function ChannelView() {
   return (
     <>
       <ChatContainer />
-      <MessageInput
+      {/* <MessageInput
         sendMessage={sendMessage}
         messageContent={messageContent}
         setMessageContent={setMessageContent}
-      />
+      /> */}
+      <RichTextEditor />
       {/* <ChatInput /> */}
     </>
   )
