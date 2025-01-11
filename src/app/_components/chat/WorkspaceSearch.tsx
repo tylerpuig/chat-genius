@@ -1,6 +1,6 @@
 'use client'
 
-import * as React from 'react'
+import { useEffect } from 'react'
 import { Search, User, MessageSquare, File, X } from 'lucide-react'
 import { Dialog, DialogContent } from '~/components/ui/dialog'
 import { Input } from '~/components/ui/input'
@@ -8,6 +8,8 @@ import { api } from '~/trpc/react'
 import { useDebouncedState } from '@mantine/hooks'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { downloadFile } from '../sheets/MessageAttachments'
+import { ScrollArea, ScrollBar } from '~/components/ui/scroll-area'
+import { format, formatDistanceToNow } from 'date-fns'
 
 export function WorkspaceSearchDialog() {
   const [searchQuery, setSearchQuery] = useDebouncedState('', 300)
@@ -29,6 +31,10 @@ export function WorkspaceSearchDialog() {
 
   const createConversation = api.conversations.createConversation.useMutation()
 
+  useEffect(() => {
+    setSearchQuery('')
+  }, [workspaceSearchOpen])
+
   return (
     <Dialog open={workspaceSearchOpen} onOpenChange={setWorkspaceSearchOpen}>
       <DialogContent className="border-0 bg-gray-900 text-gray-100 sm:max-w-[425px]">
@@ -44,7 +50,7 @@ export function WorkspaceSearchDialog() {
             <h3 className="mb-2 text-sm font-semibold text-gray-400">Users</h3>
             <div className="space-y-2">
               {searchResults.data && (
-                <>
+                <ScrollArea type="scroll" className="max-h-32 min-h-2 flex-1 rounded-md">
                   {searchResults.data?.users.map((user) => (
                     <div
                       onClick={async () => {
@@ -68,51 +74,64 @@ export function WorkspaceSearchDialog() {
                       <span>{user.name ?? ''}</span>
                     </div>
                   ))}
-                </>
+                  <ScrollBar orientation="horizontal" className="w-full" />
+                </ScrollArea>
               )}
             </div>
           </div>
           <div>
             <h3 className="mb-2 text-sm font-semibold text-gray-400">Messages</h3>
-            <div className="space-y-2">
-              {searchResults.data &&
-                searchResults.data?.messages.map((message) => (
-                  <div
-                    onClick={() => {
-                      setSelectedChannelId(message.channelId)
-                      setWorkspaceSearchOpen(false)
-                    }}
-                    className="flex cursor-pointer items-center rounded-md p-2 hover:bg-gray-800"
-                  >
-                    <MessageSquare className="mr-2 h-5 w-5 text-blue-400" />
-                    <span>{message.content ?? ''}</span>
-                  </div>
-                ))}
+            <div className="flex">
+              {/* Added wrapper div with flex */}
+              <ScrollArea type="scroll" className="max-h-32 min-h-2 flex-1 rounded-md">
+                <div className="space-y-2">
+                  {searchResults.data &&
+                    searchResults.data?.messages.map((message) => (
+                      <div
+                        onClick={() => {
+                          setSelectedChannelId(message.channelId)
+                          setWorkspaceSearchOpen(false)
+                        }}
+                        className="flex cursor-pointer items-center rounded-md p-2 hover:bg-gray-800"
+                      >
+                        <MessageSquare className="mr-2 h-5 w-5 text-blue-400" />
+                        <div className="space-x-2 break-all">
+                          <span>{message.content?.slice(0, 50) ?? ''}</span>
+                          <span>({formatDistanceToNow(message?.createdAt)})</span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                <ScrollBar orientation="horizontal" className="w-full" />
+              </ScrollArea>
             </div>
           </div>
           <div>
             <h3 className="mb-2 text-sm font-semibold text-gray-400">Files</h3>
-            <div className="space-y-2">
-              {searchResults.data &&
-                searchResults.data?.files.map((file) => (
-                  <div
-                    onClick={async () => {
-                      const download = await generateAttachmentDownloadUrl.mutateAsync({
-                        attachmentId: file.id
-                      })
-                      if (!download?.downloadUrl) return
+            <ScrollArea type="scroll" className="max-h-32 min-h-2 flex-1 rounded-md">
+              <div className="space-y-2">
+                {searchResults.data &&
+                  searchResults.data?.files.map((file) => (
+                    <div
+                      onClick={async () => {
+                        const download = await generateAttachmentDownloadUrl.mutateAsync({
+                          attachmentId: file.id
+                        })
+                        if (!download?.downloadUrl) return
 
-                      await downloadFile(download.downloadUrl, file.fileName)
-                    }}
-                    className="flex cursor-pointer items-center rounded-md p-2 hover:bg-gray-800"
-                  >
-                    <File className="mr-2 h-5 w-5 text-blue-400" />
-                    <span className="" onClick={() => console.log(file)}>
-                      {file.fileName ?? ''}
-                    </span>
-                  </div>
-                ))}
-            </div>
+                        await downloadFile(download.downloadUrl, file.fileName)
+                      }}
+                      className="flex cursor-pointer items-center rounded-md p-2 hover:bg-gray-800"
+                    >
+                      <File className="mr-2 h-5 w-5 text-blue-400" />
+                      <span className="" onClick={() => console.log(file)}>
+                        {file.fileName ?? ''}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+              <ScrollBar orientation="horizontal" className="w-full" />
+            </ScrollArea>
           </div>
         </div>
       </DialogContent>

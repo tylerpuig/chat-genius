@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { ChatMessage } from './ChatMessage'
 import { Button } from '~/components/ui/button'
 import { api } from '../../../trpc/react'
@@ -172,6 +172,16 @@ export function ChatContainer() {
     }
   )
 
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  function scrollToBottom(): void {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   return (
     <div className="absolute inset-0 bottom-[73px] flex flex-col overflow-hidden bg-gray-900">
       <div className="!scrollbar-overlay flex-1 overflow-y-auto scroll-smooth">
@@ -180,6 +190,7 @@ export function ChatContainer() {
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
+            <div ref={messagesEndRef} />
           </>
         )}
       </div>

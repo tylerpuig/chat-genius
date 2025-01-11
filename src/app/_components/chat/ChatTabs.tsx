@@ -18,6 +18,7 @@ import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
 import { SidebarTrigger } from '~/components/ui/sidebar'
 import { ConversationAvatar } from './ConversationAvatar'
 import { Badge } from '~/components/ui/badge'
+import ChannelHeader from './ChannelHeader'
 
 type NavItemProps = {
   icon: React.ReactNode
@@ -74,7 +75,7 @@ function DisplayCurrentChannelName() {
 
   return (
     <div>
-      <div className="flex items-center gap-2">
+      {/* <div className="flex items-center gap-2">
         {!selectedChannelName ? (
           <>
             <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
@@ -94,51 +95,52 @@ function DisplayCurrentChannelName() {
             <ConversationHeader />
           </>
         )}
-      </div>
+      </div> */}
     </div>
   )
 }
 
 export default function ChatTabs() {
-  const { currentTab, selectedChannelName, setWorkspaceSearchOpen } = useUI()
+  const { currentTab, setWorkspaceSearchOpen } = useUI()
   return (
-    <div className="flex flex-col gap-1 bg-gray-900/40 p-2">
-      <div className="flex items-center justify-between pb-3">
-        <SidebarTrigger variant="sidebarTrigger" className=""></SidebarTrigger>
-        <div className="flex items-center justify-end space-x-4 rounded-lg bg-gray-800 p-4">
-          <button
-            onClick={() => setWorkspaceSearchOpen(true)}
-            className="text-gray-400 transition-colors hover:text-blue-400"
-          >
-            <Search className="h-6 w-6" />
-          </button>
-          <button className="relative text-gray-400 transition-colors hover:text-blue-400">
-            <Bell className="h-6 w-6" />
-            {/* <Badge className="absolute -right-2 -top-2 bg-blue-600 text-xs text-gray-200">3</Badge> */}
-          </button>
-          {/* <button className="text-gray-400 transition-colors hover:text-blue-400">
-            <MessageSquare className="h-6 w-6" />
-          </button> */}
-        </div>
-      </div>
+    <ChannelHeader />
+    // <div className="flex flex-col gap-1 bg-gray-900/40 p-2">
+    //   <div className="flex items-center justify-between pb-3">
+    //     <SidebarTrigger variant="sidebarTrigger" className=""></SidebarTrigger>
+    //     <div className="flex items-center justify-end space-x-4 rounded-lg bg-gray-800 p-4">
+    //       <button
+    //         onClick={() => setWorkspaceSearchOpen(true)}
+    //         className="text-gray-400 transition-colors hover:text-blue-400"
+    //       >
+    //         <Search className="h-6 w-6" />
+    //       </button>
+    //       <button className="relative text-gray-400 transition-colors hover:text-blue-400">
+    //         <Bell className="h-6 w-6" />
+    //         {/* <Badge className="absolute -right-2 -top-2 bg-blue-600 text-xs text-gray-200">3</Badge> */}
+    //       </button>
+    //       {/* <button className="text-gray-400 transition-colors hover:text-blue-400">
+    //         <MessageSquare className="h-6 w-6" />
+    //       </button> */}
+    //     </div>
+    //   </div>
 
-      <DisplayCurrentChannelName />
+    //   <DisplayCurrentChannelName />
 
-      <div className="-mb-[2px] flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          {TABS.map((tab) => (
-            <NavItem
-              key={tab.label}
-              icon={tab.icon}
-              label={tab.label}
-              isActive={tab.label === currentTab}
-            />
-          ))}
-        </div>
+    //    <div className="-mb-[2px] flex items-center justify-between gap-2">
+    //     <div className="flex items-center gap-2">
+    //       {TABS.map((tab) => (
+    //         <NavItem
+    //           key={tab.label}
+    //           icon={tab.icon}
+    //           label={tab.label}
+    //           isActive={tab.label === currentTab}
+    //         />
+    //       ))}
+    //     </div>
 
-        <AvatarStack />
-      </div>
-    </div>
+    //   <AvatarStack />
+    //   </div>
+    //  </div>
   )
 }
 
