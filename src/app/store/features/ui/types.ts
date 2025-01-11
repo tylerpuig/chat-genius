@@ -18,4 +18,5 @@ export type UIState = {
   isConversation: boolean
   manageUserProfileSheetOpen: boolean
   workspaceSearchOpen: boolean
+  appSidebarOpen: boolean
 }

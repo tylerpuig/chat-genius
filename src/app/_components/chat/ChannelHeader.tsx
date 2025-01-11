@@ -9,7 +9,7 @@ import {
   FileText,
   Pin,
   Bookmark,
-  MoreHorizontal
+  ArrowLeftFromLine
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
@@ -21,6 +21,7 @@ import {
 } from '~/components/ui/dropdown-menu'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { type ChatTab } from '~/app/store/features/ui/types'
+import { SidebarTrigger } from '~/components/ui/sidebar'
 
 const headerTabs: Record<ChatTab, { icon: React.ReactNode; label: ChatTab }> = {
   Messages: { icon: <MessageSquare className="mr-2 h-4 w-4" />, label: 'Messages' },
@@ -31,12 +32,15 @@ const headerTabs: Record<ChatTab, { icon: React.ReactNode; label: ChatTab }> = {
 
 export default function ChannelHeader() {
   const { currentTab, switchTab, setWorkspaceSearchOpen } = useUI()
+
   return (
     <header className="flex h-14 items-center gap-4 border-b border-gray-700 bg-background bg-gray-800 px-4 text-white lg:px-6">
-      <Button variant="channel" size="icon" className="shrink-0">
-        <Menu className="h-5 w-5" />
-        <span className="sr-only">Toggle navigation menu</span>
-      </Button>
+      <SidebarTrigger className="shrink-0" variant="channel">
+        {/* <Button variant="channel" size="icon" className="shrink-0">
+          <ArrowLeftFromLine className="h-5 w-5" />
+          <span className="sr-only">Toggle navigation menu</span>
+        </Button> */}
+      </SidebarTrigger>
       <div className="flex flex-1 items-center gap-4 md:gap-6">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -23,6 +23,7 @@ export const useUI = () => {
   const isConversation = useSelector(uiSelectors.selectIsConversation)
   const manageUserProfileSheetOpen = useSelector(uiSelectors.selectManageUserProfileSheetOpen)
   const workspaceSearchOpen = useSelector(uiSelectors.selectWorkspaceSearchOpen)
+  const appSidebarOpen = useSelector(uiSelectors.selectAppSidebarOpen)
 
   return {
     // State
@@ -41,6 +42,7 @@ export const useUI = () => {
     isConversation,
     manageUserProfileSheetOpen,
     workspaceSearchOpen,
+    appSidebarOpen,
 
     // Actions
     switchTab: (tab: ChatTab) => dispatch(uiSlice.setCurrentTab(tab)),
@@ -63,6 +65,7 @@ export const useUI = () => {
       dispatch(uiSlice.setIsConversation(isConversation)),
     setManageUserProfileSheetOpen: (open: boolean) =>
       dispatch(uiSlice.setManageUserProfileSheetOpen(open)),
-    setWorkspaceSearchOpen: (open: boolean) => dispatch(uiSlice.setWorkspaceSearchOpen(open))
+    setWorkspaceSearchOpen: (open: boolean) => dispatch(uiSlice.setWorkspaceSearchOpen(open)),
+    setAppSidebarOpen: (open: boolean) => dispatch(uiSlice.setAppSidebarOpen(open))
   }
 }

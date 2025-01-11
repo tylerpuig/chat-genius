@@ -41,7 +41,7 @@ export const messagesRouter = createTRPCRouter({
           }
         }
       } catch (err) {
-        console.error('Error in onMessage subscription:', err)
+        // console.error('Error in onMessage subscription:', err)
       } finally {
         // Clean up subscription when the connection closes
         subscriptionManager.unsubscribe(userId, input.channelId)

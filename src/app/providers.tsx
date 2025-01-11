@@ -8,19 +8,18 @@ import { TRPCReactProvider } from '~/trpc/react'
 import { ChannelProvider } from '~/app/hooks/ui/useChannelContext'
 import { SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar'
 import { FileAttachmentProvider } from '~/app/hooks/ui/useFileAttachmentContext'
-
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <SessionProvider>
-        <TRPCReactProvider>
-          <Provider store={store}>
+    <SessionProvider>
+      <TRPCReactProvider>
+        <Provider store={store}>
+          <SidebarProvider>
             <ChannelProvider>
               <FileAttachmentProvider>{children}</FileAttachmentProvider>
             </ChannelProvider>
-          </Provider>
-        </TRPCReactProvider>
-      </SessionProvider>
-    </SidebarProvider>
+          </SidebarProvider>
+        </Provider>
+      </TRPCReactProvider>
+    </SessionProvider>
   )
 }

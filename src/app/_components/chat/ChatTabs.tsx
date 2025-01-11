@@ -7,7 +7,8 @@ import {
   Bookmark,
   Search,
   Bell,
-  MessageSquare
+  MessageSquare,
+  ArrowLeftFromLine
 } from 'lucide-react'
 import { cn } from '~/lib/utils'
 import { useUI } from '~/app/hooks/ui/useUI'

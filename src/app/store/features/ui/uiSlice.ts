@@ -17,7 +17,8 @@ const initialState: UIState = {
   conversationUser: null,
   isConversation: false,
   manageUserProfileSheetOpen: false,
-  workspaceSearchOpen: false
+  workspaceSearchOpen: false,
+  appSidebarOpen: true
 }
 
 const uiSlice = createSlice({
@@ -72,6 +73,9 @@ const uiSlice = createSlice({
     },
     setWorkspaceSearchOpen: (state, action: PayloadAction<boolean>) => {
       state.workspaceSearchOpen = action.payload
+    },
+    setAppSidebarOpen: (state, action: PayloadAction<boolean>) => {
+      state.appSidebarOpen = action.payload
     }
   }
 })
@@ -92,7 +96,8 @@ export const {
   setConversationUser,
   setIsConversation,
   setManageUserProfileSheetOpen,
-  setWorkspaceSearchOpen
+  setWorkspaceSearchOpen,
+  setAppSidebarOpen
 } = uiSlice.actions
 
 export default uiSlice.reducer

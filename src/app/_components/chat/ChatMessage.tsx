@@ -16,6 +16,7 @@ import { useUI } from '~/app/hooks/ui/useUI'
 import { formatDistanceToNow, format } from 'date-fns'
 import { api } from '~/trpc/react'
 import { useSession } from 'next-auth/react'
+import { useSidebar } from '~/components/ui/sidebar'
 
 type ChatMessageProps = {
   message: ChatMessageData
@@ -41,6 +42,8 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
     selectedParentMessageId
   } = useUI()
 
+  const { isMobile } = useSidebar()
+
   const pinMessage = api.messages.pinMessage.useMutation()
   const unPinMessage = api.messages.unPinMessage.useMutation()
   const deleteMessage = api.messages.deleteMessage.useMutation()
@@ -63,13 +66,15 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
               >
                 {user?.name || ''}
               </span>
-              <span className="text-sm text-gray-400">
-                {!isReply ? (
-                  <>{formatDistanceToNow(message?.createdAt, { addSuffix: true })}</>
-                ) : (
-                  <>{format(message?.createdAt, 'h:mm a')}</>
-                )}
-              </span>
+              {!isMobile && (
+                <span className="text-sm text-gray-400">
+                  {!isReply ? (
+                    <>{formatDistanceToNow(message?.createdAt, { addSuffix: true })}</>
+                  ) : (
+                    <>{format(message?.createdAt, 'h:mm a')}</>
+                  )}
+                </span>
+              )}
               {/* {isPinned && (
                 <span className="rounded bg-blue-900/30 px-2 py-0.5 text-xs text-blue-400">
                   Pinned
