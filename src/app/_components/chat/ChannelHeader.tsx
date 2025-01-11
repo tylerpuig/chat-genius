@@ -34,7 +34,7 @@ export default function ChannelHeader() {
   const { currentTab, switchTab, setWorkspaceSearchOpen } = useUI()
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b border-gray-700 bg-background bg-gray-800 px-4 text-white lg:px-6">
+    <header className="sticky top-0 flex h-14 items-center gap-4 border-b border-gray-700 bg-background bg-gray-800 px-4 text-white lg:px-6">
       <SidebarTrigger className="shrink-0" variant="channel">
         {/* <Button variant="channel" size="icon" className="shrink-0">
           <ArrowLeftFromLine className="h-5 w-5" />

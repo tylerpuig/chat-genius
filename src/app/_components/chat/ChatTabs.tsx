@@ -74,93 +74,10 @@ function NavItem({ icon, label, isActive }: NavItemProps) {
 function DisplayCurrentChannelName() {
   const { selectedChannelName, isConversation } = useUI()
 
-  return (
-    <div>
-      {/* <div className="flex items-center gap-2">
-        {!selectedChannelName ? (
-          <>
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
-              {'# '} <Skeleton className="h-4 w-16" />
-            </h2>
-          </>
-        ) : (
-          <>
-            {!isConversation && (
-              <div className="mb-2 flex w-full transform rounded-lg p-2 duration-700 animate-in [--tw-enter-opacity:0.05]">
-                <h2 className="text-lg font-semibold text-white">
-                  {'# ' + (selectedChannelName || '')}
-                </h2>
-              </div>
-            )}
-
-            <ConversationHeader />
-          </>
-        )}
-      </div> */}
-    </div>
-  )
+  return <div></div>
 }
 
 export default function ChatTabs() {
   const { currentTab, setWorkspaceSearchOpen } = useUI()
-  return (
-    <ChannelHeader />
-    // <div className="flex flex-col gap-1 bg-gray-900/40 p-2">
-    //   <div className="flex items-center justify-between pb-3">
-    //     <SidebarTrigger variant="sidebarTrigger" className=""></SidebarTrigger>
-    //     <div className="flex items-center justify-end space-x-4 rounded-lg bg-gray-800 p-4">
-    //       <button
-    //         onClick={() => setWorkspaceSearchOpen(true)}
-    //         className="text-gray-400 transition-colors hover:text-blue-400"
-    //       >
-    //         <Search className="h-6 w-6" />
-    //       </button>
-    //       <button className="relative text-gray-400 transition-colors hover:text-blue-400">
-    //         <Bell className="h-6 w-6" />
-    //         {/* <Badge className="absolute -right-2 -top-2 bg-blue-600 text-xs text-gray-200">3</Badge> */}
-    //       </button>
-    //       {/* <button className="text-gray-400 transition-colors hover:text-blue-400">
-    //         <MessageSquare className="h-6 w-6" />
-    //       </button> */}
-    //     </div>
-    //   </div>
-
-    //   <DisplayCurrentChannelName />
-
-    //    <div className="-mb-[2px] flex items-center justify-between gap-2">
-    //     <div className="flex items-center gap-2">
-    //       {TABS.map((tab) => (
-    //         <NavItem
-    //           key={tab.label}
-    //           icon={tab.icon}
-    //           label={tab.label}
-    //           isActive={tab.label === currentTab}
-    //         />
-    //       ))}
-    //     </div>
-
-    //   <AvatarStack />
-    //   </div>
-    //  </div>
-  )
+  return <ChannelHeader />
 }
-
-// <DropdownMenu>
-//   <DropdownMenuTrigger className="pr-2 outline-none">
-//     <Avatar className="h-8 w-8 border border-blue-600/50 hover:border-blue-500">
-//       {/* <AvatarImage src="/placeholder.svg" /> */}
-//       <AvatarFallback className="bg-blue-950 text-blue-200">AI</AvatarFallback>
-//     </Avatar>
-//   </DropdownMenuTrigger>
-//   <DropdownMenuContent align="end" className="w-40 border-gray-800 bg-gray-900">
-//     <DropdownMenuItem
-//       className="cursor-pointer text-white focus:bg-blue-800 focus:text-white"
-//       onClick={async () => {
-//         await signOut()
-//       }}
-//     >
-//       <LogOut className="mr-2 h-4 w-4" />
-//       <span>Logout</span>
-//     </DropdownMenuItem>
-//   </DropdownMenuContent>
-// </DropdownMenu>
