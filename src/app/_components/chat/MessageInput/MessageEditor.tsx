@@ -29,13 +29,9 @@ export default function MessageEditor({
 
   const { setFileUploadModalOpen, selectedChannelName } = useUI()
 
-  const inputRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  async function handleMessage(e?: React.KeyboardEvent<HTMLTextAreaElement>): Promise<void> {
+  async function handleMessage(e: React.KeyboardEvent<HTMLTextAreaElement>): Promise<void> {
     try {
       if (!session?.user.id || !messageContent) return
-      console.log('Sending message:', messageContent)
 
       if (e?.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
@@ -51,6 +47,19 @@ export default function MessageEditor({
     }
   }
 
+  async function submitMessage(): Promise<void> {
+    try {
+      if (!session?.user.id || !messageContent) return
+      const newMessage = await sendMessage()
+      if (!newMessage) return
+      if (files.length) {
+        await uploadToS3(newMessage)
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+    }
+  }
+
   return (
     <div className="bg-gray-800 p-3">
       <div className="relative rounded-lg border border-gray-600 focus-within:ring-1 focus-within:ring-blue-500">
@@ -58,16 +67,20 @@ export default function MessageEditor({
           value={messageContent}
           onKeyDown={async (e) => await handleMessage(e)}
           onChange={(e) => setMessageContent(e.target.value)}
-          placeholder="Send a message..."
+          placeholder={`Send a message to ${selectedChannelName}...`}
           className="scrollbar-thin rounded-lg border-0 !text-lg text-zinc-100 shadow-none focus-visible:ring-0"
         />
 
         <div className="flex items-center p-3 pt-0">
-          <Button onClick={() => setFileUploadModalOpen(true)} variant="channel" size="icon">
-            <input type="file" onChange={handleFileChange} ref={fileInputRef} className="hidden" />
+          <Button
+            onClick={() => setFileUploadModalOpen(true)}
+            variant="channel"
+            size="icon"
+            className="relative"
+          >
             <Paperclip className="size-4 stroke-slate-50" />
             {files.length ? (
-              <div className="absolute -top-1 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
+              <div className="absolute -right-1 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
                 <span className="text-xs font-medium text-white">{files.length}</span>
               </div>
             ) : null}
@@ -81,10 +94,10 @@ export default function MessageEditor({
 
           <Button
             onClick={async () => {
-              await handleMessage()
+              await submitMessage()
             }}
             variant="sendMessage"
-            //   disabled={!input || isLoading}
+            disabled={!messageContent}
             size="sm"
             className="ml-auto gap-1.5 bg-gray-700 text-white"
           >

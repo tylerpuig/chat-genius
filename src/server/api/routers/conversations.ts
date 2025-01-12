@@ -8,12 +8,6 @@ export const conversationsRouter = createTRPCRouter({
   createConversation: protectedProcedure
     .input(z.object({ toUserId: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const [toUser] = await ctx.db
-        .select()
-        .from(schema.users)
-        .where(eq(schema.users.id, input.toUserId))
-        .limit(1)
-      console.log('toUser', toUser)
       const conversation = await ctx.db
         .select()
         .from(schema.conversationsTable)
@@ -30,8 +24,6 @@ export const conversationsRouter = createTRPCRouter({
           )
         )
         .limit(1)
-
-      console.log('conversation', conversation)
 
       let conversationId: number = conversation[0]?.channelId || 0
 

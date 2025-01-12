@@ -1,7 +1,8 @@
 import { sql } from 'drizzle-orm'
-import { eq } from 'drizzle-orm'
+import { eq, and, ne } from 'drizzle-orm'
 import { db } from '~/server/db'
 import * as schema from '~/server/db/schema'
+import { type PostgresJsTransaction } from 'drizzle-orm/postgres-js'
 
 export async function incrementMessageReplyCount(messageId: number): Promise<void> {
   try {
@@ -26,5 +27,69 @@ export async function setMessageAttachmentCount(messageId: number, count: number
       .where(eq(schema.messages.id, messageId))
   } catch (err) {
     console.error('Error incrementing message attachment count:', err)
+  }
+}
+
+export async function createPrivateConversationsForNewUser(newUserId: string): Promise<void> {
+  try {
+    await db.transaction(async (tx) => {
+      // 1. Get all existing user IDs except the new user
+      const existingUsers = await tx
+        .select({ id: schema.users.id })
+        .from(schema.users)
+        .where(ne(schema.users.id, newUserId))
+
+      if (!existingUsers.length) return
+
+      // 2. Prepare channel insertion data
+      const channelValues = existingUsers.map(() => ({
+        name: '',
+        createdById: newUserId,
+        description: '',
+        isPrivate: true,
+        isConversation: true
+      }))
+
+      // 3. Batch insert channels
+      const newChannels = await tx
+        .insert(schema.channels)
+        .values(channelValues)
+        .returning({ id: schema.channels.id })
+
+      // 4. Prepare channel members data
+      const channelMembersValues = newChannels.flatMap((channel) => [
+        {
+          channelId: channel.id,
+          userId: newUserId,
+          isAdmin: true
+        },
+        {
+          channelId: channel.id,
+          userId: existingUsers[newChannels.indexOf(channel)]!.id,
+          isAdmin: true
+        }
+      ])
+
+      // 5. Batch insert channel members
+      await tx.insert(schema.channelMembers).values(channelMembersValues)
+
+      // 6. Prepare conversations data
+      const conversationValues = newChannels.map((channel, index) => ({
+        user1Id: newUserId,
+        user2Id: existingUsers[index]!.id,
+        channelId: channel.id
+      }))
+
+      // 7. Batch insert conversations
+      await tx.insert(schema.conversationsTable).values(conversationValues)
+
+      return {
+        channelCount: newChannels.length,
+        memberCount: channelMembersValues.length,
+        conversationCount: conversationValues.length
+      }
+    })
+  } catch (err) {
+    console.error('Error creating private conversations for new user:', err)
   }
 }

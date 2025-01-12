@@ -2,7 +2,7 @@ import { DrizzleAdapter } from '@auth/drizzle-adapter'
 import { type DefaultSession, type NextAuthConfig } from 'next-auth'
 import DiscordProvider from 'next-auth/providers/discord'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import Credentials from 'next-auth/providers/credentials'
+import { createPrivateConversationsForNewUser } from '~/server/db/utils/insertions'
 
 import { db } from '~/server/db'
 import { accounts, sessions, users, verificationTokens } from '~/server/db/schema'
@@ -41,7 +41,7 @@ export const authConfig = {
   },
   trustHost: true,
   callbacks: {
-    session: ({ session, token }) => {
+    session: async ({ session, token }) => {
       if (!token) return session
 
       return {
@@ -55,17 +55,19 @@ export const authConfig = {
         }
       }
     },
-    jwt: async ({ token, user }: { token: any; user: any }) => {
+    jwt: async ({ token, user, trigger }) => {
       if (user) {
+        if (trigger === 'signUp' && user?.id) {
+          await createPrivateConversationsForNewUser(user.id)
+        }
         token.sub = user.id
       }
       return token
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
-
   providers: [
-    Credentials({
+    CredentialsProvider({
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },

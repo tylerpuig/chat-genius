@@ -4,8 +4,9 @@ import { users } from '~/server/db/schema'
 import { eq } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
 import { AvatarGenerator } from 'random-avatar-generator'
-import { faker } from '@faker-js/faker'
+import { faker, id_ID } from '@faker-js/faker'
 import { type User } from '~/server/db/types'
+import { createPrivateConversationsForNewUser } from '~/server/db/utils/insertions'
 
 export const authRouter = createTRPCRouter({
   emailSignUp: publicProcedure
@@ -25,7 +26,7 @@ export const authRouter = createTRPCRouter({
       // Simply get a random avatar
       const randomAvatar = generator.generateRandomAvatar(input.email)
 
-      const newUser = await ctx.db
+      const [newUser] = await ctx.db
         .insert(users)
         .values({
           name: input.name,
@@ -33,11 +34,22 @@ export const authRouter = createTRPCRouter({
           password: hashedPassword,
           image: randomAvatar
         })
-        .returning()
+        .returning({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          image: users.image
+        })
+
+      if (!newUser?.id) {
+        throw new Error('Failed to create user')
+      }
+
+      await createPrivateConversationsForNewUser(newUser.id)
 
       return {
         success: true,
-        user: newUser[0]
+        user: newUser
       }
     }),
   seedDB: protectedProcedure.mutation(async ({ ctx }) => {
