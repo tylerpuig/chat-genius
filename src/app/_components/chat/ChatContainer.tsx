@@ -155,7 +155,7 @@ export function ChatContainer() {
 
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden bg-gray-900">
-      <div className="!scrollbar-overlay flex-1 overflow-y-auto scroll-smooth">
+      <div className="!scrollbar-overlay mb-24 flex-1 overflow-y-auto scroll-smooth">
         {messages && (
           <>
             {messages.map((message) => (
