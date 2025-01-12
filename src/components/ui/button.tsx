@@ -18,6 +18,7 @@ const buttonVariants = cva(
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         channel: 'hover:bg-gray-700',
+        sendMessage: 'hover:bg-gray-600',
         link: 'text-primary underline-offset-4 hover:underline',
         emoji: 'text-primary hover:text-primary/80'
       },

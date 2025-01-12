@@ -10,6 +10,7 @@ import { ChatMessage } from '~/app/_components/chat/ChatMessage'
 import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
 import { Skeleton } from '~/components/ui/skeleton'
 import { MessageInput } from '../chat/ChatContainer'
+import MessageEditor from '../chat/MessageInput/MessageEditor'
 
 export function ViewMessageRepliesSheet() {
   const {
@@ -101,7 +102,7 @@ export function ViewMessageRepliesSheet() {
             )}
           </div>
           {/* <ChatInput /> */}
-          <MessageInput
+          <MessageEditor
             sendMessage={sendMessage}
             messageContent={replyContent}
             setMessageContent={setReplyContent}
