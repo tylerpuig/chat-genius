@@ -108,28 +108,7 @@ type UserStatusProps = {
 
 function OnlineUserList() {
   const userList = api.messages.getOnlineUsers.useQuery()
-  const {
-    setSelectedChannelId,
-    setSelectedChannelName,
-    setConversationUser,
-    setIsConversation,
-    isConversation
-  } = useUI()
-
-  // const createConversation = api.conversations.createConversation.useMutation({
-  //   onSuccess: (data) => {
-  //     if (data?.newConversationId) {
-  //       setSelectedChannelId(data.newConversationId)
-  //       userList.refetch()
-  //     }
-  //   }
-  // })
-
-  // useEffect(() => {
-  //   if (isConversation) {
-  //     userList.refetch()
-  //   }
-  // }, [isConversation])
+  const { setSelectedChannelId, setSelectedChannelName, setIsConversation } = useUI()
 
   if (!userList.data) return null
 
@@ -148,7 +127,7 @@ function OnlineUserList() {
             // }
             setSelectedChannelName(user.name)
             setIsConversation(true)
-            setConversationUser(user)
+            // setConversationUser(user)
           }}
         >
           <UserStatus

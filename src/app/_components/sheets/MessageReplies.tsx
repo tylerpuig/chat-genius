@@ -9,7 +9,6 @@ import { useUI } from '~/app/hooks/ui/useUI'
 import { ChatMessage } from '~/app/_components/chat/ChatMessage'
 import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
 import { Skeleton } from '~/components/ui/skeleton'
-import { MessageInput } from '../chat/ChatContainer'
 import MessageEditor from '../chat/MessageInput/MessageEditor'
 
 export function ViewMessageRepliesSheet() {
@@ -39,7 +38,7 @@ export function ViewMessageRepliesSheet() {
     refetch,
     isPending
   } = api.messages.getMessageReplies.useQuery({
-    messageId: selectedParentMessageId || 0
+    parentMessageId: selectedParentMessageId || 0
   })
 
   useEffect(() => {

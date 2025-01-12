@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm'
 import { eq, and, ne, or, isNull } from 'drizzle-orm'
 import { db } from '~/server/db'
 import * as schema from '~/server/db/schema'
-import { type PostgresJsTransaction } from 'drizzle-orm/postgres-js'
 
 export async function incrementMessageReplyCount(messageId: number): Promise<void> {
   try {
@@ -32,76 +31,71 @@ export async function setMessageAttachmentCount(messageId: number, count: number
 
 export async function createPrivateConversationsForNewUser(newUserId: string): Promise<void> {
   try {
-    await db.transaction(async (tx) => {
-      // 1. Get all existing user IDs except the new user that don't already have a conversation
-      const existingUsers = await tx
-        .select({ id: schema.users.id })
-        .from(schema.users)
-        .leftJoin(
-          schema.conversationsTable,
-          or(
-            and(
-              eq(schema.users.id, schema.conversationsTable.user1Id),
-              eq(schema.conversationsTable.user2Id, newUserId)
-            ),
-            and(
-              eq(schema.users.id, schema.conversationsTable.user2Id),
-              eq(schema.conversationsTable.user1Id, newUserId)
-            )
+    // await db.transaction(async (tx) => {
+    // 1. Get all existing user IDs except the new user that don't already have a conversation
+    const existingUsers = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .leftJoin(
+        schema.conversationsTable,
+        or(
+          and(
+            eq(schema.users.id, schema.conversationsTable.user1Id),
+            eq(schema.conversationsTable.user2Id, newUserId)
+          ),
+          and(
+            eq(schema.users.id, schema.conversationsTable.user2Id),
+            eq(schema.conversationsTable.user1Id, newUserId)
           )
         )
-        .where(and(ne(schema.users.id, newUserId), isNull(schema.conversationsTable.id)))
+      )
+      .where(and(ne(schema.users.id, newUserId), isNull(schema.conversationsTable.id)))
 
-      if (!existingUsers.length) return
+    if (!existingUsers.length) return
 
-      // 2. Prepare channel insertion data
-      const channelValues = existingUsers.map(() => ({
-        name: '',
-        createdById: newUserId,
-        description: '',
-        isPrivate: true,
-        isConversation: true
-      }))
+    // 2. Prepare channel insertion data
+    const channelValues = existingUsers.map(() => ({
+      name: '',
+      createdById: newUserId,
+      description: '',
+      isPrivate: true,
+      isConversation: true
+    }))
 
-      // 3. Batch insert channels
-      const newChannels = await tx
-        .insert(schema.channels)
-        .values(channelValues)
-        .returning({ id: schema.channels.id })
+    // 3. Batch insert channels
+    const newChannels = await db
+      .insert(schema.channels)
+      .values(channelValues)
+      .returning({ id: schema.channels.id })
 
-      // 4. Prepare channel members data
-      const channelMembersValues = newChannels.flatMap((channel) => [
-        {
-          channelId: channel.id,
-          userId: newUserId,
-          isAdmin: true
-        },
-        {
-          channelId: channel.id,
-          userId: existingUsers[newChannels.indexOf(channel)]!.id,
-          isAdmin: true
-        }
-      ])
-
-      // 5. Batch insert channel members
-      await tx.insert(schema.channelMembers).values(channelMembersValues)
-
-      // 6. Prepare conversations data
-      const conversationValues = newChannels.map((channel, index) => ({
-        user1Id: newUserId,
-        user2Id: existingUsers[index]!.id,
-        channelId: channel.id
-      }))
-
-      // 7. Batch insert conversations
-      await tx.insert(schema.conversationsTable).values(conversationValues)
-
-      return {
-        channelCount: newChannels.length,
-        memberCount: channelMembersValues.length,
-        conversationCount: conversationValues.length
+    // 4. Prepare channel members data
+    const channelMembersValues = newChannels.flatMap((channel) => [
+      {
+        channelId: channel.id,
+        userId: newUserId,
+        isAdmin: true
+      },
+      {
+        channelId: channel.id,
+        userId: existingUsers[newChannels.indexOf(channel)]!.id,
+        isAdmin: true
       }
-    })
+    ])
+
+    // 5. Batch insert channel members
+    await db.insert(schema.channelMembers).values(channelMembersValues)
+
+    // 6. Prepare conversations data
+    const conversationValues = newChannels.map((channel, index) => ({
+      user1Id: newUserId,
+      user2Id: existingUsers[index]!.id,
+      channelId: channel.id
+    }))
+
+    // 7. Batch insert conversations
+    await db.insert(schema.conversationsTable).values(conversationValues)
+
+    // })
   } catch (err) {
     console.error('Error creating private conversations for new user:', err)
   }

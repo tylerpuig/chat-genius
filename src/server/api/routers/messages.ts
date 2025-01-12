@@ -143,9 +143,9 @@ export const messagesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      let newMesageId: number = 0
-      await ctx.db.transaction(async (tx) => {
-        const newMessage = await tx
+      try {
+        let newMessageId: number = 0
+        const newMessage = await ctx.db
           .insert(schema.messages)
           .values({
             content: input.content,
@@ -156,38 +156,47 @@ export const messagesRouter = createTRPCRouter({
           .returning()
 
         if (!newMessage?.[0]?.id) {
-          return { messageId: newMesageId }
+          return { messageId: newMessageId }
         }
 
-        await tx.insert(schema.messagesToParents).values({
-          messageId: newMessage[0].id,
-          parentId: input.messageId
+        const parent = await ctx.db
+          .insert(schema.messagesToParents)
+          .values({
+            messageId: newMessage[0].id,
+            parentId: input.messageId
+          })
+          .returning()
+
+        newMessageId = newMessage[0].id
+
+        if (!newMessageId) {
+          throw new Error('Failed to create reply message')
+        }
+
+        await incrementMessageReplyCount(input.messageId)
+
+        ee.emit('newMessage', {
+          id: '',
+          content: '',
+          channelId: input.channelId,
+          userId: ctx.session.user.id
         })
 
-        newMesageId = newMessage[0].id
-      })
-
-      await incrementMessageReplyCount(input.messageId)
-
-      ee.emit('newMessage', {
-        id: '',
-        content: '',
-        channelId: input.channelId,
-        userId: ctx.session.user.id
-      })
-
-      return { messageId: newMesageId }
+        return { messageId: newMessageId }
+      } catch (err) {
+        console.error('Error creating reply:', err)
+      }
     }),
   getMessageReplies: protectedProcedure
     .input(
       z.object({
-        messageId: z.number()
+        parentMessageId: z.number()
       })
     )
     .query(async ({ ctx, input }) => {
       // await new Promise((resolve) => setTimeout(resolve, 4000))
       const mainMessage = await ctx.db.query.messages.findFirst({
-        where: eq(schema.messages.id, input.messageId),
+        where: eq(schema.messages.id, input.parentMessageId),
         extras: {
           isSaved: sql<boolean>`EXISTS (
                     SELECT 1 FROM ${schema.savedMessagesTable}
@@ -208,7 +217,7 @@ export const messagesRouter = createTRPCRouter({
         }
       })
       const replies = await ctx.db.query.messagesToParents.findMany({
-        where: eq(schema.messagesToParents.parentId, input.messageId),
+        where: eq(schema.messagesToParents.parentId, input.parentMessageId),
         with: {
           message: {
             extras: {
@@ -387,35 +396,33 @@ export const messagesRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { name, description, userId, isPrivate, userIds } = input
 
-      return await ctx.db.transaction(async (tx) => {
-        const [newChannel] = await tx
-          .insert(schema.channels)
-          .values({ name, createdById: userId, description, isPrivate })
-          .returning()
-        if (!newChannel) {
-          throw new Error('Failed to create channel')
-        }
+      const [newChannel] = await ctx.db
+        .insert(schema.channels)
+        .values({ name, createdById: userId, description, isPrivate })
+        .returning()
+      if (!newChannel) {
+        throw new Error('Failed to create channel')
+      }
 
-        // Add creator as channel member and admin
-        await tx.insert(schema.channelMembers).values({
-          channelId: newChannel.id,
-          userId: userId,
-          isAdmin: true // Creator should probably be an admin
-        })
-
-        if (userIds.length) {
-          // Add other users as channel members
-          await tx.insert(schema.channelMembers).values(
-            userIds.map((userId) => ({
-              channelId: newChannel.id,
-              userId: userId,
-              isAdmin: false
-            }))
-          )
-        }
-
-        return newChannel
+      // Add creator as channel member and admin
+      await ctx.db.insert(schema.channelMembers).values({
+        channelId: newChannel.id,
+        userId: userId,
+        isAdmin: true // Creator should probably be an admin
       })
+
+      if (userIds.length) {
+        // Add other users as channel members
+        await ctx.db.insert(schema.channelMembers).values(
+          userIds.map((userId) => ({
+            channelId: newChannel.id,
+            userId: userId,
+            isAdmin: false
+          }))
+        )
+      }
+
+      return newChannel
     }),
   getOnlineUsers: protectedProcedure.query(async ({ ctx }) => {
     const onlineUsers = await ctx.db
@@ -451,27 +458,27 @@ export const messagesRouter = createTRPCRouter({
   getChannels: protectedProcedure.query(async ({ ctx }) => {
     let userChannels = await getUserChannels(ctx.db, ctx.session.user.id)
     if (!userChannels.length) {
-      await ctx.db.transaction(async (tx) => {
-        const [newChannel] = await tx
-          .insert(schema.channels)
-          .values({
-            name: 'Home',
-            createdById: ctx.session.user.id,
-            description: '',
-            isPrivate: false
-          })
-          .returning()
-        if (!newChannel) {
-          return []
-        }
-
-        // Add creator as channel member and admin
-        await tx.insert(schema.channelMembers).values({
-          channelId: newChannel.id,
-          userId: ctx.session.user.id,
-          isAdmin: true // Creator should probably be an admin
+      // await ctx.db.transaction(async (tx) => {
+      const [newChannel] = await ctx.db
+        .insert(schema.channels)
+        .values({
+          name: 'Home',
+          createdById: ctx.session.user.id,
+          description: '',
+          isPrivate: false
         })
+        .returning()
+      if (!newChannel) {
+        return []
+      }
+
+      // Add creator as channel member and admin
+      await ctx.db.insert(schema.channelMembers).values({
+        channelId: newChannel.id,
+        userId: ctx.session.user.id,
+        isAdmin: true // Creator should probably be an admin
       })
+      // })
 
       userChannels = await getUserChannels(ctx.db, ctx.session.user.id)
     }
