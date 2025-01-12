@@ -154,14 +154,14 @@ export function ChatContainer() {
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden bg-gray-900">
-      <div className="!scrollbar-overlay flex-1 overflow-y-auto scroll-smooth pb-32">
+    <div className="flex h-full flex-col bg-gray-900">
+      <div className="!scrollbar-overlay flex-1 overflow-y-auto">
         {messages && (
           <>
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
-            <div ref={messagesEndRef} className="h-6" />{' '}
+            <div ref={messagesEndRef} className="h-4" />
           </>
         )}
       </div>

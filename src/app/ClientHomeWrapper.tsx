@@ -55,8 +55,10 @@ function ChannelView() {
     return 0
   }
   return (
-    <div className="">
-      <ChatContainer />
+    <div className="flex h-full flex-col">
+      <div className="flex-1 overflow-hidden">
+        <ChatContainer />
+      </div>
       <MessageEditor
         sendMessage={sendMessage}
         setMessageContent={setMessageContent}
