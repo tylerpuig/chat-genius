@@ -2,7 +2,7 @@ import { z } from 'zod'
 import EventEmitter, { on } from 'events'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
-import { eq, and, or, ne, sql, desc, ilike, asc } from 'drizzle-orm'
+import { eq, and, or, ne, sql, gt, desc, ilike, asc } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import {
   UserSubscriptionManager,
@@ -45,7 +45,7 @@ export const messagesRouter = createTRPCRouter({
           // console.log(newMessage, 'onMessage')
 
           // Only yield messages for channels this user is subscribed to
-          if (await subscriptionManager.isSubscribed(userId, newMessage.channelId)) {
+          if (subscriptionManager.isSubscribed(userId, newMessage.channelId)) {
             yield newMessage
           }
         }
@@ -61,7 +61,7 @@ export const messagesRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { userId, content, channelId } = input
       try {
-        const newMessage = await ctx.db
+        const [newMessage] = await ctx.db
           .insert(schema.messages)
           .values({
             userId,
@@ -70,15 +70,15 @@ export const messagesRouter = createTRPCRouter({
           })
           .returning()
 
-        if (!newMessage?.[0]?.id) return []
+        if (!newMessage?.id) return []
         // Emit the new message event
         // The subscription above will handle filtering to only subscribed users
         const subscriptionMessage: NewChannelMessage = {
-          id: newMessage?.[0]?.id,
-          content: input.content,
+          id: newMessage?.id,
           channelId: input.channelId,
           userId: ctx.session.user.id,
-          createdAt: new Date()
+          createdAt: new Date(),
+          messageType: 'NEW_MESSAGE'
         }
 
         ee.emit('newMessage', subscriptionMessage)
@@ -95,6 +95,26 @@ export const messagesRouter = createTRPCRouter({
       const { channelId } = input
 
       const results = await getMessagesFromChannel(channelId, ctx.session.user.id, input.chatTab)
+
+      return results
+    }),
+  getLatestMessagesFromChannel: protectedProcedure
+    .input(
+      z.object({
+        channelId: z.number(),
+        chatTab: z.enum(['Messages', 'Files', 'Pins', 'Saved']),
+        lastReadMessageId: z.number()
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { channelId } = input
+
+      const results = await getMessagesFromChannel(
+        channelId,
+        ctx.session.user.id,
+        input.chatTab,
+        input.lastReadMessageId
+      )
 
       return results
     }),
@@ -120,19 +140,43 @@ export const messagesRouter = createTRPCRouter({
         return existingReaction
       }
 
-      const newReaction = await ctx.db
+      const [newReaction] = await ctx.db
         .insert(schema.messageReactions)
         .values({ messageId: input.messageId, emoji: input.emoji, userId: ctx.session.user.id })
-        .returning()
+        .returning({
+          id: schema.messageReactions.messageId
+        })
 
-      ee.emit('newMessage', {
-        id: newReaction?.[0]?.messageId,
-        content: '',
+      if (!newReaction?.id) return
+
+      const subMessage: NewChannelMessage = {
+        id: newReaction.id,
         channelId: input.channelId,
-        userId: ctx.session.user.id
-      })
+        userId: ctx.session.user.id,
+        createdAt: new Date(),
+        messageType: 'NEW_REACTION'
+      }
+      ee.emit('newMessage', subMessage)
 
       return newReaction
+    }),
+  getMessageReactions: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.number()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const reactions = await ctx.db
+        .select({
+          messageId: schema.messageReactions.messageId,
+          emoji: schema.messageReactions.emoji,
+          userId: schema.messageReactions.userId
+        })
+        .from(schema.messageReactions)
+        .where(eq(schema.messageReactions.messageId, input.messageId))
+
+      return reactions
     }),
   createMessageReply: protectedProcedure
     .input(
@@ -143,8 +187,9 @@ export const messagesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      let newMesageId: number = 0
-      await ctx.db.transaction(async (tx) => {
+      // Move all DB operations inside a single transaction
+      const result = await ctx.db.transaction(async (tx) => {
+        // 1. Create the reply message
         const newMessage = await tx
           .insert(schema.messages)
           .values({
@@ -155,28 +200,43 @@ export const messagesRouter = createTRPCRouter({
           })
           .returning()
 
-        if (!newMessage?.[0]?.id) {
-          return { messageId: newMesageId }
+        if (!newMessage?.[0]) {
+          throw new Error('Failed to create reply message')
         }
 
+        const newMessageId = newMessage[0].id
+
+        // 2. Create the parent-child relationship
         await tx.insert(schema.messagesToParents).values({
-          messageId: newMessage[0].id,
+          messageId: newMessageId,
           parentId: input.messageId
         })
 
-        newMesageId = newMessage[0].id
+        // 3. Increment the reply count within the same transaction
+        await tx
+          .update(schema.messages)
+          .set({
+            replyCount: sql`reply_count + 1`
+          })
+          .where(eq(schema.messages.id, input.messageId))
+        console.log('newMessageId', newMessageId)
+
+        return newMessageId
       })
 
-      await incrementMessageReplyCount(input.messageId)
+      // Only emit event after successful transaction
+      if (result) {
+        const channelMessage: NewChannelMessage = {
+          id: result,
+          channelId: input.channelId,
+          userId: ctx.session.user.id,
+          createdAt: new Date(),
+          messageType: 'NEW_REPLY'
+        }
+        ee.emit('newMessage', channelMessage)
+      }
 
-      ee.emit('newMessage', {
-        id: '',
-        content: '',
-        channelId: input.channelId,
-        userId: ctx.session.user.id
-      })
-
-      return { messageId: newMesageId }
+      return { messageId: result }
     }),
   getMessageReplies: protectedProcedure
     .input(
@@ -207,8 +267,73 @@ export const messagesRouter = createTRPCRouter({
           attachments: true
         }
       })
+
+      // console.log(mainMessage)
+      if (!mainMessage) return { mainMessage, replies: [] }
       const replies = await ctx.db.query.messagesToParents.findMany({
-        where: eq(schema.messagesToParents.parentId, input.messageId),
+        where: eq(schema.messagesToParents.parentId, mainMessage?.id),
+        with: {
+          message: {
+            extras: {
+              isSaved: sql<boolean>`EXISTS (
+                    SELECT 1 FROM ${schema.savedMessagesTable}
+                    WHERE message_id = ${schema.messages.id}
+                    AND user_id = ${ctx.session.user.id}
+                  )`.as('isSaved')
+            },
+            with: {
+              user: {
+                columns: {
+                  id: true,
+                  name: true,
+                  image: true
+                }
+              },
+              reactions: true,
+              attachments: true
+            }
+          }
+        }
+      })
+
+      // console.log(replies)
+
+      return { mainMessage, replies }
+    }),
+  getLatestMessageReply: protectedProcedure
+    .input(
+      z.object({
+        parentMessageId: z.number(),
+        lastReadMessageId: z.number()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const mainMessage = await ctx.db.query.messages.findFirst({
+        where: eq(schema.messages.id, input.parentMessageId),
+        extras: {
+          isSaved: sql<boolean>`EXISTS (
+                    SELECT 1 FROM ${schema.savedMessagesTable}
+                    WHERE message_id = ${schema.messages.id}
+                    AND user_id = ${ctx.session.user.id}
+                  )`.as('isSaved')
+        },
+        with: {
+          user: {
+            columns: {
+              id: true,
+              name: true,
+              image: true
+            }
+          },
+          reactions: true,
+          attachments: true
+        }
+      })
+      const replies = await ctx.db.query.messagesToParents.findMany({
+        where: and(
+          eq(schema.messagesToParents.parentId, input.parentMessageId),
+          gt(schema.messagesToParents.messageId, input.lastReadMessageId)
+        ),
         with: {
           message: {
             extras: {
@@ -244,17 +369,24 @@ export const messagesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       if (!input.messageId) return
-      await ctx.db
+      const [updatedMessage] = await ctx.db
         .update(schema.messages)
         .set({ isPinned: true })
         .where(eq(schema.messages.id, input.messageId))
+        .returning()
 
-      ee.emit('newMessage', {
-        id: input.messageId,
-        content: '',
-        channelId: input.channelId,
-        userId: ctx.session.user.id
-      })
+      if (updatedMessage?.id) {
+        const subMessage: NewChannelMessage = {
+          id: updatedMessage?.id,
+          channelId: input.channelId,
+          userId: ctx.session.user.id,
+          createdAt: updatedMessage?.createdAt,
+          messageType: 'NEW_PIN'
+        }
+        ee.emit('newMessage', subMessage)
+      }
+
+      return updatedMessage ?? {}
     }),
   unPinMessage: protectedProcedure
     .input(
@@ -265,17 +397,23 @@ export const messagesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       if (!input.messageId) return
-      await ctx.db
+      const [updatePin] = await ctx.db
         .update(schema.messages)
         .set({ isPinned: false })
         .where(eq(schema.messages.id, input.messageId))
+        .returning({ id: schema.messages.id })
 
-      ee.emit('newMessage', {
-        id: input.messageId,
-        content: '',
+      if (!updatePin?.id) return
+
+      const subMessage: NewChannelMessage = {
+        id: updatePin?.id,
         channelId: input.channelId,
-        userId: ctx.session.user.id
-      })
+        userId: ctx.session.user.id,
+        createdAt: new Date(),
+        messageType: 'REMOVE_PIN'
+      }
+
+      ee.emit('newMessage', subMessage)
     }),
   deleteMessage: protectedProcedure
     .input(
@@ -297,14 +435,23 @@ export const messagesRouter = createTRPCRouter({
         return
       }
 
-      await ctx.db.delete(schema.messages).where(eq(schema.messages.id, input.messageId))
+      const [deletedMessage] = await ctx.db
+        .delete(schema.messages)
+        .where(eq(schema.messages.id, input.messageId))
+        .returning({
+          id: schema.messages.id
+        })
 
-      ee.emit('newMessage', {
-        id: input.messageId,
-        content: '',
+      if (!deletedMessage?.id) return
+
+      const subMessage: NewChannelMessage = {
+        id: deletedMessage?.id,
         channelId: input.channelId,
-        userId: ctx.session.user.id
-      })
+        userId: ctx.session.user.id,
+        createdAt: new Date(),
+        messageType: 'DELETE_MESSAGE'
+      }
+      ee.emit('newMessage', subMessage)
     }),
 
   saveMessage: protectedProcedure
@@ -315,16 +462,23 @@ export const messagesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db
+      const [savedMessage] = await ctx.db
         .insert(schema.savedMessagesTable)
         .values({ messageId: input.messageId, userId: ctx.session.user.id })
+        .returning({
+          id: schema.savedMessagesTable.messageId
+        })
 
-      ee.emit('newMessage', {
-        id: input.messageId,
-        content: '',
+      if (!savedMessage?.id) return
+
+      const subMessage: NewChannelMessage = {
+        id: savedMessage?.id,
         channelId: input.channelId,
-        userId: ctx.session.user.id
-      })
+        userId: ctx.session.user.id,
+        createdAt: new Date(),
+        messageType: 'SAVE_MESSAGE'
+      }
+      ee.emit('newMessage', subMessage)
     }),
   unSaveMessage: protectedProcedure
     .input(
@@ -334,16 +488,23 @@ export const messagesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db
+      const [unSavedMessage] = await ctx.db
         .delete(schema.savedMessagesTable)
         .where(eq(schema.savedMessagesTable.messageId, input.messageId))
+        .returning({
+          id: schema.savedMessagesTable.messageId
+        })
 
-      ee.emit('newMessage', {
-        id: input.messageId,
-        content: '',
+      if (!unSavedMessage?.id) return
+
+      const subMessage: NewChannelMessage = {
+        id: unSavedMessage?.id,
         channelId: input.channelId,
-        userId: ctx.session.user.id
-      })
+        userId: ctx.session.user.id,
+        createdAt: new Date(),
+        messageType: 'UNSAVE_MESSAGE'
+      }
+      ee.emit('newMessage', subMessage)
     }),
   removeMessageReaction: protectedProcedure
     .input(
@@ -354,7 +515,7 @@ export const messagesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const deletedReaction = await ctx.db
+      const [deletedReaction] = await ctx.db
         .delete(schema.messageReactions)
         .where(
           and(
@@ -364,13 +525,16 @@ export const messagesRouter = createTRPCRouter({
           )
         )
 
-      // if (!deletedReaction?.[0]?.) return []
-      ee.emit('newMessage', {
-        id: 1,
-        content: '',
+      // if (!deletedReaction?.id) return
+
+      const subMessage: NewChannelMessage = {
+        id: input.messageId,
         channelId: input.channelId,
-        userId: ctx.session.user.id
-      })
+        userId: ctx.session.user.id,
+        createdAt: new Date(),
+        messageType: 'REMOVE_REACTION'
+      }
+      ee.emit('newMessage', subMessage)
 
       return deletedReaction
     }),

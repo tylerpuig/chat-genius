@@ -52,12 +52,21 @@ export async function getUserChannels(db: any, userId: string): Promise<UserChan
   return []
 }
 
-export async function getMessagesFromChannel(channelId: number, userId: string, chatTab: ChatTab) {
+export async function getMessagesFromChannel(
+  channelId: number,
+  userId: string,
+  chatTab: ChatTab,
+  lastMessageId?: number
+) {
   try {
     const conditions: SQL<unknown>[] = [
       eq(schema.messages.channelId, channelId),
       eq(schema.messages.isReply, false)
     ]
+
+    if (lastMessageId) {
+      conditions.push(gt(schema.messages.id, lastMessageId))
+    }
 
     if (chatTab === 'Pins') {
       conditions.push(eq(schema.messages.isPinned, true))

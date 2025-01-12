@@ -150,17 +150,6 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
                           channelId: selectedChannelId
                         })
                       }
-                      // if (!message?.isPinned) {
-                      //   pinMessage.mutate({
-                      //     messageId: id,
-                      //     channelId: selectedChannelId
-                      //   })
-                      // } else {
-                      //   unPinMessage.mutate({
-                      //     messageId: id,
-                      //     channelId: selectedChannelId
-                      //   })
-                      // }
                     }}
                     className="text-gray-300 hover:text-gray-100"
                   >

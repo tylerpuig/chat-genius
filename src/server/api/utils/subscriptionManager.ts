@@ -1,6 +1,7 @@
 import { db } from '~/server/db'
 import { eq, count, sql } from 'drizzle-orm'
 import { users } from '~/server/db/schema'
+import { type ChatMessageData } from '~/trpc/types'
 
 type UserSubscriptions = {
   channels: Set<number>
@@ -10,10 +11,19 @@ type UserSubscriptions = {
 
 export type NewChannelMessage = {
   id: number
-  content: string
   channelId: number
   userId: string
   createdAt: Date
+  messageType:
+    | 'NEW_MESSAGE'
+    | 'NEW_REPLY'
+    | 'NEW_PIN'
+    | 'REMOVE_PIN'
+    | 'SAVE_MESSAGE'
+    | 'UNSAVE_MESSAGE'
+    | 'DELETE_MESSAGE'
+    | 'NEW_REACTION'
+    | 'REMOVE_REACTION'
 }
 
 // In-memory store for active channel subscriptions
@@ -57,10 +67,10 @@ export class UserSubscriptionManager {
   }
 
   // Check if a user is subscribed to a channel
-  async isSubscribed(userId: string, channelId: number): Promise<boolean> {
+  isSubscribed(userId: string, channelId: number): boolean {
     const isSubbed = this.subscriptions.get(userId)?.channels?.has(channelId) ?? false
     if (isSubbed) {
-      await updateUserLastOnline(userId)
+      void updateUserLastOnline(userId)
     }
 
     return isSubbed

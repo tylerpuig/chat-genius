@@ -132,20 +132,23 @@ export function ChatContainer() {
   const { messages, refetchMessages } = useChannelContext()
   // console.log(messages)
   const { selectedChannelId } = useUI()
-  api.messages.onMessage.useSubscription(
-    {
-      channelId: selectedChannelId
-    },
-    {
-      onData: () => {
-        refetchMessages()
-      }
-    }
-  )
 
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  console.log(messages)
+
+  // api.messages.onMessage.useSubscription(
+  //   {
+  //     channelId: selectedChannelId
+  //   },
+  //   {
+  //     onData: (data) => {
+  //       refetchMessages()
+  //     }
+  //   }
+  // )
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
