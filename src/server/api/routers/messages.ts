@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import EventEmitter, { on } from 'events'
+import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
 import { eq, and, or, ne, sql, desc, ilike, asc } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
@@ -27,6 +28,14 @@ export const messagesRouter = createTRPCRouter({
       // AsyncIterator for the new message events
       // Subscribe the user to the channel when they start listening
       const userId = ctx.session.user.id
+
+      if (!userId) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You must be logged in to subscribe to a channel.'
+        })
+      }
+
       subscriptionManager.subscribe(userId, input.channelId)
 
       try {

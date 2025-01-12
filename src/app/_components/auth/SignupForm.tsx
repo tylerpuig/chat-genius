@@ -2,18 +2,39 @@
 import { cn } from '~/lib/utils'
 import { useRef } from 'react'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { api } from '~/trpc/react'
 import { useRouter } from 'next/navigation'
+import { useToast } from '~/hooks/use-toast'
+// import { ToastAction } from '~/components/ui/toast'
 
 export function SignupForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
   const router = useRouter()
+  const { toast } = useToast()
   const formRef = useRef<HTMLFormElement>(null)
   const signup = api.auth.emailSignUp.useMutation({
     onSuccess: () => {
+      toast({
+        variant: 'blue',
+        title: 'Account created',
+        description: 'Please login to continue.',
+        duration: 4_000
+        // action: (
+        //   <ToastAction className="!border-gray-700" altText="Go to login">
+        //     Undo
+        //   </ToastAction>
+        // )
+      })
       router.push('/auth/login')
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to create account. Please try again.',
+        duration: 4_000
+      })
     }
   })
 
@@ -95,8 +116,12 @@ export function SignupForm({ className, ...props }: React.ComponentPropsWithoutR
                     className="border-0 bg-gray-700 text-gray-200"
                   />
                 </div>
-                <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">
-                  Sign Up
+                <Button
+                  disabled={signup.isPending}
+                  type="submit"
+                  className="w-full bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  {signup.isPending ? 'Signing up...' : 'Sign Up'}
                 </Button>
               </div>
               <div className="flex justify-center gap-2 text-center text-sm text-gray-400">

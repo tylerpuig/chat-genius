@@ -1,5 +1,5 @@
 'use client'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { cn } from '~/lib/utils'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
@@ -7,10 +7,44 @@ import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { signIn } from 'next-auth/react'
 import { redirect } from 'next/navigation'
+import { useToast } from '~/hooks/use-toast'
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
+  const [loginLoading, setLoginLoading] = useState(false)
+
+  async function tryLogin(e?: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
+    try {
+      setLoginLoading(true)
+      e?.preventDefault()
+      e?.stopPropagation()
+      console.log(emailRef.current?.value, passwordRef.current?.value)
+
+      if (!emailRef.current?.value || !passwordRef.current?.value) return
+
+      const result = await signIn('credentials', {
+        email: emailRef.current.value,
+        password: passwordRef.current.value,
+        redirect: true,
+        redirectTo: '/'
+      })
+
+      if (!result?.ok) {
+        throw new Error('Failed to log in')
+      }
+    } catch (error) {
+      console.error('Error logging in:', error)
+      // toast({
+      //   title: 'Error',
+      //   description: 'Failed to log in. Please try again.',
+      //   duration: 4_000
+      // })
+    } finally {
+      setLoginLoading(false)
+    }
+  }
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -112,30 +146,22 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   </div>
                   <Input
                     ref={passwordRef}
+                    onKeyDown={async (e) => {
+                      if (e.key === 'Enter') {
+                        await tryLogin()
+                      }
+                    }}
                     id="password"
                     type="password"
                     className="border-0 bg-gray-700 text-gray-200"
                   />
                 </div>
                 <Button
-                  onClick={async (e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    console.log(emailRef.current?.value, passwordRef.current?.value)
-
-                    if (!emailRef.current?.value || !passwordRef.current?.value) return
-
-                    await signIn('credentials', {
-                      email: emailRef.current.value,
-                      password: passwordRef.current.value,
-                      redirect: true,
-                      redirectTo: '/'
-                    })
-                  }}
+                  onClick={async (e) => await tryLogin(e)}
                   // type="submit"
                   className="w-full bg-blue-600 text-white hover:bg-blue-700"
                 >
-                  Login
+                  {loginLoading ? 'Logging in...' : 'Login'}
                 </Button>
               </div>
               <div className="flex justify-center gap-2 text-center text-sm text-gray-400">

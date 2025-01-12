@@ -43,6 +43,7 @@ export function ViewMessageRepliesSheet() {
   })
 
   useEffect(() => {
+    if (!messageReplySheetOpen) return
     refetch()
   }, [messages])
 

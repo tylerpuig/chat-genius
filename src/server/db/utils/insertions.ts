@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { eq, and, ne } from 'drizzle-orm'
+import { eq, and, ne, or, isNull } from 'drizzle-orm'
 import { db } from '~/server/db'
 import * as schema from '~/server/db/schema'
 import { type PostgresJsTransaction } from 'drizzle-orm/postgres-js'
@@ -33,11 +33,24 @@ export async function setMessageAttachmentCount(messageId: number, count: number
 export async function createPrivateConversationsForNewUser(newUserId: string): Promise<void> {
   try {
     await db.transaction(async (tx) => {
-      // 1. Get all existing user IDs except the new user
+      // 1. Get all existing user IDs except the new user that don't already have a conversation
       const existingUsers = await tx
         .select({ id: schema.users.id })
         .from(schema.users)
-        .where(ne(schema.users.id, newUserId))
+        .leftJoin(
+          schema.conversationsTable,
+          or(
+            and(
+              eq(schema.users.id, schema.conversationsTable.user1Id),
+              eq(schema.conversationsTable.user2Id, newUserId)
+            ),
+            and(
+              eq(schema.users.id, schema.conversationsTable.user2Id),
+              eq(schema.conversationsTable.user1Id, newUserId)
+            )
+          )
+        )
+        .where(and(ne(schema.users.id, newUserId), isNull(schema.conversationsTable.id)))
 
       if (!existingUsers.length) return
 

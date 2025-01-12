@@ -3,7 +3,7 @@ import '~/styles/globals.css'
 import { GeistSans } from 'geist/font/sans'
 import { type Metadata } from 'next'
 import { Providers } from './providers'
-import { AppSidebar } from './_components/AppSidebar'
+import { Toaster } from '~/components/ui/toaster'
 
 export const metadata: Metadata = {
   title: 'Chat Genius',
@@ -19,6 +19,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {/* <AppSidebar /> */}
 
           <main className="flex-1 overflow-hidden bg-gray-800">{children}</main>
+          <Toaster />
         </Providers>
       </body>
     </html>

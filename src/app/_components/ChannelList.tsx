@@ -116,20 +116,20 @@ function OnlineUserList() {
     isConversation
   } = useUI()
 
-  const createConversation = api.conversations.createConversation.useMutation({
-    onSuccess: (data) => {
-      if (data?.newConversationId) {
-        setSelectedChannelId(data.newConversationId)
-        userList.refetch()
-      }
-    }
-  })
+  // const createConversation = api.conversations.createConversation.useMutation({
+  //   onSuccess: (data) => {
+  //     if (data?.newConversationId) {
+  //       setSelectedChannelId(data.newConversationId)
+  //       userList.refetch()
+  //     }
+  //   }
+  // })
 
-  useEffect(() => {
-    if (isConversation) {
-      userList.refetch()
-    }
-  }, [isConversation])
+  // useEffect(() => {
+  //   if (isConversation) {
+  //     userList.refetch()
+  //   }
+  // }, [isConversation])
 
   if (!userList.data) return null
 
@@ -139,12 +139,13 @@ function OnlineUserList() {
         <div
           key={user.id}
           onClick={async () => {
-            console.log('user', user)
-            if (!user.channelId) {
-              await createConversation.mutateAsync({ toUserId: user.id })
-            } else {
-              setSelectedChannelId(user.channelId)
-            }
+            if (!user.channelId) return
+            // console.log('user', user)
+            // if (!user.channelId) {
+            //   await createConversation.mutateAsync({ toUserId: user.id })
+            // } else {
+            setSelectedChannelId(user.channelId)
+            // }
             setSelectedChannelName(user.name)
             setIsConversation(true)
             setConversationUser(user)

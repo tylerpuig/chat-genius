@@ -68,6 +68,10 @@ export const authRouter = createTRPCRouter({
       createUsers.push(newUser)
     }
 
-    await ctx.db.insert(users).values(createUsers)
+    const createdUsers = await ctx.db.insert(users).values(createUsers).returning()
+
+    for (const user of createdUsers) {
+      await createPrivateConversationsForNewUser(user.id)
+    }
   })
 })

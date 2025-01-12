@@ -54,34 +54,6 @@ export async function getUserChannels(db: any, userId: string): Promise<UserChan
 
 export async function getMessagesFromChannel(channelId: number, userId: string, chatTab: ChatTab) {
   try {
-    // First verify the user has access to this channel
-    const channelAccess = await db
-      .select()
-      .from(schema.channels)
-      .leftJoin(
-        schema.channelMembers,
-        and(
-          eq(schema.channels.id, schema.channelMembers.channelId),
-          eq(schema.channelMembers.userId, userId)
-        )
-      )
-      .where(
-        and(
-          eq(schema.channels.id, channelId),
-          or(
-            // User can access if channel is public
-            eq(schema.channels.isPrivate, false),
-            // OR if user is a member of the private channel
-            eq(schema.channelMembers.userId, userId)
-          )
-        )
-      )
-      .limit(1)
-
-    if (!channelAccess.length) {
-      return []
-    }
-
     const conditions: SQL<unknown>[] = [
       eq(schema.messages.channelId, channelId),
       eq(schema.messages.isReply, false)
@@ -117,7 +89,13 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
             image: true
           }
         },
-        reactions: true,
+        reactions: {
+          columns: {
+            messageId: true,
+            userId: true,
+            emoji: true
+          }
+        },
         attachments: true
       }
     })
