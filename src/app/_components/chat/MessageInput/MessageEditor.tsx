@@ -1,19 +1,12 @@
-import { useRef } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
+import { useRef, useEffect, useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { Paperclip, CornerDownLeft, Mic } from 'lucide-react'
-
 import { ChatInput } from '~/components/ui/chat/chat-input'
 import { useFileAttachmentContext } from '~/app/hooks/ui/useFileAttachmentContext'
 import { useSession } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
-
-interface ToolbarButtonProps {
-  isActive: boolean
-  onClick: () => void
-  children: React.ReactNode
-}
+import { api } from '~/trpc/react'
+import { useDebouncedState } from '@mantine/hooks'
 
 export default function MessageEditor({
   sendMessage,
@@ -24,16 +17,89 @@ export default function MessageEditor({
   setMessageContent: React.Dispatch<React.SetStateAction<string>>
   messageContent: string
 }) {
-  const { files, handleFileChange, uploadToS3 } = useFileAttachmentContext()
+  const { files, uploadToS3 } = useFileAttachmentContext()
   const { data: session } = useSession()
 
-  const { setFileUploadModalOpen, selectedChannelName } = useUI()
+  const { setFileUploadModalOpen, selectedChannelName, selectedChannelId } = useUI()
+
+  // Create a debounced version of messageContent
+  const [debouncedContent, setDebouncedContent] = useDebouncedState('', 400)
+
+  // Store the current mutation promise to allow cancellation
+  const currentMutation = useRef<AbortController | null>(null)
+
+  // State for predicted text
+  const [predictedText, setPredictedText] = useState('')
+
+  // Reference to track if Tab was pressed
+  const tabPressed = useRef(false)
+
+  const predictNextMessage = api.integrations.predictNextMessage.useMutation({
+    onSuccess: (data) => {
+      if (data.suggestedMessage) {
+        console.log('Suggested message:', data.suggestedMessage)
+        // Only set prediction if it's different from current content
+        if (data.suggestedMessage !== debouncedContent) {
+          setPredictedText(data.suggestedMessage)
+        } else {
+          setPredictedText('')
+        }
+      }
+    }
+  })
+
+  useEffect(() => {
+    setDebouncedContent(messageContent)
+    console.log('Debounced content:', debouncedContent)
+    console.log('Message content:', messageContent)
+  }, [messageContent])
+
+  useEffect(() => {
+    if (!messageContent || !debouncedContent) return
+    if (predictNextMessage.isPending) return
+    predictNextMessage.mutate({
+      currentText: debouncedContent,
+      channelId: selectedChannelId
+    })
+  }, [debouncedContent])
+
+  useEffect(() => {
+    if (!messageContent) {
+      setPredictedText('')
+    }
+  }, [messageContent])
+
+  // async function handleMessage(e: React.KeyboardEvent<HTMLTextAreaElement>): Promise<void> {
+  //   try {
+  //     if (!session?.user.id || !messageContent) return
+
+  //     if (e?.key === 'Enter' && !e.shiftKey) {
+  //       e.preventDefault()
+  //       const newMessage = await sendMessage()
+
+  //       if (!newMessage) return
+  //       if (files.length) {
+  //         await uploadToS3(newMessage)
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error sending message:', error)
+  //   }
+  // }
 
   async function handleMessage(e: React.KeyboardEvent<HTMLTextAreaElement>): Promise<void> {
     try {
       if (!session?.user.id || !messageContent) return
 
-      if (e?.key === 'Enter' && !e.shiftKey) {
+      if (e.key === 'Tab' && predictedText) {
+        e.preventDefault()
+        tabPressed.current = true
+        setMessageContent((prev) => prev + predictedText)
+        setPredictedText('')
+        return
+      }
+
+      if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
         const newMessage = await sendMessage()
 
@@ -41,9 +107,11 @@ export default function MessageEditor({
         if (files.length) {
           await uploadToS3(newMessage)
         }
+        // Clear prediction after sending
+        setPredictedText('')
       }
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error('Error handling message:', error)
     }
   }
 
@@ -70,6 +138,15 @@ export default function MessageEditor({
           placeholder={`Send a message to ${selectedChannelName}...`}
           className="scrollbar-thin rounded-lg border-0 !text-lg text-zinc-100 shadow-none focus-visible:ring-0"
         />
+
+        {predictedText && (
+          <div className="pointer-events-none absolute inset-0 rounded-lg">
+            <div className="px-3 py-1 text-lg">
+              <span className="invisible mr-1">{messageContent}</span>
+              <span className="text-zinc-100 opacity-40">{predictedText}</span>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center p-3 pt-0">
           <Button

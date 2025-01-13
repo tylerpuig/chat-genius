@@ -22,6 +22,7 @@ export default function ChannelList() {
   const [isChannelsExpanded, setIsChannelsExpanded] = useState(true)
   const [isDMsExpanded, setIsDMsExpanded] = useState(true)
   const seedDB = api.auth.seedDB.useMutation()
+  const seedMessages = api.messages.seedChannelMessages.useMutation()
 
   useEffect(() => {
     refetchChannels()
@@ -95,7 +96,18 @@ export default function ChannelList() {
       >
         <div className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          <div>Seed DB</div>
+          <div>Seed Users</div>
+        </div>
+      </Button>
+      <Button
+        onClick={() => {
+          seedMessages.mutate()
+        }}
+        className="w-full justify-start border-gray-700 hover:bg-gray-600"
+      >
+        <div className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          <div>Seed Messages</div>
         </div>
       </Button>
     </div>

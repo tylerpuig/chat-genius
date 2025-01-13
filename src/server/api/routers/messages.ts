@@ -11,6 +11,7 @@ import {
 import { getUserChannels, getMessagesFromChannel } from '~/server/db/utils/queries'
 import { incrementMessageReplyCount, setMessageAttachmentCount } from '~/server/db/utils/insertions'
 import { generatePresignedUrl, generateDownloadUrl } from '~/server/db/utils/s3'
+import { createMessageTextEmbedding, seedChannelWithMessages } from '~/server/db/utils/openai'
 
 // Event emitter for trpc subscriptions
 const ee = new EventEmitter()
@@ -60,20 +61,25 @@ export const messagesRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { userId, content, channelId } = input
       try {
-        const newMessage = await ctx.db
+        const [newMessage] = await ctx.db
           .insert(schema.messages)
           .values({
             userId,
             content,
             channelId
           })
-          .returning()
+          .returning({
+            id: schema.messages.id
+          })
 
-        if (!newMessage?.[0]?.id) return []
+        if (!newMessage?.id) return {}
+
+        // Create embedding for the new message, don't await in this scope
+        void createMessageTextEmbedding(newMessage.id, content)
         // Emit the new message event
         // The subscription above will handle filtering to only subscribed users
         const subscriptionMessage: NewChannelMessage = {
-          id: newMessage?.[0]?.id,
+          id: newMessage?.id,
           channelId: input.channelId,
           userId: ctx.session.user.id,
           type: 'NEW_MESSAGE'
@@ -342,7 +348,7 @@ export const messagesRouter = createTRPCRouter({
         id: input.messageId,
         channelId: input.channelId,
         userId: ctx.session.user.id,
-        type: 'NEW_MESSAGE'
+        type: 'SAVE_MESSAGE'
       }
 
       ee.emit('newMessage', subscriptionMessage)
@@ -703,5 +709,9 @@ export const messagesRouter = createTRPCRouter({
         messages: messages,
         files: files
       }
-    })
+    }),
+  seedChannelMessages: protectedProcedure.mutation(async ({ ctx }) => {
+    seedChannelWithMessages(50)
+    return {}
+  })
 })

@@ -3,7 +3,7 @@ import { usersRouter } from '~/server/api/routers/user'
 import { messagesRouter } from '~/server/api/routers/messages'
 import { authRouter } from '~/server/api/routers/auth'
 import { conversationsRouter } from '~/server/api/routers/conversations'
-
+import { integrationsRouter } from '~/server/api/routers/integrations'
 /**
  * This is the primary router for your server.
  *
@@ -13,7 +13,8 @@ export const appRouter = createTRPCRouter({
   user: usersRouter,
   messages: messagesRouter,
   auth: authRouter,
-  conversations: conversationsRouter
+  conversations: conversationsRouter,
+  integrations: integrationsRouter
 })
 
 // export type definition of API

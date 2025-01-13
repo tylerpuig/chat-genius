@@ -1,4 +1,4 @@
-import { eq, and, or, type SQL, sql, gt, asc } from 'drizzle-orm'
+import { eq, and, or, type SQL, sql, gt, asc, desc } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import { db } from '~/server/db'
 import { type ChatTab } from '~/app/store/features/ui/types'
@@ -71,9 +71,14 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
       return await getSavedMessages(userId)
     }
 
-    return await db.query.messages.findMany({
-      where: and(...conditions),
-      orderBy: asc(schema.messages.id),
+    console.log('final query')
+    const results = await db.query.messages.findMany({
+      columns: {
+        id: true,
+        content: true,
+        createdAt: true
+      },
+
       extras: {
         isSaved: sql<boolean>`EXISTS (
             SELECT 1 FROM ${schema.savedMessagesTable}
@@ -98,8 +103,16 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
           }
         },
         attachments: true
-      }
+      },
+      where: and(...conditions),
+      // limit: 20,
+      orderBy: desc(schema.messages.createdAt),
+      limit: 20
     })
+
+    console.log('results', results)
+
+    return results.reverse()
   } catch (err) {
     console.error('Error getting messages from channel:', err)
   }
