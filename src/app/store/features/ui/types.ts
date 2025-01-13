@@ -2,6 +2,11 @@ export type ChatTab = 'Messages' | 'Files' | 'Pins' | 'Saved'
 export type UIView = 'channel' | 'conversation'
 import { type ConversationUser } from '~/server/db/types'
 
+export type UserProfileChatConfig = {
+  userId: string
+  sheetOpen: boolean
+}
+
 export type UIState = {
   currentTab: ChatTab
   selectedMessageId: number
@@ -19,4 +24,5 @@ export type UIState = {
   manageUserProfileSheetOpen: boolean
   workspaceSearchOpen: boolean
   appSidebarOpen: boolean
+  userProfileChatConfig: UserProfileChatConfig
 }

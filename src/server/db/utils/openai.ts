@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import { db } from '~/server/db'
 import { eq } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
+import { z } from 'zod'
 
 const OPENAI_EMBEDDING_MODEL = 'text-embedding-3-large'
 const OPENAI_CHAT_MODEL = 'gpt-4o-mini-2024-07-18'
@@ -194,6 +195,45 @@ export async function generateSuggestedMessage(
         {
           role: 'user',
           content: `${currentText}`
+        }
+      ]
+    })
+
+    return response.choices[0]?.message?.content || ''
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+const askProfileOutputSchema = z.object({
+  response: z.string()
+})
+
+export async function generateUserProfileResponse(
+  pastMessageContext: string,
+  userQuery: string
+): Promise<string | undefined> {
+  try {
+    console.log('pastMessageContext', pastMessageContext)
+    console.log('userQuery', userQuery)
+    const response = await openAIClient.chat.completions.create({
+      model: OPENAI_CHAT_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: `You are a helpful assistant that helps users with their queries. You should represent your message in the same style as the user's message. 
+
+          Your response should be a single message that attempts to answer the user's question.
+
+          Here are the previous messages from the user:
+          ${pastMessageContext}
+
+          If there is no relevant information in the previous messages, you can say "I don't have any information about that."
+          `
+        },
+        {
+          role: 'user',
+          content: `${userQuery}`
         }
       ]
     })

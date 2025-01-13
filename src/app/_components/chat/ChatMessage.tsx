@@ -39,7 +39,8 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
     setMessageReplySheetOpen,
     messageReplySheetOpen,
     setSelectedParentMessageId,
-    selectedParentMessageId
+    selectedParentMessageId,
+    setUserProfileChatConfig
   } = useUI()
 
   const { isMobile } = useSidebar()
@@ -50,10 +51,17 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
   const saveMessage = api.messages.saveMessage.useMutation()
   const unSaveMessage = api.messages.unSaveMessage.useMutation()
 
+  function openUserProfileChat() {
+    setUserProfileChatConfig({
+      userId: user.id,
+      sheetOpen: true
+    })
+  }
+
   return (
     <div className="group px-4 py-2 hover:bg-gray-800/50">
       <div className="flex gap-4">
-        <Avatar className="h-10 w-10">
+        <Avatar className="h-10 w-10 cursor-pointer" onClick={() => openUserProfileChat()}>
           <AvatarImage src={user.image ?? ''} alt={user?.name ?? ''} />
           <AvatarFallback>{user?.name?.[0] ?? ''}</AvatarFallback>
         </Avatar>
@@ -62,7 +70,8 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span
-                className={`... ${isReply ? 'max-w-[100px]' : 'max-w-[200px]'} truncate font-semibold text-gray-100`}
+                onClick={() => openUserProfileChat()}
+                className={`... ${isReply ? 'max-w-[100px]' : 'max-w-[200px]'} cursor-pointer truncate font-semibold text-gray-100 hover:underline`}
               >
                 {user?.name || ''}
               </span>

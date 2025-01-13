@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux'
 import { useAppDispatch } from '../useAppDispatch'
 import * as uiSelectors from '../../store/features/ui/selectors'
 import * as uiSlice from '../../store/features/ui/uiSlice'
-import type { ChatTab, UIView } from '../../store/features/ui/types'
+import type { ChatTab, UIView, UserProfileChatConfig } from '../../store/features/ui/types'
 import { type ConversationUser } from '~/server/db/types'
 
 export const useUI = () => {
@@ -24,6 +24,7 @@ export const useUI = () => {
   const manageUserProfileSheetOpen = useSelector(uiSelectors.selectManageUserProfileSheetOpen)
   const workspaceSearchOpen = useSelector(uiSelectors.selectWorkspaceSearchOpen)
   const appSidebarOpen = useSelector(uiSelectors.selectAppSidebarOpen)
+  const userProfileChatConfig = useSelector(uiSelectors.selectUserProfileChatConfig)
 
   return {
     // State
@@ -43,6 +44,7 @@ export const useUI = () => {
     manageUserProfileSheetOpen,
     workspaceSearchOpen,
     appSidebarOpen,
+    userProfileChatConfig,
 
     // Actions
     switchTab: (tab: ChatTab) => dispatch(uiSlice.setCurrentTab(tab)),
@@ -66,6 +68,8 @@ export const useUI = () => {
     setManageUserProfileSheetOpen: (open: boolean) =>
       dispatch(uiSlice.setManageUserProfileSheetOpen(open)),
     setWorkspaceSearchOpen: (open: boolean) => dispatch(uiSlice.setWorkspaceSearchOpen(open)),
-    setAppSidebarOpen: (open: boolean) => dispatch(uiSlice.setAppSidebarOpen(open))
+    setAppSidebarOpen: (open: boolean) => dispatch(uiSlice.setAppSidebarOpen(open)),
+    setUserProfileChatConfig: (config: UserProfileChatConfig) =>
+      dispatch(uiSlice.updateUserProfileChatConfig(config))
   }
 }

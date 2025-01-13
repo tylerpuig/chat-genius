@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '~/server/api/trpc'
 import { cosineDistance, desc, gt, sql, eq, and } from 'drizzle-orm'
-import { createMessageEmbedding, generateSuggestedMessage } from '~/server/db/utils/openai'
+import * as openAIUtils from '~/server/db/utils/openai'
 import * as schema from '~/server/db/schema'
 
 export const integrationsRouter = createTRPCRouter({
@@ -13,7 +13,7 @@ export const integrationsRouter = createTRPCRouter({
         throw new Error('Aborted')
       })
 
-      const embedding = await createMessageEmbedding(input.currentText)
+      const embedding = await openAIUtils.createMessageEmbedding(input.currentText)
       if (!embedding) return { suggestedMessage: '' }
 
       const similarity = sql<number>`1 - (${cosineDistance(schema.messages.contentEmbedding, embedding)})`
@@ -61,12 +61,44 @@ export const integrationsRouter = createTRPCRouter({
         .map((m) => `from: ${m.name}, similarity: ${m.similarity} message: ${m.content}`)
         .join('\n')
 
-      const suggestedMessage = await generateSuggestedMessage(
+      const suggestedMessage = await openAIUtils.generateSuggestedMessage(
         input.currentText,
         userMessagesContext,
         recentMessagesContext
       )
 
       return { suggestedMessage: suggestedMessage || '' }
+    }),
+  askUserProfileQuestion: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        question: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const embedding = await openAIUtils.createMessageEmbedding(input.question)
+      if (!embedding) return { reply: '' }
+
+      const userMessages = await ctx.db
+        .select({
+          content: schema.messages.content,
+          similarity: sql<number>`1 - (${cosineDistance(schema.messages.contentEmbedding, embedding)})`
+        })
+        .from(schema.messages)
+        .where(eq(schema.messages.userId, input.userId))
+        .orderBy((t) => desc(t.similarity))
+        .limit(20)
+
+      // console.log('userMessages', userMessages)
+
+      const userMessagesContext = userMessages.map((m) => `${m.content}`).join('\n')
+
+      const response = await openAIUtils.generateUserProfileResponse(
+        userMessagesContext,
+        input.question
+      )
+
+      return { response: response || '' }
     })
 })

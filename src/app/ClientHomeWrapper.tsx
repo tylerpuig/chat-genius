@@ -15,7 +15,7 @@ import { api } from '~/trpc/react'
 import UserProfileManager from './_components/user/profile/UserProfileManager'
 import { WorkspaceSearchDialog } from './_components/chat/WorkspaceSearch'
 import MessageEditor from './_components/chat/MessageInput/MessageEditor'
-
+import UserProfileChat from './_components/user/profile/UserProfileChat'
 const homeComponents: Record<UIView, JSX.Element> = {
   channel: <ChannelView />,
   conversation: <></>
@@ -85,6 +85,7 @@ export default function ClientHomeWrapper() {
         <MessageAttachmentsSheet />
         <UserProfileManager />
         <WorkspaceSearchDialog />
+        <UserProfileChat />
       </div>
     </div>
   )
