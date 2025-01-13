@@ -12,13 +12,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <TRPCReactProvider>
-        <Provider store={store}>
-          <SidebarProvider>
+        <SidebarProvider>
+          <Provider store={store}>
             <ChannelProvider>
               <FileAttachmentProvider>{children}</FileAttachmentProvider>
             </ChannelProvider>
-          </SidebarProvider>
-        </Provider>
+          </Provider>
+        </SidebarProvider>
       </TRPCReactProvider>
     </SessionProvider>
   )

@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 import { api } from '~/trpc/react'
 import { useUI } from '~/app/hooks/ui/useUI'
+import { useSidebar } from '~/components/ui/sidebar'
 
 export default function ChannelList() {
   const { data: channels, refetch: refetchChannels } = api.messages.getChannels.useQuery()
@@ -17,6 +18,7 @@ export default function ChannelList() {
     setSelectedChannelName,
     setIsConversation
   } = useUI()
+  const { isMobile, state, toggleSidebar } = useSidebar()
   const [isChannelsExpanded, setIsChannelsExpanded] = useState(true)
   const [isDMsExpanded, setIsDMsExpanded] = useState(true)
   const seedDB = api.auth.seedDB.useMutation()
@@ -46,6 +48,9 @@ export default function ChannelList() {
           {channels.map((channel) => (
             <Button
               onClick={() => {
+                if (isMobile && state === 'expanded') {
+                  toggleSidebar()
+                }
                 setSelectedChannelId(channel.id)
                 setSelectedChannelName(channel.name)
                 setIsConversation(false)
@@ -109,6 +114,7 @@ type UserStatusProps = {
 function OnlineUserList() {
   const userList = api.messages.getOnlineUsers.useQuery()
   const { setSelectedChannelId, setSelectedChannelName, setIsConversation } = useUI()
+  const { toggleSidebar, isMobile, state } = useSidebar()
 
   if (!userList.data) return null
 
@@ -119,15 +125,12 @@ function OnlineUserList() {
           key={user.id}
           onClick={async () => {
             if (!user.channelId) return
-            // console.log('user', user)
-            // if (!user.channelId) {
-            //   await createConversation.mutateAsync({ toUserId: user.id })
-            // } else {
+            if (isMobile && state === 'expanded') {
+              toggleSidebar()
+            }
             setSelectedChannelId(user.channelId)
-            // }
             setSelectedChannelName(user.name)
             setIsConversation(true)
-            // setConversationUser(user)
           }}
         >
           <UserStatus

@@ -7,13 +7,23 @@ type UserSubscriptions = {
   privateMessages: Set<number>
   lastActive: number
 }
+export type ChannelMessageType =
+  | 'NEW_MESSAGE'
+  | 'PINNED_MESSAGE'
+  | 'NEW_REPLY'
+  | 'DELETED_REPLY'
+  | 'DELETED_MESSAGE'
+  | 'NEW_REACTION'
+  | 'DELETED_REACTION'
+  | 'SAVE_MESSAGE'
+  | 'UNSAVE_MESSAGE'
 
 export type NewChannelMessage = {
   id: number
-  content: string
   channelId: number
   userId: string
-  createdAt: Date
+  type: ChannelMessageType
+  isLastMessage?: boolean
 }
 
 // In-memory store for active channel subscriptions

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef } from 'react'
 import { ChatMessage } from './ChatMessage'
 import { Button } from '~/components/ui/button'
 import { api } from '../../../trpc/react'
@@ -127,31 +127,8 @@ export function ChatInput() {
     </div>
   )
 }
-
 export function ChatContainer() {
-  const { messages, refetchMessages } = useChannelContext()
-  // console.log(messages)
-  const { selectedChannelId } = useUI()
-  api.messages.onMessage.useSubscription(
-    {
-      channelId: selectedChannelId
-    },
-    {
-      onData: () => {
-        refetchMessages()
-      }
-    }
-  )
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  function scrollToBottom(): void {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  const { messages, messagesEndRef } = useChannelContext()
 
   return (
     <div className="flex h-full flex-col bg-gray-900">
