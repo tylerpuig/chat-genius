@@ -9,7 +9,7 @@ export function AppSidebar() {
   if (!session || !session.user) return null
 
   return (
-    <Sidebar className="border-gray-800 bg-gray-900">
+    <Sidebar className="!border-gray-800 bg-gray-900">
       <SidebarContent className="!scrollbar-overlay !h-full !overflow-y-auto !overflow-x-hidden bg-gray-900">
         <div className="h-screen text-gray-100">
           <div className="p-4">
