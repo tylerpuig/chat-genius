@@ -74,9 +74,7 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
     console.log('final query')
     const results = await db.query.messages.findMany({
       columns: {
-        id: true,
-        content: true,
-        createdAt: true
+        contentEmbedding: false
       },
 
       extras: {

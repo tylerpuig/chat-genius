@@ -47,7 +47,7 @@ function ChannelView() {
         userId: session?.user.id
       })
 
-      return newMessage?.[0]?.id || 0
+      return newMessage?.id || 0
     } catch (error) {
       console.error('Error sending message:', error)
     }

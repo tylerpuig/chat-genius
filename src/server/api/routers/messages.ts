@@ -72,7 +72,7 @@ export const messagesRouter = createTRPCRouter({
             id: schema.messages.id
           })
 
-        if (!newMessage?.id) return {}
+        if (!newMessage?.id) return { id: 0 }
 
         // Create embedding for the new message, don't await in this scope
         void createMessageTextEmbedding(newMessage.id, content)
