@@ -1,6 +1,15 @@
 import { relations, sql } from 'drizzle-orm'
-import { boolean } from 'drizzle-orm/pg-core'
-import { index, integer, primaryKey, text, timestamp, varchar, pgTable } from 'drizzle-orm/pg-core'
+import {
+  index,
+  boolean,
+  integer,
+  primaryKey,
+  text,
+  timestamp,
+  varchar,
+  pgTable,
+  vector
+} from 'drizzle-orm/pg-core'
 import { type AdapterAccount } from 'next-auth/adapters'
 
 /**
@@ -9,7 +18,6 @@ import { type AdapterAccount } from 'next-auth/adapters'
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
-// export const pgTable = pgTableCreator((name) => `chat-genius_${name}`)
 
 export const users = pgTable('user', {
   id: varchar('id', { length: 255 })
@@ -184,11 +192,16 @@ export const messages = pgTable(
     isReply: boolean('is_reply').default(false).notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date()),
     replyCount: integer('reply_count').default(0).notNull(),
-    attachmentCount: integer('attachment_count').default(0).notNull()
+    attachmentCount: integer('attachment_count').default(0).notNull(),
+    contentEmbedding: vector('embedding', { dimensions: 1536 })
   },
   (message) => [
     index('message_channel_id_idx').on(message.channelId),
-    index('message_user_id_idx').on(message.userId)
+    index('message_user_id_idx').on(message.userId),
+    index('message_content_embedding_idx').using(
+      'hnsw',
+      message.contentEmbedding.op('vector_cosine_ops')
+    )
   ]
 )
 

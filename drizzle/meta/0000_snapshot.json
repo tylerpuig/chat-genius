@@ -1,5 +1,5 @@
 {
-  "id": "0dc49ec5-0a58-415d-b25f-3a33ebd592b6",
+  "id": "b1d1e288-5ed5-40bd-9efb-d80bcfdbfb54",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -744,6 +744,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "embedding": {
+          "name": "embedding",
+          "type": "vector(1536)",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -775,6 +781,22 @@
           "isUnique": false,
           "concurrently": false,
           "method": "btree",
+          "with": {}
+        },
+        "message_content_embedding_idx": {
+          "name": "message_content_embedding_idx",
+          "columns": [
+            {
+              "expression": "embedding",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last",
+              "opclass": "vector_cosine_ops"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "hnsw",
           "with": {}
         }
       },

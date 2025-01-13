@@ -71,6 +71,7 @@ CREATE TABLE "message" (
 	"updated_at" timestamp with time zone,
 	"reply_count" integer DEFAULT 0 NOT NULL,
 	"attachment_count" integer DEFAULT 0 NOT NULL,
+	"embedding" vector(1536),
 	CONSTRAINT "message_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
@@ -138,4 +139,5 @@ CREATE INDEX "attachment_message_id_idx" ON "message_attachment" USING btree ("m
 CREATE INDEX "message_reaction_message_emoji_idx" ON "message_reaction" USING btree ("message_id","emoji");--> statement-breakpoint
 CREATE INDEX "message_channel_id_idx" ON "message" USING btree ("channel_id");--> statement-breakpoint
 CREATE INDEX "message_user_id_idx" ON "message" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "message_content_embedding_idx" ON "message" USING hnsw ("embedding" vector_cosine_ops);--> statement-breakpoint
 CREATE INDEX "session_user_id_idx" ON "session" USING btree ("user_id");
