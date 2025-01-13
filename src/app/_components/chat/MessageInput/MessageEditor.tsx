@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import { Button } from '~/components/ui/button'
-import { Paperclip, CornerDownLeft, Mic } from 'lucide-react'
+import { Paperclip, CornerDownLeft, Mic, Sparkles } from 'lucide-react'
 import { ChatInput } from '~/components/ui/chat/chat-input'
 import { useFileAttachmentContext } from '~/app/hooks/ui/useFileAttachmentContext'
 import { useSession } from 'next-auth/react'
@@ -21,12 +21,10 @@ export default function MessageEditor({
   const { data: session } = useSession()
 
   const { setFileUploadModalOpen, selectedChannelName, selectedChannelId } = useUI()
+  const [autoCompleteOn, setAutoCompleteOn] = useState(true)
 
   // Create a debounced version of messageContent
   const [debouncedContent, setDebouncedContent] = useDebouncedState('', 400)
-
-  // Store the current mutation promise to allow cancellation
-  const currentMutation = useRef<AbortController | null>(null)
 
   // State for predicted text
   const [predictedText, setPredictedText] = useState('')
@@ -40,6 +38,7 @@ export default function MessageEditor({
         console.log('Suggested message:', data.suggestedMessage)
         // Only set prediction if it's different from current content
         if (data.suggestedMessage !== debouncedContent) {
+          if (!messageContent || !debouncedContent) return
           setPredictedText(data.suggestedMessage)
         } else {
           setPredictedText('')
@@ -50,22 +49,38 @@ export default function MessageEditor({
 
   useEffect(() => {
     setDebouncedContent(messageContent)
-    console.log('Debounced content:', debouncedContent)
-    console.log('Message content:', messageContent)
   }, [messageContent])
 
   useEffect(() => {
-    if (!messageContent || !debouncedContent) return
-    if (predictNextMessage.isPending) return
+    if (!autoCompleteOn || !messageContent || !debouncedContent) {
+      return
+    }
+
+    // Cancel previous mutation if it's still running
+    if (predictNextMessage.isPending) {
+      predictNextMessage.reset()
+    }
+
     predictNextMessage.mutate({
       currentText: debouncedContent,
       channelId: selectedChannelId
     })
-  }, [debouncedContent])
+
+    return () => {
+      if (predictNextMessage.isPending) {
+        predictNextMessage.reset()
+      }
+    }
+  }, [debouncedContent, autoCompleteOn])
 
   useEffect(() => {
     if (!messageContent) {
       setPredictedText('')
+      setDebouncedContent('')
+      // Reset any pending mutation
+      if (predictNextMessage.isPending) {
+        predictNextMessage.reset()
+      }
     }
   }, [messageContent])
 
@@ -142,7 +157,9 @@ export default function MessageEditor({
         {predictedText && (
           <div className="pointer-events-none absolute inset-0 rounded-lg">
             <div className="px-3 py-1 text-lg">
-              <span className="invisible mr-1">{messageContent}</span>
+              <span className={`invisible ${messageContent.endsWith('.') ? 'mr-2' : 'mr-2'}`}>
+                {messageContent}
+              </span>
               <span className="text-zinc-100 opacity-40">{predictedText}</span>
             </div>
           </div>
@@ -166,6 +183,22 @@ export default function MessageEditor({
 
           <Button variant="channel" size="icon">
             <Mic className="size-4 stroke-slate-50" />
+            <span className="sr-only">Use Microphone</span>
+          </Button>
+          <Button
+            onClick={() => {
+              if (autoCompleteOn) {
+                setPredictedText('')
+                setDebouncedContent('')
+              }
+              setAutoCompleteOn((prev) => !prev)
+            }}
+            variant="channel"
+            size="icon"
+          >
+            <Sparkles
+              className={`size-4 ${autoCompleteOn ? 'stroke-blue-400' : 'stroke-slate-50'}`}
+            />
             <span className="sr-only">Use Microphone</span>
           </Button>
 

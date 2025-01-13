@@ -7,7 +7,12 @@ import * as schema from '~/server/db/schema'
 export const integrationsRouter = createTRPCRouter({
   predictNextMessage: protectedProcedure
     .input(z.object({ currentText: z.string(), channelId: z.number() }))
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx, signal }) => {
+      signal?.addEventListener('abort', () => {
+        console.log('Aborted')
+        throw new Error('Aborted')
+      })
+
       const embedding = await createMessageEmbedding(input.currentText)
       if (!embedding) return { suggestedMessage: '' }
 
@@ -43,6 +48,10 @@ export const integrationsRouter = createTRPCRouter({
         )
         .orderBy((t) => desc(t.similarity))
         .limit(4)
+
+      if (signal?.aborted) {
+        return { suggestedMessage: '' }
+      }
 
       // Context from user's similar messages
       const userMessagesContext = similarUserMessages.map((m) => m.content).join('\n')
