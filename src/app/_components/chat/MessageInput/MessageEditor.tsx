@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { api } from '~/trpc/react'
 import { useDebouncedState } from '@mantine/hooks'
+import { UserMention } from './UserMention'
 
 export default function MessageEditor({
   sendMessage,
@@ -28,9 +29,18 @@ export default function MessageEditor({
 
   // State for predicted text
   const [predictedText, setPredictedText] = useState('')
+  const [showUserList, setShowUserList] = useState(false)
 
   // Reference to track if Tab was pressed
   const tabPressed = useRef(false)
+
+  const [cursorPosition, setCursorPosition] = useState(0)
+
+  // Add this handler for cursor position
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessageContent(e.target.value)
+    setCursorPosition(e.target.selectionStart || 0)
+  }
 
   const predictNextMessage = api.integrations.predictNextMessage.useMutation({
     onSuccess: (data) => {
@@ -149,12 +159,12 @@ export default function MessageEditor({
         <ChatInput
           value={messageContent}
           onKeyDown={async (e) => await handleMessage(e)}
-          onChange={(e) => setMessageContent(e.target.value)}
+          onChange={handleChange}
           placeholder={`Send a message to ${selectedChannelName}...`}
           className="scrollbar-thin rounded-lg border-0 !text-lg text-zinc-100 shadow-none focus-visible:ring-0"
         />
 
-        {predictedText && (
+        {predictedText && !showUserList && (
           <div className="pointer-events-none absolute inset-0 rounded-lg">
             <div className="px-3 py-1 text-lg">
               <span className={`invisible ${messageContent.endsWith('.') ? 'mr-2' : 'mr-2'}`}>
@@ -164,6 +174,14 @@ export default function MessageEditor({
             </div>
           </div>
         )}
+
+        <UserMention
+          showUserList={showUserList}
+          setShowUserList={setShowUserList}
+          messageContent={messageContent}
+          setMessageContent={setMessageContent}
+          cursorPosition={cursorPosition}
+        />
 
         <div className="flex items-center p-3 pt-0">
           <Button
