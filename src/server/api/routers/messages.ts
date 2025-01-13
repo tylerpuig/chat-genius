@@ -201,6 +201,7 @@ export const messagesRouter = createTRPCRouter({
       // await new Promise((resolve) => setTimeout(resolve, 4000))
       const mainMessage = await ctx.db.query.messages.findFirst({
         where: eq(schema.messages.id, input.parentMessageId),
+        orderBy: asc(schema.messages.id),
         extras: {
           isSaved: sql<boolean>`EXISTS (
                     SELECT 1 FROM ${schema.savedMessagesTable}
@@ -262,12 +263,14 @@ export const messagesRouter = createTRPCRouter({
         .set({ isPinned: true })
         .where(eq(schema.messages.id, input.messageId))
 
-      ee.emit('newMessage', {
+      const subscriptionMessage: NewChannelMessage = {
         id: input.messageId,
-        content: '',
         channelId: input.channelId,
-        userId: ctx.session.user.id
-      })
+        userId: ctx.session.user.id,
+        type: 'PIN_MESSAGE'
+      }
+
+      ee.emit('newMessage', subscriptionMessage)
     }),
   unPinMessage: protectedProcedure
     .input(
@@ -287,7 +290,7 @@ export const messagesRouter = createTRPCRouter({
         id: input.messageId,
         channelId: input.channelId,
         userId: ctx.session.user.id,
-        type: 'PINNED_MESSAGE'
+        type: 'UNPIN_MESSAGE'
       }
 
       ee.emit('newMessage', subscriptionMessage)

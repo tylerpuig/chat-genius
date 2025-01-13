@@ -1,4 +1,4 @@
-import { eq, and, or, type SQL, sql, gt } from 'drizzle-orm'
+import { eq, and, or, type SQL, sql, gt, asc } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import { db } from '~/server/db'
 import { type ChatTab } from '~/app/store/features/ui/types'
@@ -73,6 +73,7 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
 
     return await db.query.messages.findMany({
       where: and(...conditions),
+      orderBy: asc(schema.messages.id),
       extras: {
         isSaved: sql<boolean>`EXISTS (
             SELECT 1 FROM ${schema.savedMessagesTable}
@@ -109,6 +110,7 @@ async function getSavedMessages(userId: string) {
     const savedMessages = await db.query.savedMessagesTable
       .findMany({
         where: eq(schema.savedMessagesTable.userId, userId),
+        orderBy: asc(schema.savedMessagesTable.messageId),
         columns: {}, // don't select any columns from savedMessages table
         with: {
           message: {

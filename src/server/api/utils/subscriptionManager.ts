@@ -9,7 +9,6 @@ type UserSubscriptions = {
 }
 export type ChannelMessageType =
   | 'NEW_MESSAGE'
-  | 'PINNED_MESSAGE'
   | 'NEW_REPLY'
   | 'DELETED_REPLY'
   | 'DELETED_MESSAGE'
@@ -17,6 +16,8 @@ export type ChannelMessageType =
   | 'DELETED_REACTION'
   | 'SAVE_MESSAGE'
   | 'UNSAVE_MESSAGE'
+  | 'PIN_MESSAGE'
+  | 'UNPIN_MESSAGE'
 
 export type NewChannelMessage = {
   id: number
