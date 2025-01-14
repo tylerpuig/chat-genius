@@ -1,5 +1,5 @@
 {
-  "id": "b1d1e288-5ed5-40bd-9efb-d80bcfdbfb54",
+  "id": "2e10dd97-8650-46fe-9af3-7231a1464260",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -750,6 +750,13 @@
           "type": "vector(1536)",
           "primaryKey": false,
           "notNull": false
+        },
+        "is_bot": {
+          "name": "is_bot",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {

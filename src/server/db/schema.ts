@@ -193,7 +193,8 @@ export const messages = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date()),
     replyCount: integer('reply_count').default(0).notNull(),
     attachmentCount: integer('attachment_count').default(0).notNull(),
-    contentEmbedding: vector('embedding', { dimensions: 1536 })
+    contentEmbedding: vector('embedding', { dimensions: 1536 }),
+    fromBot: boolean('is_bot').default(false).notNull()
   },
   (message) => [
     index('message_channel_id_idx').on(message.channelId),

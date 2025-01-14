@@ -72,6 +72,7 @@ CREATE TABLE "message" (
 	"reply_count" integer DEFAULT 0 NOT NULL,
 	"attachment_count" integer DEFAULT 0 NOT NULL,
 	"embedding" vector(1536),
+	"is_bot" boolean DEFAULT false NOT NULL,
 	CONSTRAINT "message_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
