@@ -10,6 +10,7 @@ import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
 import { Paperclip } from 'lucide-react'
 import { Textarea } from '~/components/ui/textarea'
 import { useFileAttachmentContext } from '~/app/hooks/ui/useFileAttachmentContext'
+import PrivateConversationHeader from '~/app/_components/user/profile/PrivateConversationHeader'
 
 export function MessageInput({
   sendMessage,
@@ -129,10 +130,16 @@ export function ChatInput() {
 }
 export function ChatContainer() {
   const { messages, messagesEndRef } = useChannelContext()
+  const { isConversation } = useUI()
 
   return (
     <div className="flex h-full flex-col bg-gray-900">
       <div className="!scrollbar-overlay flex-1 overflow-y-auto">
+        {isConversation && (
+          <div className="sticky top-0 z-40 border-b border-blue-400">
+            <PrivateConversationHeader />
+          </div>
+        )}
         {messages && (
           <>
             {messages.map((message) => (

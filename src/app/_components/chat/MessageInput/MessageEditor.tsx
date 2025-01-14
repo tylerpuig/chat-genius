@@ -59,13 +59,35 @@ export default function MessageEditor({
   })
 
   useEffect(() => {
-    setDebouncedContent(messageContent)
+    // Only proceed if not ending with (bot)
+    if (messageContent.trim().endsWith('(bot)')) {
+      setDebouncedContent('') // Reset debounced content when we just have the bot mention
+      return
+    }
+
+    // Check if we have text after the (bot) mention
+    const botMentionIndex = messageContent.indexOf('(bot)')
+    if (botMentionIndex !== -1) {
+      // Get the text that comes after "(bot)"
+      const textAfterBot = messageContent.slice(botMentionIndex + 5).trim()
+      if (textAfterBot) {
+        setDebouncedContent(textAfterBot)
+      } else {
+        setDebouncedContent('')
+      }
+    } else {
+      // If no bot mention, proceed as normal
+      setDebouncedContent(messageContent)
+    }
   }, [messageContent])
 
   useEffect(() => {
     if (!autoCompleteOn || !messageContent || !debouncedContent) {
       return
     }
+
+    const botMentionIndex = messageContent.indexOf('(bot)')
+    if (debouncedContent.trim().startsWith('@') && botMentionIndex !== -1) return
 
     // Cancel previous mutation if it's still running
     if (predictNextMessage.isPending) {

@@ -3,6 +3,8 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from '~/server/
 import { cosineDistance, desc, gt, sql, eq, and } from 'drizzle-orm'
 import * as openAIUtils from '~/server/db/utils/openai'
 import * as schema from '~/server/db/schema'
+import { ee } from '~/server/api/routers/messages'
+import { type NewChannelMessage } from '~/server/api/utils/subscriptionManager'
 
 export const integrationsRouter = createTRPCRouter({
   predictNextMessage: protectedProcedure
@@ -100,5 +102,93 @@ export const integrationsRouter = createTRPCRouter({
       )
 
       return { response: response || '' }
+    }),
+  sendMessageToUserWithBot: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        content: z.string(),
+        channelId: z.number(),
+        toUserId: z.string()
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { userId, content, channelId, toUserId } = input
+      try {
+        const [newMessage] = await ctx.db
+          .insert(schema.messages)
+          .values({
+            userId,
+            content,
+            channelId
+          })
+          .returning({
+            id: schema.messages.id
+          })
+
+        if (!newMessage?.id) return { id: 0 }
+
+        const subscriptionMessage: NewChannelMessage = {
+          id: newMessage?.id,
+          channelId: input.channelId,
+          userId: ctx.session.user.id,
+          type: 'NEW_MESSAGE'
+        }
+        ee.emit('newMessage', subscriptionMessage)
+
+        // Create embedding for the new message, don't await in this scope
+        const messageEmbedding = await openAIUtils.createMessageTextEmbedding(
+          newMessage.id,
+          content
+        )
+        if (!messageEmbedding) return { id: 0 }
+
+        const userMessages = await ctx.db
+          .select({
+            content: schema.messages.content,
+            similarity: sql<number>`1 - (${cosineDistance(schema.messages.contentEmbedding, messageEmbedding)})`
+          })
+          .from(schema.messages)
+          .where(eq(schema.messages.userId, toUserId))
+          .orderBy((t) => desc(t.similarity))
+          .limit(20)
+
+        console.log('userMessages', userMessages)
+
+        const toUserMessagesContext = userMessages.map((m) => `message: ${m.content}`).join('\n')
+
+        const chatBotMessage = await openAIUtils.generateUserProfileResponse(
+          toUserMessagesContext,
+          content
+        )
+
+        if (!chatBotMessage) return { id: 0 }
+
+        await ctx.db
+          .insert(schema.messages)
+          .values({
+            userId: toUserId,
+            content: chatBotMessage,
+            channelId,
+            fromBot: true
+          })
+          .returning({
+            id: schema.messages.id
+          })
+
+        if (!newMessage?.id) return { id: 0 }
+
+        // Create embedding for the new message, don't await in this scope
+        void openAIUtils.createMessageTextEmbedding(newMessage.id, chatBotMessage)
+
+        // Emit the new message event
+        // The subscription above will handle filtering to only subscribed users
+        subscriptionMessage.userId = toUserId
+        ee.emit('newMessage', subscriptionMessage)
+
+        return newMessage
+      } catch (err) {
+        console.error('Error creating new message:', err)
+      }
     })
 })
