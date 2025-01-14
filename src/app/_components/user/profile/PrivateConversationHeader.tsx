@@ -18,6 +18,9 @@ export default function PrivateConversationHeader() {
     setConversationUser(userProfileDetails.data)
   }, [userProfileDetails.data])
 
+  // console.log('userProfileDetails', userProfileDetails.data)
+  // console.log('userProfileChatConfig', userProfileChatConfig)
+
   if (!userProfileDetails.data) {
     return null
   }
@@ -28,7 +31,7 @@ export default function PrivateConversationHeader() {
 
   return (
     <div
-      key={userProfileChatConfig.userId}
+      key={userProfileChatConfig.userId + userProfileDetails.data.lastOnline}
       className="border-b border-blue-400 duration-300 animate-in slide-in-from-top"
     >
       <div className="flex h-16 items-center justify-between bg-gray-900 px-4 text-gray-300 shadow-md">

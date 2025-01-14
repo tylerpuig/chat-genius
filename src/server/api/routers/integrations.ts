@@ -36,7 +36,7 @@ export const integrationsRouter = createTRPCRouter({
         )
         .orderBy(desc(schema.messages.createdAt))
         .leftJoin(schema.users, eq(schema.messages.userId, schema.users.id))
-        .limit(10)
+        .limit(20)
 
       // Get similar messages from the current user
       const similarUserMessages = await ctx.db
@@ -49,7 +49,7 @@ export const integrationsRouter = createTRPCRouter({
           )
         )
         .orderBy((t) => desc(t.similarity))
-        .limit(4)
+        .limit(10)
 
       if (signal?.aborted) {
         return { suggestedMessage: '' }

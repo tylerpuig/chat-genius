@@ -12,7 +12,8 @@ export default function UserProfileChat() {
     userProfileChatConfig,
     setUserProfileChatConfig,
     setSelectedChannelId,
-    setConversationUser
+    setConversationUser,
+    setIsConversation
   } = useUI()
 
   const { userList } = useChannelContext()
@@ -32,8 +33,6 @@ export default function UserProfileChat() {
   const getUserProfileDetails = api.user.getUserProfileDetails.useQuery({
     userId: userProfileChatConfig?.userId
   })
-
-  console.log('getUserProfileDetails', userProfileChatConfig)
 
   if (!getUserProfileDetails.data) {
     return null
@@ -89,10 +88,11 @@ export default function UserProfileChat() {
         <div className="mt-4 flex items-center justify-center gap-4">
           <Button
             onClick={() => {
-              const channelId = getUserConversationId(userProfileChatConfig?.userId)
+              const channelId = getUserConversationId(userProfileChatConfig.userId)
               if (getUserProfileDetails.data && channelId) {
                 setSelectedChannelId(channelId)
                 setConversationUser(getUserProfileDetails.data)
+                setIsConversation(true)
                 setUserProfileChatConfig({
                   ...userProfileChatConfig,
                   sheetOpen: false
