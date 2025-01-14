@@ -71,7 +71,6 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
       return await getSavedMessages(userId)
     }
 
-    console.log('final query')
     const results = await db.query.messages.findMany({
       columns: {
         contentEmbedding: false
@@ -107,8 +106,6 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
       orderBy: desc(schema.messages.createdAt),
       limit: 20
     })
-
-    console.log('results', results)
 
     return results.reverse()
   } catch (err) {

@@ -8,6 +8,7 @@ import { useUI } from '~/app/hooks/ui/useUI'
 import { api } from '~/trpc/react'
 import { useDebouncedState } from '@mantine/hooks'
 import { UserMention } from './UserMention'
+import { ScrollArea } from '~/components/ui/scroll-area'
 
 export default function MessageEditor({
   sendMessage,
@@ -161,15 +162,13 @@ export default function MessageEditor({
           onKeyDown={async (e) => await handleMessage(e)}
           onChange={handleChange}
           placeholder={`Send a message to ${selectedChannelName}...`}
-          className="scrollbar-thin rounded-lg border-0 !text-lg text-zinc-100 shadow-none focus-visible:ring-0"
+          className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 !scrollbar-thumb-rounded-full rounded-lg border-0 !text-lg text-zinc-100 shadow-none focus-visible:ring-0"
         />
 
         {predictedText && !showUserList && (
-          <div className="pointer-events-none absolute inset-0 rounded-lg">
-            <div className="px-3 py-1 text-lg">
-              <span className={`invisible ${messageContent.endsWith('.') ? 'mr-2' : 'mr-2'}`}>
-                {messageContent}
-              </span>
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg">
+            <div className="whitespace-pre-wrap break-words px-4 py-1 text-lg">
+              <span className="invisible">{messageContent}</span>
               <span className="text-zinc-100 opacity-40">{predictedText}</span>
             </div>
           </div>

@@ -3,6 +3,8 @@ import { db } from '~/server/db'
 import { eq } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import { z } from 'zod'
+import { zodResponseFormat } from 'openai/helpers/zod'
+import { ee } from '~/server/api/routers/messages'
 
 const OPENAI_EMBEDDING_MODEL = 'text-embedding-3-large'
 const OPENAI_CHAT_MODEL = 'gpt-4o-mini-2024-07-18'
@@ -33,7 +35,8 @@ export async function createMessageTextEmbedding(messageId: number, text: string
 
 async function genRandomChannelMessage(
   userCtx: string,
-  messagesCtx: string
+  messagesCtx: string,
+  userStatus: string
 ): Promise<string | undefined> {
   try {
     const response = await openAIClient.chat.completions.create({
@@ -61,6 +64,12 @@ The message should:
 - Occasionally ask questions or request input from others
 - Sometimes reference specific financial metrics, tools, or processes
 - Don't put any placeholders
+- It's important that there's a diversity of messages, so don't just follow the same format as the previous messages, unless explicitly asked to do so
+- You can use emojis if that fits the user style
+- Make your response a mixture of questions and discoveries (e.g., "What's the current trend in the market?" or "I just finished the report for Q2") based on previous messages of the user
+- If the previous message has an emoji, don't include it in your response
+- COME UP WITH DIFFERENT INTROS instead of HEY TEAM. YOU DON'T ALWAYS NEED AN INTRO
+- IF YOUR PRVIOUS MESSAGE HAS A QUESTION AT THE END, DO NOT ASK A QUESTION AT THE END OF YOUR RESPONSE
 
 - Here are the previous messages from the user:
 ${userCtx}
@@ -68,7 +77,8 @@ ${userCtx}
 Here are the previous messages from the channel:
 ${messagesCtx}
 
-
+-Form your response in the same style as the user's message. 
+-The user's status is: ${userStatus}
     `
         }
       ]
@@ -92,7 +102,8 @@ async function getAllUsers() {
     const users = await db.query.users.findMany({
       columns: {
         name: true,
-        id: true
+        id: true,
+        userStatus: true
       }
     })
     return users
@@ -125,14 +136,18 @@ export async function seedChannelWithMessages(iterations: number): Promise<void>
       }
 
       const userCtx = usersPrevMessages.join('\n')
-      const message = await genRandomChannelMessage(userCtx, channelMessages.join('\n'))
+      const message = await genRandomChannelMessage(
+        userCtx,
+        channelMessages.join('\n'),
+        randomUser.userStatus!
+      )
       if (!message) continue
       console.log('new message', message, 'from', randomUser.name)
 
       channelMessages.push(message)
       userPreviousMessages[userId].push(message)
 
-      if (channelMessages.length > 20) {
+      if (channelMessages.length > 30) {
         channelMessages.shift()
       }
 
@@ -146,6 +161,15 @@ export async function seedChannelWithMessages(iterations: number): Promise<void>
         channelId,
         contentEmbedding: embedding
       })
+
+      const subscriptionMessage = {
+        id: 1,
+        channelId,
+        userId: '',
+        type: 'NEW_MESSAGE'
+      }
+
+      ee.emit('newMessage', subscriptionMessage)
     }
   } catch (err) {
     console.error('Error seeding channel with messages:', err)
@@ -214,31 +238,33 @@ export async function generateUserProfileResponse(
   userQuery: string
 ): Promise<string | undefined> {
   try {
-    console.log('pastMessageContext', pastMessageContext)
-    console.log('userQuery', userQuery)
-    const response = await openAIClient.chat.completions.create({
+    // console.log('pastMessageContext', pastMessageContext)
+    // console.log('userQuery', userQuery)
+    const response = await openAIClient.beta.chat.completions.parse({
       model: OPENAI_CHAT_MODEL,
       messages: [
         {
           role: 'system',
-          content: `You are a helpful assistant that helps users with their queries. You should represent your message in the same style as the user's message. 
+          content: `
+          You are an AI agent that is representing a user. You should represent your message in the same style as the user's message.
+
+          ${pastMessageContext}
 
           Your response should be a single message that attempts to answer the user's question.
 
-          Here are the previous messages from the user:
-          ${pastMessageContext}
-
-          If there is no relevant information in the previous messages, you can say "I don't have any information about that."
+          Your answer should depend on the context of the previous messages from the user. If there is no relevant information in the previous messages, you can say "I don't have any information about that."          
           `
         },
         {
           role: 'user',
           content: `${userQuery}`
         }
-      ]
+      ],
+      response_format: zodResponseFormat(askProfileOutputSchema, 'response')
     })
 
-    return response.choices[0]?.message?.content || ''
+    console.log(response.choices?.[0]?.message.parsed?.response)
+    return response.choices[0]?.message.parsed?.response || ''
   } catch (err) {
     console.log(err)
   }

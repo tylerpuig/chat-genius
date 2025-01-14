@@ -14,7 +14,7 @@ import { generatePresignedUrl, generateDownloadUrl } from '~/server/db/utils/s3'
 import { createMessageTextEmbedding, seedChannelWithMessages } from '~/server/db/utils/openai'
 
 // Event emitter for trpc subscriptions
-const ee = new EventEmitter()
+export const ee = new EventEmitter()
 
 const subscriptionManager = new UserSubscriptionManager()
 

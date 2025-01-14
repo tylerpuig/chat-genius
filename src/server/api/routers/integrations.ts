@@ -92,7 +92,7 @@ export const integrationsRouter = createTRPCRouter({
 
       // console.log('userMessages', userMessages)
 
-      const userMessagesContext = userMessages.map((m) => `${m.content}`).join('\n')
+      const userMessagesContext = userMessages.map((m) => `message: ${m.content}`).join('\n')
 
       const response = await openAIUtils.generateUserProfileResponse(
         userMessagesContext,

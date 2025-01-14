@@ -33,7 +33,6 @@ export const usersRouter = createTRPCRouter({
     }),
   editUserDetails: protectedProcedure.input(editUserSchema).mutation(async ({ ctx, input }) => {
     const result = await ctx.db.update(users).set(input).where(eq(users.id, ctx.session.user.id))
-    console.log('result', result)
     return result
   }),
   getUserDetails: protectedProcedure.query(async ({ ctx }) => {
