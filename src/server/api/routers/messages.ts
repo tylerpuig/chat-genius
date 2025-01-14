@@ -96,13 +96,14 @@ export const messagesRouter = createTRPCRouter({
     .input(
       z.object({
         channelId: z.number(),
-        chatTab: z.enum(['Messages', 'Files', 'Pins', 'Saved', 'Bot'])
+        chatTab: z.enum(['Messages', 'Files', 'Pins', 'Saved', 'Bot']),
+        limit: z.number()
       })
     )
     .query(async ({ input, ctx }) => {
-      const { channelId } = input
+      const { channelId, chatTab, limit } = input
 
-      const results = await getMessagesFromChannel(channelId, ctx.session.user.id, input.chatTab)
+      const results = await getMessagesFromChannel(channelId, ctx.session.user.id, chatTab, limit)
 
       return results
     }),

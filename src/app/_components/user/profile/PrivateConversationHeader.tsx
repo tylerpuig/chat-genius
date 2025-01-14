@@ -18,9 +18,6 @@ export default function PrivateConversationHeader() {
     setConversationUser(userProfileDetails.data)
   }, [userProfileDetails.data])
 
-  // console.log('userProfileDetails', userProfileDetails.data)
-  // console.log('userProfileChatConfig', userProfileChatConfig)
-
   if (!userProfileDetails.data) {
     return null
   }

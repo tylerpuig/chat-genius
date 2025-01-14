@@ -7,7 +7,7 @@ import { api } from '../../../trpc/react'
 import { useSession } from 'next-auth/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
-import { Paperclip } from 'lucide-react'
+import { Paperclip, ChevronUp } from 'lucide-react'
 import { Textarea } from '~/components/ui/textarea'
 import { useFileAttachmentContext } from '~/app/hooks/ui/useFileAttachmentContext'
 import PrivateConversationHeader from '~/app/_components/user/profile/PrivateConversationHeader'
@@ -128,13 +128,42 @@ export function ChatInput() {
     </div>
   )
 }
+
+const LoadMoreButton = () => {
+  return (
+    <button
+      // onClick={onClick}
+      className="flex -translate-x-1/2 transform items-center justify-center space-x-2 rounded-full bg-blue-900 px-2 py-[.2rem] text-sm text-blue-100 opacity-75 shadow-lg transition-colors duration-200 ease-in-out hover:bg-blue-800 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50"
+      aria-label="Load more messages"
+    >
+      <span>Previous</span>
+      <ChevronUp className="h-4 w-4" />
+    </button>
+  )
+}
 export function ChatContainer() {
-  const { messages, messagesEndRef } = useChannelContext()
+  const {
+    messages,
+    messagesEndRef,
+    handleTopMessageScroll,
+    isNearTopMessages,
+    loadAdditionalMessages
+  } = useChannelContext()
   const { isConversation } = useUI()
 
   return (
     <div className="flex h-full flex-col bg-gray-900">
-      <div className="!scrollbar-overlay flex-1 overflow-y-auto">
+      <div onScroll={handleTopMessageScroll} className="!scrollbar-overlay flex-1 overflow-y-auto">
+        {isNearTopMessages && messages.length > 19 && !isConversation && (
+          <div
+            onClick={() => {
+              loadAdditionalMessages()
+            }}
+            className="absolute left-1/2 top-1 z-40"
+          >
+            <LoadMoreButton />
+          </div>
+        )}
         {isConversation && (
           <div className="sticky top-0 z-40">
             <PrivateConversationHeader />

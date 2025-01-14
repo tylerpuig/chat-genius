@@ -96,7 +96,6 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
               {!isReply && (
                 <Button
                   onClick={() => {
-                    console.log(id)
                     if (messageReplySheetOpen) return
                     setSelectedParentMessageId(id)
                     setMessageReplySheetOpen(true)

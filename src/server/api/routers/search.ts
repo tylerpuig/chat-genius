@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '~/server/api/trpc'
-import { eq, and, desc, or, ne, ilike, asc, cosineDistance, sql } from 'drizzle-orm'
+import { eq, and, desc, or, ne, ilike, asc, cosineDistance, sql, exists } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import * as openAIUtils from '~/server/db/utils/openai'
 
@@ -139,6 +139,17 @@ export const searchRouter = createTRPCRouter({
         .orderBy((t) => t.similarity)
         .limit(10)
 
+      // const messages = await ctx.db
+      //   .select({
+      //     content: schema.messages.content,
+      //     similarity: sql<number>`1 - (${cosineDistance(schema.messages.contentEmbedding, messageEmbedding)})`,
+      //     channelId: schema.messages.channelId,
+      //     createdAt: schema.messages.createdAt
+      //   })
+      //   .from(schema.messages)
+      //   .orderBy((t) => desc(t.similarity))
+      //   .limit(10)
+
       const messages = await ctx.db
         .select({
           content: schema.messages.content,
@@ -147,8 +158,46 @@ export const searchRouter = createTRPCRouter({
           createdAt: schema.messages.createdAt
         })
         .from(schema.messages)
+        .innerJoin(schema.channels, eq(schema.messages.channelId, schema.channels.id))
+        .where(
+          or(
+            // User is a member of the channel
+            exists(
+              ctx.db
+                .select()
+                .from(schema.channelMembers)
+                .where(
+                  and(
+                    eq(schema.channelMembers.channelId, schema.messages.channelId),
+                    eq(schema.channelMembers.userId, ctx.session.user.id)
+                  )
+                )
+            ),
+            // Channel is public
+            and(eq(schema.channels.isPrivate, false), eq(schema.channels.isConversation, false)),
+            // User is part of the conversation
+            and(
+              eq(schema.channels.isConversation, true),
+              exists(
+                ctx.db
+                  .select()
+                  .from(schema.conversationsTable)
+                  .where(
+                    and(
+                      eq(schema.conversationsTable.channelId, schema.messages.channelId),
+                      or(
+                        eq(schema.conversationsTable.user1Id, ctx.session.user.id),
+                        eq(schema.conversationsTable.user2Id, ctx.session.user.id)
+                      )
+                    )
+                  )
+              )
+            )
+          )
+        )
         .orderBy((t) => desc(t.similarity))
         .limit(10)
+      // console.log('userMessages', messages)
 
       const files = await ctx.db
         .select({

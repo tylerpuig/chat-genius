@@ -11,6 +11,9 @@ type ChannelContext = {
   messagesEndRef: React.RefObject<HTMLDivElement>
   replyMessagesEndRef: React.RefObject<HTMLDivElement>
   userList: OnlineUserList
+  handleTopMessageScroll: (e: React.UIEvent<HTMLDivElement>) => void
+  isNearTopMessages: boolean
+  loadAdditionalMessages: () => void
 }
 
 const MessagesContext = createContext<ChannelContext>({
@@ -18,28 +21,28 @@ const MessagesContext = createContext<ChannelContext>({
   refetchMessages: () => {},
   messagesEndRef: React.createRef<HTMLDivElement>(),
   replyMessagesEndRef: React.createRef<HTMLDivElement>(),
-  userList: []
+  userList: [],
+  handleTopMessageScroll: () => {},
+  isNearTopMessages: false,
+  loadAdditionalMessages: () => {}
 })
 
-const SCROLL_NOTIFICATION_KEYS = new Set<ChannelMessageType>(['NEW_MESSAGE', 'NEW_REPLY'])
-
 export function ChannelProvider({ children }: { children: ReactNode }) {
-  const {
-    selectedChannelId,
-    setSelectedChannelId,
-    setSelectedChannelName,
-    currentTab,
-    messageReplySheetOpen
-  } = useUI()
+  const { selectedChannelId, setSelectedChannelId, setSelectedChannelName, currentTab } = useUI()
+
+  const [allMessages, setAllMessages] = useState<ChatMessageData[]>([])
+  const [isNearTopMessages, setIsNearTopMessages] = useState(false)
 
   const channels = api.messages.getChannels.useQuery(undefined, {
     enabled: !selectedChannelId
   })
 
+  const [msgLimit, setMsgLimit] = useState(20)
+
   const userList = api.messages.getOnlineUsers.useQuery()
 
-  const [currentNotificationType, setCurrentNotificationType] =
-    useState<ChannelMessageType>('NEW_MESSAGE')
+  // const [currentNotificationType, setCurrentNotificationType] =
+  //   useState<ChannelMessageType>('NEW_MESSAGE')
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const replyMessagesEndRef = useRef<HTMLDivElement>(null)
@@ -58,32 +61,91 @@ export function ChannelProvider({ children }: { children: ReactNode }) {
     }
   }, [channels.data])
 
-  const { data: messages, refetch } = api.messages.getMessagesFromChannel.useQuery({
-    channelId: selectedChannelId,
-    chatTab: currentTab
-  })
+  const { data: messages, refetch } = api.messages.getMessagesFromChannel.useQuery(
+    {
+      channelId: selectedChannelId,
+      chatTab: currentTab,
+      limit: msgLimit
+    },
+    {
+      enabled: true
+    }
+  )
+
+  function handleTopMessageScroll(e: React.UIEvent<HTMLDivElement>): void {
+    try {
+      const target = e.target as HTMLDivElement
+      const isNearTop = target.scrollTop < 100 // Adjust this threshold as needed
+      setIsNearTopMessages(isNearTop)
+    } catch (error) {
+      console.error('Error handling scroll event:', error)
+    }
+  }
 
   useEffect(() => {
-    if (currentNotificationType === 'NEW_MESSAGE' && messagesEndRef.current) {
+    setMsgLimit(20)
+    ;(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
       scrollToBottomMainMessages()
-    }
+    })()
+  }, [selectedChannelId, currentTab])
 
-    if (currentNotificationType === 'NEW_REPLY' && replyMessagesEndRef.current) {
-      scrollToBottomReplyMessages()
+  useEffect(() => {
+    if (messages?.messages) {
+      setAllMessages(messages.messages)
     }
-  }, [messages])
+  }, [messages?.messages])
+
+  // useEffect(() => {
+  //   if (currentNotificationType === 'NEW_MESSAGE' && messagesEndRef.current) {
+  //     // setTimeout(() => {
+  //     //   scrollToBottomMainMessages()
+  //     // }, 500)
+  //     // scrollToBottomMainMessages()
+  //   }
+
+  //   if (currentNotificationType === 'NEW_REPLY' && replyMessagesEndRef.current) {
+  //     scrollToBottomReplyMessages()
+  //   }
+  // }, [currentNotificationType])
 
   function refetchMessages(): void {
     refetch()
   }
+  function loadAdditionalMessages(): void {
+    setMsgLimit((prev) => prev + 20)
+  }
+
+  const RELOAD_KEYS = new Set<ChannelMessageType>([
+    'DELETED_MESSAGE',
+    'SAVE_MESSAGE',
+    'UNSAVE_MESSAGE',
+    'PIN_MESSAGE',
+    'UNPIN_MESSAGE',
+    'NEW_MESSAGE',
+    'NEW_REPLY',
+    'NEW_REACTION',
+    'DELETED_REACTION'
+  ])
+
+  const SCROLL_KEYS = new Set<ChannelMessageType>(['NEW_MESSAGE', 'NEW_REPLY'])
+
   api.messages.onMessage.useSubscription(
     {
       channelId: selectedChannelId
     },
     {
-      onData: (data) => {
-        setCurrentNotificationType(data.type)
-        refetchMessages()
+      onData: async (data) => {
+        // setCurrentNotificationType(data.type)
+        if (RELOAD_KEYS.has(data.type)) {
+          refetch()
+        }
+
+        if (SCROLL_KEYS.has(data.type)) {
+          await new Promise((resolve) => setTimeout(resolve, 1_000))
+          scrollToBottomMainMessages()
+        }
+        // refetchMessages()
       }
     }
   )
@@ -91,11 +153,14 @@ export function ChannelProvider({ children }: { children: ReactNode }) {
   return (
     <MessagesContext.Provider
       value={{
-        messages: messages || [],
+        messages: allMessages || [],
         refetchMessages,
         messagesEndRef,
         replyMessagesEndRef,
-        userList: userList.data || []
+        userList: userList.data || [],
+        handleTopMessageScroll,
+        isNearTopMessages,
+        loadAdditionalMessages
       }}
     >
       {children}

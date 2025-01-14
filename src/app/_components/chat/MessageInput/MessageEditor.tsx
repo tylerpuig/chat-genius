@@ -115,7 +115,7 @@ export default function MessageEditor({
         predictNextMessage.reset()
       }
     }
-  }, [messageContent])
+  }, [messageContent, debouncedContent, predictedText])
 
   // async function handleMessage(e: React.KeyboardEvent<HTMLTextAreaElement>): Promise<void> {
   //   try {

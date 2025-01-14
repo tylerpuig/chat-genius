@@ -1,4 +1,4 @@
-import { eq, and, or, type SQL, sql, gt, asc, desc } from 'drizzle-orm'
+import { eq, and, or, type SQL, sql, gt, asc, desc, inArray, lt } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import { db } from '~/server/db'
 import { type ChatTab } from '~/app/store/features/ui/types'
@@ -52,28 +52,38 @@ export async function getUserChannels(db: any, userId: string): Promise<UserChan
   return []
 }
 
-export async function getMessagesFromChannel(channelId: number, userId: string, chatTab: ChatTab) {
+export async function getMessagesFromChannel(
+  channelId: number,
+  userId: string,
+  chatTab: ChatTab,
+  limit: number = 20
+) {
   try {
-    const conditions: SQL<unknown>[] = [
-      eq(schema.messages.channelId, channelId),
-      eq(schema.messages.isReply, false)
-    ]
+    // const conditions: SQL<unknown>[] = [
+    //   eq(schema.messages.channelId, channelId),
+    //   eq(schema.messages.isReply, false)
+    // ]
 
-    if (chatTab === 'Pins') {
-      conditions.push(eq(schema.messages.isPinned, true))
-    }
-
-    if (chatTab === 'Files') {
-      conditions.push(gt(schema.messages.attachmentCount, 0))
-    }
-
-    if (chatTab === 'Bot') {
-      conditions.push(eq(schema.messages.fromBot, true))
-    }
+    // Add cursor condition if provided
+    // if (cursor) {
+    //   conditions.push(lt(schema.messages.id, cursor))
+    // }
 
     if (chatTab === 'Saved') {
       return await getSavedMessages(userId)
     }
+
+    const subquery = sql`(
+      SELECT id 
+      FROM ${schema.messages}
+      WHERE channel_id = ${channelId} 
+      AND is_reply = false
+      ${chatTab === 'Pins' ? sql`AND is_pinned = true` : sql``}
+      ${chatTab === 'Files' ? sql`AND attachment_count > 0` : sql``}
+      ${chatTab === 'Bot' ? sql`AND is_bot = true` : sql``}
+      ORDER BY id DESC
+      LIMIT ${limit}
+    )`
 
     const results = await db.query.messages.findMany({
       columns: {
@@ -85,7 +95,6 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
             WHERE message_id = ${schema.messages.id}
             AND user_id = ${userId}
           )`.as('isSaved')
-        // isSaved: true
       },
       with: {
         user: {
@@ -102,56 +111,90 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
             emoji: true
           }
         },
-        attachments: true
+        attachments: {
+          columns: {
+            fileNameEmbedding: false
+          }
+        }
       },
-      where: and(...conditions),
-      // limit: 20,
-      orderBy: desc(schema.messages.createdAt),
-      limit: 20
+      where: inArray(schema.messages.id, subquery),
+      orderBy: asc(schema.messages.id)
+      // offset: offset || 0
     })
 
-    return results.reverse()
+    // Check if there are more results
+    // const hasMore = results.length > 20
+    // const messages = results.slice(0, 20)
+
+    // console.log('hasMore', hasMore)
+
+    const nextCursor = results.at(-1)?.id || 0
+
+    return {
+      messages: results,
+      // hasMore,
+      nextCursor
+    }
+    // return results
   } catch (err) {
     console.error('Error getting messages from channel:', err)
   }
 }
 
-async function getSavedMessages(userId: string) {
+async function getSavedMessages(userId: string, limit: number = 20) {
   try {
-    const savedMessages = await db.query.savedMessagesTable
-      .findMany({
-        where: eq(schema.savedMessagesTable.userId, userId),
-        orderBy: asc(schema.savedMessagesTable.messageId),
-        columns: {},
-        with: {
-          message: {
-            extras: {
-              isSaved: sql<boolean>`EXISTS (
-              SELECT 1 FROM ${schema.savedMessagesTable}
-              WHERE message_id = ${schema.messages.id}
-              AND user_id = ${userId}
-            )`.as('isSaved')
-            },
-            columns: {
-              contentEmbedding: false
-            },
-            with: {
-              user: {
-                columns: {
-                  id: true,
-                  name: true,
-                  image: true
-                }
-              },
-              reactions: true,
-              attachments: true
-            }
+    // Create subquery to get saved message IDs
+    const subquery = sql`(
+      SELECT message_id 
+      FROM ${schema.savedMessagesTable}
+      WHERE user_id = ${userId}
+      ORDER BY message_id DESC
+      LIMIT ${limit}
+    )`
+
+    // Query messages using the same structure as getMessagesFromChannel
+    const results = await db.query.messages.findMany({
+      columns: {
+        contentEmbedding: false
+      },
+      extras: {
+        isSaved: sql<boolean>`EXISTS (
+            SELECT 1 FROM ${schema.savedMessagesTable}
+            WHERE message_id = ${schema.messages.id}
+            AND user_id = ${userId}
+          )`.as('isSaved')
+      },
+      with: {
+        user: {
+          columns: {
+            id: true,
+            name: true,
+            image: true
+          }
+        },
+        reactions: {
+          columns: {
+            messageId: true,
+            userId: true,
+            emoji: true
+          }
+        },
+        attachments: {
+          columns: {
+            fileNameEmbedding: false
           }
         }
-      })
-      .then((saved) => saved.map((s) => s.message))
+      },
+      where: inArray(schema.messages.id, subquery),
+      orderBy: asc(schema.messages.id)
+    })
 
-    return savedMessages
+    const nextCursor = results.at(-1)?.id || 0
+
+    return {
+      messages: results,
+      nextCursor
+    }
   } catch (err) {
     console.error('Error getting saved messages:', err)
   }

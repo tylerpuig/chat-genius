@@ -73,6 +73,7 @@ export function WorkspaceSearchDialog() {
 
   useEffect(() => {
     setSearchQuery('')
+    setCachedSearchResults(undefined)
   }, [workspaceSearchOpen])
 
   useEffect(() => {
