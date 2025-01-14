@@ -136,7 +136,7 @@ export function ChatContainer() {
     <div className="flex h-full flex-col bg-gray-900">
       <div className="!scrollbar-overlay flex-1 overflow-y-auto">
         {isConversation && (
-          <div className="sticky top-0 z-40 border-b border-blue-400">
+          <div className="sticky top-0 z-40">
             <PrivateConversationHeader />
           </div>
         )}

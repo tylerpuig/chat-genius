@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 import { PhoneCall, MoreVertical } from 'lucide-react'
@@ -27,7 +27,10 @@ export default function PrivateConversationHeader() {
     : false
 
   return (
-    <div key={userProfileChatConfig.userId} className="duration-300 animate-in slide-in-from-top">
+    <div
+      key={userProfileChatConfig.userId}
+      className="border-b border-blue-400 duration-300 animate-in slide-in-from-top"
+    >
       <div className="flex h-16 items-center justify-between bg-gray-900 px-4 text-gray-300 shadow-md">
         <div className="flex items-center space-x-4">
           <div className="relative">

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createContext, useContext, ReactNode } from 'react'
 import { api } from '~/trpc/react'
-import { type ChatMessageData } from '~/trpc/types'
+import type { ChatMessageData, OnlineUserList } from '~/trpc/types'
 import { useUI } from './useUI'
 import { type ChannelMessageType } from '~/server/api/utils/subscriptionManager'
 
@@ -10,13 +10,15 @@ type ChannelContext = {
   refetchMessages: () => void
   messagesEndRef: React.RefObject<HTMLDivElement>
   replyMessagesEndRef: React.RefObject<HTMLDivElement>
+  userList: OnlineUserList
 }
 
 const MessagesContext = createContext<ChannelContext>({
   messages: [],
   refetchMessages: () => {},
   messagesEndRef: React.createRef<HTMLDivElement>(),
-  replyMessagesEndRef: React.createRef<HTMLDivElement>()
+  replyMessagesEndRef: React.createRef<HTMLDivElement>(),
+  userList: []
 })
 
 const SCROLL_NOTIFICATION_KEYS = new Set<ChannelMessageType>(['NEW_MESSAGE', 'NEW_REPLY'])
@@ -33,6 +35,8 @@ export function ChannelProvider({ children }: { children: ReactNode }) {
   const channels = api.messages.getChannels.useQuery(undefined, {
     enabled: !selectedChannelId
   })
+
+  const userList = api.messages.getOnlineUsers.useQuery()
 
   const [currentNotificationType, setCurrentNotificationType] =
     useState<ChannelMessageType>('NEW_MESSAGE')
@@ -90,7 +94,8 @@ export function ChannelProvider({ children }: { children: ReactNode }) {
         messages: messages || [],
         refetchMessages,
         messagesEndRef,
-        replyMessagesEndRef
+        replyMessagesEndRef,
+        userList: userList.data || []
       }}
     >
       {children}

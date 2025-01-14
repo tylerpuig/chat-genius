@@ -25,16 +25,16 @@ export function UserMention({
   const inputRef = useRef<HTMLInputElement>(null)
   const userListRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (userListRef.current && !userListRef.current.contains(event.target as Node)) {
-        setShowUserList(false)
-      }
-    }
+  // useEffect(() => {
+  //   function handleClickOutside(event: MouseEvent) {
+  //     if (userListRef.current && !userListRef.current.contains(event.target as Node)) {
+  //       setShowUserList(false)
+  //     }
+  //   }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [setShowUserList])
+  //   document.addEventListener('mousedown', handleClickOutside)
+  //   return () => document.removeEventListener('mousedown', handleClickOutside)
+  // }, [setShowUserList])
 
   useEffect(() => {
     if (isConversation && conversationUser) {

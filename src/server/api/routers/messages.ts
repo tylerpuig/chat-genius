@@ -486,7 +486,6 @@ export const messagesRouter = createTRPCRouter({
   getChannels: protectedProcedure.query(async ({ ctx }) => {
     let userChannels = await getUserChannels(ctx.db, ctx.session.user.id)
     if (!userChannels.length) {
-      // await ctx.db.transaction(async (tx) => {
       const [newChannel] = await ctx.db
         .insert(schema.channels)
         .values({
@@ -506,7 +505,6 @@ export const messagesRouter = createTRPCRouter({
         userId: ctx.session.user.id,
         isAdmin: true // Creator should probably be an admin
       })
-      // })
 
       userChannels = await getUserChannels(ctx.db, ctx.session.user.id)
     }
@@ -634,93 +632,14 @@ export const messagesRouter = createTRPCRouter({
       const url = await generateDownloadUrl(attachment.fileKey)
       return { downloadUrl: url }
     }),
-  getWorkspaceSearchResults: protectedProcedure
-    .input(
-      z.object({
-        query: z.string()
-      })
-    )
-    .query(async ({ input, ctx }) => {
-      if (!input.query)
-        return {
-          users: [],
-          messages: [],
-          files: []
-        }
 
-      const users = await ctx.db
-        .selectDistinct({
-          id: schema.users.id,
-          name: schema.users.name,
-          image: schema.users.image,
-          channelId: schema.conversationsTable.channelId,
-          userVisibility: schema.users.userVisibility,
-          userStatus: schema.users.userStatus,
-          // createdAt: schema.conversationsTable.createdAt,
-          lastOnline: schema.users.lastOnline
-        })
-        .from(schema.users)
-        .where(
-          and(
-            ne(schema.users.id, ctx.session.user.id),
-            ilike(schema.users.name, '%' + input.query + '%')
-          )
-        )
-        .leftJoin(
-          schema.conversationsTable,
-          or(
-            and(
-              eq(schema.users.id, schema.conversationsTable.user1Id),
-              eq(schema.conversationsTable.user2Id, ctx.session.user.id)
-            ),
-            and(
-              eq(schema.users.id, schema.conversationsTable.user2Id),
-              eq(schema.conversationsTable.user1Id, ctx.session.user.id)
-            )
-          )
-        )
-
-      const messages = await ctx.db.query.messages.findMany({
-        where: ilike(schema.messages.content, '%' + input.query + '%'),
-        with: {
-          user: {
-            columns: {
-              id: true,
-              name: true,
-              image: true
-            }
-          },
-          reactions: true,
-          attachments: true
-        }
-      })
-
-      const files = await ctx.db.query.messageAttachmentsTable.findMany({
-        where: ilike(schema.messageAttachmentsTable.fileName, '%' + input.query + '%'),
-        with: {
-          message: {
-            columns: {
-              id: true,
-              content: true
-            }
-          }
-        },
-        orderBy: asc(schema.messageAttachmentsTable.createdAt)
-      })
-
-      return {
-        users: users,
-        messages: messages,
-        files: files
-      }
-    }),
   seedChannelMessages: protectedProcedure.mutation(async ({ ctx }) => {
     seedChannelWithMessages(50)
     return {}
   }),
   getChannelUsers: protectedProcedure
     .input(z.object({ channelId: z.number(), isConversation: z.boolean() }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx }) => {
       const onlineUsers = await ctx.db
         .selectDistinct({
           id: schema.users.id,

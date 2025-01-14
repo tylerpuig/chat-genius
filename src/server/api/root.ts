@@ -4,6 +4,7 @@ import { messagesRouter } from '~/server/api/routers/messages'
 import { authRouter } from '~/server/api/routers/auth'
 import { conversationsRouter } from '~/server/api/routers/conversations'
 import { integrationsRouter } from '~/server/api/routers/integrations'
+import { searchRouter } from '~/server/api/routers/search'
 /**
  * This is the primary router for your server.
  *
@@ -14,7 +15,8 @@ export const appRouter = createTRPCRouter({
   messages: messagesRouter,
   auth: authRouter,
   conversations: conversationsRouter,
-  integrations: integrationsRouter
+  integrations: integrationsRouter,
+  search: searchRouter
 })
 
 // export type definition of API

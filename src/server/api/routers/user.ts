@@ -1,9 +1,9 @@
 import { z } from 'zod'
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '~/server/api/trpc'
-import { eq } from 'drizzle-orm'
+import { eq, and, or, ne, desc } from 'drizzle-orm'
 import { channels, channelMembers } from '~/server/db/schema'
-import { users } from '~/server/db/schema'
+import { users, conversationsTable } from '~/server/db/schema'
 
 const editUserSchema = z.object({
   name: z.string().min(1).nullable(),

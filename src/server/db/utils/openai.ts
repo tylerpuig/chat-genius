@@ -61,7 +61,7 @@ async function genRandomChannelMessage(
 
     Generate a single message from one of the team members that naturally continues this conversation. 
 The message should:
-- Only be around 20 - 30 words
+- Only be around 20 - 50 words. If the previous user's message was longer, this response should be longer, and vice versa
 - Be relevant to the ongoing discussion
 - Include specific details or numbers when appropriate
 - Reflect the speaker's role
@@ -277,8 +277,49 @@ export async function generateUserProfileResponse(
       response_format: zodResponseFormat(askProfileOutputSchema, 'response')
     })
 
-    console.log(response.choices?.[0]?.message.parsed?.response)
     return response.choices[0]?.message.parsed?.response || ''
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+const askUserStatusOutputSchema = z.object({
+  response: z.string()
+})
+
+export async function generateRandomUserStatus(): Promise<string | undefined> {
+  try {
+    const response = await openAIClient.beta.chat.completions.parse({
+      model: OPENAI_CHAT_MODEL,
+      temperature: 1.0,
+      top_p: 0.9,
+      messages: [
+        {
+          role: 'user',
+          content: `Generate me a random status message for a social media app. This will be for other to see. Must be under 200 characters.`
+        }
+      ],
+      response_format: zodResponseFormat(askUserStatusOutputSchema, 'response')
+    })
+
+    return response.choices[0]?.message.parsed?.response || ''
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+export async function generateEmbeddingFromText(
+  text: string,
+  dimensions: number
+): Promise<number[] | undefined> {
+  try {
+    const response = await openAIClient.embeddings.create({
+      model: OPENAI_EMBEDDING_MODEL,
+      input: text,
+      dimensions: dimensions
+    })
+
+    return response.data[0]?.embedding
   } catch (err) {
     console.log(err)
   }

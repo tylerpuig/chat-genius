@@ -7,6 +7,7 @@ import { Button } from '~/components/ui/button'
 import { api } from '~/trpc/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { useSidebar } from '~/components/ui/sidebar'
+import { useChannelContext } from '~/app/hooks/ui/useChannelContext'
 
 export default function ChannelList() {
   const { data: channels, refetch: refetchChannels } = api.messages.getChannels.useQuery()
@@ -124,7 +125,6 @@ type UserStatusProps = {
 }
 
 function OnlineUserList() {
-  const userList = api.messages.getOnlineUsers.useQuery()
   const {
     setSelectedChannelId,
     setSelectedChannelName,
@@ -132,13 +132,15 @@ function OnlineUserList() {
     userProfileChatConfig,
     setUserProfileChatConfig
   } = useUI()
+
+  const { userList } = useChannelContext()
   const { toggleSidebar, isMobile, state } = useSidebar()
 
-  if (!userList.data) return null
+  if (!userList) return null
 
   return (
     <div className="flex flex-col gap-4">
-      {userList.data.map((user) => (
+      {userList.map((user) => (
         <div
           key={user.id}
           onClick={() => {

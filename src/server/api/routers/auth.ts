@@ -7,6 +7,7 @@ import { AvatarGenerator } from 'random-avatar-generator'
 import { faker, id_ID } from '@faker-js/faker'
 import { type User } from '~/server/db/types'
 import { createPrivateConversationsForNewUser } from '~/server/db/utils/insertions'
+import * as openAIUtils from '~/server/db/utils/openai'
 
 export const authRouter = createTRPCRouter({
   emailSignUp: publicProcedure
@@ -53,16 +54,19 @@ export const authRouter = createTRPCRouter({
       }
     }),
   seedDB: protectedProcedure.mutation(async ({ ctx }) => {
-    const createUsers: Omit<User, 'id' | 'emailVerified' | 'userVisibility'>[] = []
+    const createUsers: SeedUser[] = []
 
     for (let i = 0; i < 10; i++) {
-      const newUser: Omit<User, 'id' | 'emailVerified' | 'userVisibility'> = {
-        name: faker.person.fullName(),
+      const fakeName = faker.person.fullName()
+      const nameEmbedding = await openAIUtils.generateEmbeddingFromText(fakeName, 512)
+      const newUser: SeedUser = {
+        name: fakeName,
+        userNameEmbedding: nameEmbedding ?? null,
         email: faker.internet.email().toLowerCase(),
         password: bcrypt.hashSync('testing', 10),
         image: faker.image.avatar(),
         lastOnline: new Date(),
-        userStatus: faker.lorem.sentence()
+        userStatus: (await openAIUtils.generateRandomUserStatus()) ?? faker.lorem.sentence()
       }
 
       createUsers.push(newUser)
@@ -75,3 +79,5 @@ export const authRouter = createTRPCRouter({
     }
   })
 })
+
+type SeedUser = Omit<User, 'id' | 'emailVerified' | 'userVisibility'>

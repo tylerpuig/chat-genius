@@ -8,7 +8,7 @@ import { useUI } from '~/app/hooks/ui/useUI'
 import { api } from '~/trpc/react'
 import { useDebouncedState } from '@mantine/hooks'
 import { UserMention } from './UserMention'
-import { ScrollArea } from '~/components/ui/scroll-area'
+// import { ScrollArea } from '~/components/ui/scroll-area'
 
 export default function MessageEditor({
   sendMessage,
@@ -184,7 +184,7 @@ export default function MessageEditor({
           onKeyDown={async (e) => await handleMessage(e)}
           onChange={handleChange}
           placeholder={`Send a message to ${selectedChannelName}...`}
-          className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 !scrollbar-thumb-rounded-full rounded-lg border-0 !text-lg text-zinc-100 shadow-none focus-visible:ring-0"
+          className="!scrollbar-thumb-rounded-full rounded-lg border-0 !text-lg text-zinc-100 shadow-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 focus-visible:ring-0"
         />
 
         {predictedText && !showUserList && (
