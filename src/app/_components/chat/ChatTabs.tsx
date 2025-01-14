@@ -1,15 +1,6 @@
 'use client'
 
-import {
-  MessagesSquare,
-  FolderOpen,
-  Pin,
-  Bookmark,
-  Search,
-  Bell,
-  MessageSquare,
-  ArrowLeftFromLine
-} from 'lucide-react'
+import { MessagesSquare, FolderOpen, Pin, Bookmark, Bot } from 'lucide-react'
 import { cn } from '~/lib/utils'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { type ChatTab } from '~/app/store/features/ui/types'
@@ -31,7 +22,8 @@ const TABS: NavItemProps[] = [
   { icon: <MessagesSquare className="h-4 w-4" />, label: 'Messages', isActive: true },
   { icon: <FolderOpen className="h-4 w-4" />, label: 'Files' },
   { icon: <Pin className="h-4 w-4" />, label: 'Pins' },
-  { icon: <Bookmark className="h-4 w-4" />, label: 'Saved' }
+  { icon: <Bookmark className="h-4 w-4" />, label: 'Saved' },
+  { icon: <Bot className="h-4 w-4" />, label: 'Bot' }
 ]
 
 function ConversationHeader() {

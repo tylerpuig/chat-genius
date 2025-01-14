@@ -67,6 +67,10 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
       conditions.push(gt(schema.messages.attachmentCount, 0))
     }
 
+    if (chatTab === 'Bot') {
+      conditions.push(eq(schema.messages.fromBot, true))
+    }
+
     if (chatTab === 'Saved') {
       return await getSavedMessages(userId)
     }
@@ -75,7 +79,6 @@ export async function getMessagesFromChannel(channelId: number, userId: string, 
       columns: {
         contentEmbedding: false
       },
-
       extras: {
         isSaved: sql<boolean>`EXISTS (
             SELECT 1 FROM ${schema.savedMessagesTable}
@@ -119,7 +122,7 @@ async function getSavedMessages(userId: string) {
       .findMany({
         where: eq(schema.savedMessagesTable.userId, userId),
         orderBy: asc(schema.savedMessagesTable.messageId),
-        columns: {}, // don't select any columns from savedMessages table
+        columns: {},
         with: {
           message: {
             extras: {
@@ -130,15 +133,7 @@ async function getSavedMessages(userId: string) {
             )`.as('isSaved')
             },
             columns: {
-              id: true,
-              createdAt: true,
-              updatedAt: true,
-              channelId: true,
-              userId: true,
-              content: true,
-              isPinned: true,
-              isReply: true,
-              replyCount: true
+              contentEmbedding: false
             },
             with: {
               user: {

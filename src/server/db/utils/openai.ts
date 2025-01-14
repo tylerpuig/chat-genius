@@ -13,7 +13,10 @@ const openAIClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
 
-export async function createMessageTextEmbedding(messageId: number, text: string): Promise<void> {
+export async function createMessageTextEmbedding(
+  messageId: number,
+  text: string
+): Promise<number[] | undefined> {
   try {
     const response = await openAIClient.embeddings.create({
       model: OPENAI_EMBEDDING_MODEL,
@@ -28,6 +31,8 @@ export async function createMessageTextEmbedding(messageId: number, text: string
       .update(schema.messages)
       .set({ contentEmbedding: embedding })
       .where(eq(schema.messages.id, messageId))
+
+    return response.data[0]?.embedding
   } catch (err) {
     console.error('Error creating message text embedding:', err)
   }
@@ -74,15 +79,18 @@ The message should:
 - Here are the previous messages from the user:
 ${userCtx}
 
+If you don't see any previous messages, create a new "style" for the user by differentiating them from the rest of the users. For example, you can use emojis or different colors to differentiate the user. Don't use too many emojis if other messages have emojis.
+
 Here are the previous messages from the channel:
 ${messagesCtx}
 
--Form your response in the same style as the user's message. 
--The user's status is: ${userStatus}
     `
         }
       ]
     })
+
+    //     -Form your response in the same style as the user's message.
+    // -The user's status is: ${userStatus}
 
     const message = response.choices[0]?.message?.content
     if (!message) return
@@ -113,7 +121,7 @@ async function getAllUsers() {
 }
 
 export async function seedChannelWithMessages(iterations: number): Promise<void> {
-  const channelId = 59
+  const channelId = 2
 
   const userPreviousMessages: Record<string, string[]> = {}
   const channelMessages: string[] = []
@@ -220,7 +228,11 @@ export async function generateSuggestedMessage(
           role: 'user',
           content: `${currentText}`
         }
-      ]
+      ],
+      prediction: {
+        type: 'content',
+        content: currentText
+      }
     })
 
     return response.choices[0]?.message?.content || ''
@@ -251,6 +263,8 @@ export async function generateUserProfileResponse(
           ${pastMessageContext}
 
           Your response should be a single message that attempts to answer the user's question.
+
+          You are allowed to "make up" information that is not in the previous messages exactly, but it has to be relevant to the user's question.
 
           Your answer should depend on the context of the previous messages from the user. If there is no relevant information in the previous messages, you can say "I don't have any information about that."          
           `

@@ -27,8 +27,17 @@ function HomeComponentToRender() {
   return homeComponents[uiView] || <ChatContainer />
 }
 
+function isMessageForChatBot(message: string): boolean {
+  try {
+    return message.includes('@') && message.includes('(bot)')
+  } catch (err) {
+    console.error('Error checking if message is for chat bot:', err)
+  }
+  return false
+}
+
 function ChannelView() {
-  const { selectedChannelId } = useUI()
+  const { selectedChannelId, conversationUser, isConversation } = useUI()
   const { data: session } = useSession()
   const [messageContent, setMessageContent] = useState('')
 
@@ -38,9 +47,28 @@ function ChannelView() {
     }
   })
 
+  const createBotMessage = api.integrations.sendMessageToUserWithBot.useMutation({
+    onSettled: () => {
+      setMessageContent('')
+    }
+  })
+
   async function sendMessage(): Promise<number> {
     try {
       if (!session?.user.id || !messageContent) return 0
+
+      if (isConversation && conversationUser && isMessageForChatBot(messageContent)) {
+        const messageCopy = messageContent
+        setMessageContent('')
+        const newMessage = await createBotMessage.mutateAsync({
+          userId: session?.user.id,
+          content: messageCopy,
+          channelId: selectedChannelId,
+          toUserId: conversationUser.id
+        })
+        return newMessage?.id || 0
+      }
+
       const newMessage = await createMessage.mutateAsync({
         content: messageContent,
         channelId: selectedChannelId,

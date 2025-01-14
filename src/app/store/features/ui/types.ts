@@ -1,4 +1,4 @@
-export type ChatTab = 'Messages' | 'Files' | 'Pins' | 'Saved'
+export type ChatTab = 'Messages' | 'Files' | 'Pins' | 'Saved' | 'Bot'
 export type UIView = 'channel' | 'conversation'
 import { type ConversationUser } from '~/server/db/types'
 

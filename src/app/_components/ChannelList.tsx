@@ -125,7 +125,13 @@ type UserStatusProps = {
 
 function OnlineUserList() {
   const userList = api.messages.getOnlineUsers.useQuery()
-  const { setSelectedChannelId, setSelectedChannelName, setIsConversation } = useUI()
+  const {
+    setSelectedChannelId,
+    setSelectedChannelName,
+    setIsConversation,
+    userProfileChatConfig,
+    setUserProfileChatConfig
+  } = useUI()
   const { toggleSidebar, isMobile, state } = useSidebar()
 
   if (!userList.data) return null
@@ -135,7 +141,7 @@ function OnlineUserList() {
       {userList.data.map((user) => (
         <div
           key={user.id}
-          onClick={async () => {
+          onClick={() => {
             if (!user.channelId) return
             if (isMobile && state === 'expanded') {
               toggleSidebar()
@@ -143,6 +149,11 @@ function OnlineUserList() {
             setSelectedChannelId(user.channelId)
             setSelectedChannelName(user.name)
             setIsConversation(true)
+
+            setUserProfileChatConfig({
+              ...userProfileChatConfig,
+              userId: user.id
+            })
           }}
         >
           <UserStatus

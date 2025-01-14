@@ -73,7 +73,8 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
                 onClick={() => openUserProfileChat()}
                 className={`... ${isReply ? 'max-w-[100px]' : 'max-w-[200px]'} cursor-pointer truncate font-semibold text-gray-100 hover:underline`}
               >
-                {user?.name || ''}
+                {/* {user?.name || ''} */}
+                {message?.fromBot ? `${user?.name + ` (bot)`}` : user?.name}
               </span>
               {!isMobile && (
                 <span className="text-sm text-gray-400">
@@ -160,17 +161,6 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
                           channelId: selectedChannelId
                         })
                       }
-                      // if (!message?.isPinned) {
-                      //   pinMessage.mutate({
-                      //     messageId: id,
-                      //     channelId: selectedChannelId
-                      //   })
-                      // } else {
-                      //   unPinMessage.mutate({
-                      //     messageId: id,
-                      //     channelId: selectedChannelId
-                      //   })
-                      // }
                     }}
                     className="text-gray-300 hover:text-gray-100"
                   >
@@ -196,7 +186,7 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
           </div>
 
           <div className="mt-1 break-words text-gray-300">
-            <p className="break-all">{content}</p>
+            <p className="break-words">{content}</p>
           </div>
 
           <ChatReactions reactions={reactions} id={id} />

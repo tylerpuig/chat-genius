@@ -91,9 +91,13 @@ export const messagesRouter = createTRPCRouter({
         console.error('Error creating new message:', err)
       }
     }),
+
   getMessagesFromChannel: protectedProcedure
     .input(
-      z.object({ channelId: z.number(), chatTab: z.enum(['Messages', 'Files', 'Pins', 'Saved']) })
+      z.object({
+        channelId: z.number(),
+        chatTab: z.enum(['Messages', 'Files', 'Pins', 'Saved', 'Bot'])
+      })
     )
     .query(async ({ input, ctx }) => {
       const { channelId } = input
@@ -713,5 +717,34 @@ export const messagesRouter = createTRPCRouter({
   seedChannelMessages: protectedProcedure.mutation(async ({ ctx }) => {
     seedChannelWithMessages(50)
     return {}
-  })
+  }),
+  getChannelUsers: protectedProcedure
+    .input(z.object({ channelId: z.number(), isConversation: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const onlineUsers = await ctx.db
+        .selectDistinct({
+          id: schema.users.id,
+          name: schema.users.name,
+          image: schema.users.image,
+          lastOnline: schema.users.lastOnline
+        })
+        .from(schema.users)
+        .where(ne(schema.users.id, ctx.session.user.id))
+        .leftJoin(
+          schema.conversationsTable,
+          or(
+            and(
+              eq(schema.users.id, schema.conversationsTable.user1Id),
+              eq(schema.conversationsTable.user2Id, ctx.session.user.id)
+            ),
+            and(
+              eq(schema.users.id, schema.conversationsTable.user2Id),
+              eq(schema.conversationsTable.user1Id, ctx.session.user.id)
+            )
+          )
+        )
+        .orderBy(desc(schema.users.lastOnline))
+
+      return onlineUsers
+    })
 })

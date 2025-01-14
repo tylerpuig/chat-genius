@@ -56,7 +56,8 @@ export const usersRouter = createTRPCRouter({
           name: true,
           userVisibility: true,
           userStatus: true,
-          image: true
+          image: true,
+          lastOnline: true
         }
       })
       return user
