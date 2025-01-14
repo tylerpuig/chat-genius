@@ -19,25 +19,32 @@ import { type AdapterAccount } from 'next-auth/adapters'
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
 
-export const users = pgTable('user', {
-  id: varchar('id', { length: 255 })
-    .notNull()
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: varchar('name', { length: 255 }),
-  email: varchar('email', { length: 255 }).notNull(),
-  userVisibility: varchar('user_visibility', { length: 255 }).default('public'),
-  userStatus: varchar('user_status', { length: 255 }).default('active'),
-  password: varchar('password', { length: 255 }),
-  emailVerified: timestamp('email_verified', {
-    mode: 'date',
-    withTimezone: true
-  }).default(sql`CURRENT_TIMESTAMP`),
-  lastOnline: timestamp('last_online', { withTimezone: true })
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
-  image: varchar('image', { length: 2048 })
-})
+export const users = pgTable(
+  'user',
+  {
+    id: varchar('id', { length: 255 })
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: varchar('name', { length: 255 }),
+    email: varchar('email', { length: 255 }).notNull(),
+    userVisibility: varchar('user_visibility', { length: 255 }).default('public'),
+    userStatus: varchar('user_status', { length: 255 }).default('active'),
+    password: varchar('password', { length: 255 }),
+    emailVerified: timestamp('email_verified', {
+      mode: 'date',
+      withTimezone: true
+    }).default(sql`CURRENT_TIMESTAMP`),
+    userNameEmbedding: vector('user_name_embedding', { dimensions: 512 }),
+    lastOnline: timestamp('last_online', { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    image: varchar('image', { length: 2048 })
+  },
+  (user) => [
+    index('user_name_embedding_idx').using('hnsw', user.userNameEmbedding.op('vector_cosine_ops'))
+  ]
+)
 
 export const channels = pgTable(
   'channel',
@@ -169,9 +176,16 @@ export const messageAttachmentsTable = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date())
+    updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date()),
+    fileNameEmbedding: vector('embedding', { dimensions: 512 })
   },
-  (attachment) => [index('attachment_message_id_idx').on(attachment.messageId)]
+  (attachment) => [
+    index('attachment_message_id_idx').on(attachment.messageId),
+    index('attachment_file_name_embedding_idx').using(
+      'hnsw',
+      attachment.fileNameEmbedding.op('vector_cosine_ops')
+    )
+  ]
 )
 
 export const messages = pgTable(
