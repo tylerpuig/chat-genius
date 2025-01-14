@@ -153,22 +153,20 @@ export const integrationsRouter = createTRPCRouter({
           .orderBy((t) => desc(t.similarity))
           .limit(20)
 
-        console.log('userMessages', userMessages)
-
         const toUserMessagesContext = userMessages.map((m) => `message: ${m.content}`).join('\n')
 
-        const chatBotMessage = await openAIUtils.generateUserProfileResponse(
+        const chatBotResponse = await openAIUtils.generateUserProfileResponse(
           toUserMessagesContext,
           content
         )
 
-        if (!chatBotMessage) return { id: 0 }
+        if (!chatBotResponse) return { id: 0 }
 
-        await ctx.db
+        const [newChatbotMessage] = await ctx.db
           .insert(schema.messages)
           .values({
             userId: toUserId,
-            content: chatBotMessage,
+            content: chatBotResponse.response,
             channelId,
             fromBot: true
           })
@@ -176,14 +174,33 @@ export const integrationsRouter = createTRPCRouter({
             id: schema.messages.id
           })
 
-        if (!newMessage?.id) return { id: 0 }
+        if (!newChatbotMessage?.id) return { id: 0 }
 
         // Create embedding for the new message, don't await in this scope
-        void openAIUtils.createMessageTextEmbedding(newMessage.id, chatBotMessage)
+        void openAIUtils.createMessageTextEmbedding(newChatbotMessage.id, chatBotResponse.response)
 
         // Emit the new message event
         // The subscription above will handle filtering to only subscribed users
         subscriptionMessage.userId = toUserId
+        ee.emit('newMessage', subscriptionMessage)
+
+        // update the message with the emoji response
+        const [newMessageEmoji] = await ctx.db
+          .insert(schema.messageReactions)
+          .values({
+            messageId: newMessage.id,
+            userId: toUserId,
+            emoji: chatBotResponse.emojiResponse
+          })
+          .returning({
+            messageId: schema.messageReactions.messageId
+          })
+
+        if (!newMessageEmoji?.messageId) return { id: 0 }
+
+        // new emit
+        subscriptionMessage.userId = toUserId
+        subscriptionMessage.type = 'NEW_REACTION'
         ee.emit('newMessage', subscriptionMessage)
 
         return newMessage

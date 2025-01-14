@@ -242,13 +242,16 @@ export async function generateSuggestedMessage(
 }
 
 const askProfileOutputSchema = z.object({
-  response: z.string()
+  response: z.string(),
+  emojiResponse: z.string()
 })
+
+type AskProfileOutput = z.infer<typeof askProfileOutputSchema>
 
 export async function generateUserProfileResponse(
   pastMessageContext: string,
   userQuery: string
-): Promise<string | undefined> {
+): Promise<AskProfileOutput | undefined> {
   try {
     // console.log('pastMessageContext', pastMessageContext)
     // console.log('userQuery', userQuery)
@@ -264,9 +267,12 @@ export async function generateUserProfileResponse(
 
           Your response should be a single message that attempts to answer the user's question.
 
-          You are allowed to "make up" information that is not in the previous messages exactly, but it has to be relevant to the user's question.
+          You are allowed to "make up" information that is not in the previous messages exactly, but it has to be relevant to the user's question. If there is no relevant information in the previous messages, you can say something like "Let me get back to you on that."
 
-          Your answer should depend on the context of the previous messages from the user. If there is no relevant information in the previous messages, you can say "I don't have any information about that."          
+          Your answer should depend on the context of the previous messages from the user. If there is no relevant information in the previous messages, you can say "I don't have any information about that."
+          
+          You can also reply with a single emoji. It should be relevant to the user's question. They must be one of the emojis in the list below.
+          '😀', '😂',  '🤔',  '😎', '🙌',  '👍', '🎉',  '🔥',  '❤️',  '🌈',  '🍕',  '🎸',  '🚀',  '💡'
           `
         },
         {
@@ -276,8 +282,9 @@ export async function generateUserProfileResponse(
       ],
       response_format: zodResponseFormat(askProfileOutputSchema, 'response')
     })
+    // console.log(response.choices[0]?.message.parsed?.emojiResponse || '')
 
-    return response.choices[0]?.message.parsed?.response || ''
+    return response.choices[0]?.message?.parsed || undefined
   } catch (err) {
     console.log(err)
   }
