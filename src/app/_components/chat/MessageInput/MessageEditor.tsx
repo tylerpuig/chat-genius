@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import { Button } from '~/components/ui/button'
-import { Paperclip, CornerDownLeft, Mic, Sparkles } from 'lucide-react'
+import { Paperclip, CornerDownLeft, Mic, Sparkles, BookText } from 'lucide-react'
 import { ChatInput } from '~/components/ui/chat/chat-input'
 import { useFileAttachmentContext } from '~/app/hooks/ui/useFileAttachmentContext'
 import { useSession } from 'next-auth/react'
@@ -22,7 +22,8 @@ export default function MessageEditor({
   const { files, uploadToS3 } = useFileAttachmentContext()
   const { data: session } = useSession()
 
-  const { setFileUploadModalOpen, selectedChannelName, selectedChannelId } = useUI()
+  const { setFileUploadModalOpen, selectedChannelName, selectedChannelId, setChatSummaryOpen } =
+    useUI()
   const [autoCompleteOn, setAutoCompleteOn] = useState(true)
 
   // Create a debounced version of messageContent
@@ -183,7 +184,7 @@ export default function MessageEditor({
           value={messageContent}
           onKeyDown={async (e) => await handleMessage(e)}
           onChange={handleChange}
-          placeholder={`Send a message to ${selectedChannelName}...`}
+          placeholder={`Send a message to ${selectedChannelName ?? ''}...`}
           className="!scrollbar-thumb-rounded-full rounded-lg border-0 !text-lg text-zinc-100 shadow-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 focus-visible:ring-0"
         />
 
@@ -239,6 +240,16 @@ export default function MessageEditor({
               className={`size-4 ${autoCompleteOn ? 'stroke-blue-400' : 'stroke-slate-50'}`}
             />
             <span className="sr-only">Use Microphone</span>
+          </Button>
+          <Button
+            onClick={() => {
+              setChatSummaryOpen(true)
+            }}
+            variant="channel"
+            size="icon"
+          >
+            <BookText className={`size-4 stroke-slate-50`} />
+            <span className="sr-only">Summarize Chat</span>
           </Button>
 
           <Button

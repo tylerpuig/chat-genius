@@ -19,3 +19,4 @@ export const selectManageUserProfileSheetOpen = (state: RootState) =>
 export const selectWorkspaceSearchOpen = (state: RootState) => state.ui.workspaceSearchOpen
 export const selectAppSidebarOpen = (state: RootState) => state.ui.appSidebarOpen
 export const selectUserProfileChatConfig = (state: RootState) => state.ui.userProfileChatConfig
+export const selectChatSummaryOpen = (state: RootState) => state.ui.chatSummaryOpen

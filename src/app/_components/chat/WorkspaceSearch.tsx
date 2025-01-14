@@ -11,39 +11,7 @@ import { downloadFile } from '../sheets/MessageAttachments'
 import { ScrollArea, ScrollBar } from '~/components/ui/scroll-area'
 import { formatDistanceToNow } from 'date-fns'
 import { type WorkSpaceSearchResults } from '~/trpc/types'
-
-import React from 'react'
-
-function ColorLoader() {
-  return (
-    <div className="flex w-full items-center">
-      <svg className="h-2 w-full" viewBox="0 0 100 4">
-        <defs>
-          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#0066cc">
-              <animate attributeName="offset" values="-1; 1" dur="2s" repeatCount="indefinite" />
-            </stop>
-            <stop offset="50%" stopColor="#00bfff">
-              <animate
-                attributeName="offset"
-                values="-0.5; 1.5"
-                dur="2s"
-                repeatCount="indefinite"
-              />
-            </stop>
-            <stop offset="100%" stopColor="#1e3a8a">
-              <animate attributeName="offset" values="0; 2" dur="2s" repeatCount="indefinite" />
-            </stop>
-          </linearGradient>
-        </defs>
-
-        <rect x="0" y="0" width="100" height="4" fill="url(#gradient)" rx="2" ry="2" />
-      </svg>
-    </div>
-  )
-}
-
-export default ColorLoader
+import { LineaerGradientLoader } from '../state/loading/LineaderGradient'
 
 export function WorkspaceSearchDialog() {
   const [searchQuery, setSearchQuery] = useDebouncedState('', 300)
@@ -65,7 +33,7 @@ export function WorkspaceSearchDialog() {
       query: searchQuery
     },
     {
-      enabled: workspaceSearchOpen
+      enabled: workspaceSearchOpen && searchQuery !== ''
     }
   )
 
@@ -84,7 +52,7 @@ export function WorkspaceSearchDialog() {
 
   return (
     <Dialog open={workspaceSearchOpen} onOpenChange={setWorkspaceSearchOpen}>
-      <DialogContent className="max-h-[90vh] border-0 bg-gray-900 text-gray-100 sm:max-w-[425px] md:max-h-[600px]">
+      <DialogContent className="max-h-[90vh] border-0 bg-gray-900 text-gray-100 sm:max-w-[625px] md:max-h-[800px]">
         <div className="mt-2 flex items-center border-b border-gray-700 pb-4">
           <Input
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -94,7 +62,7 @@ export function WorkspaceSearchDialog() {
         </div>
 
         <div className="w-full">
-          {searchResults.isPending && <ColorLoader />}
+          {searchResults.isLoading && <LineaerGradientLoader />}
           <div className="mt-4 space-y-4">
             <h3 className="mb-2 text-sm font-semibold text-gray-400">Users</h3>
             <div className="space-y-2">

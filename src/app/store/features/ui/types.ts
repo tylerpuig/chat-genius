@@ -25,4 +25,5 @@ export type UIState = {
   workspaceSearchOpen: boolean
   appSidebarOpen: boolean
   userProfileChatConfig: UserProfileChatConfig
+  chatSummaryOpen: boolean
 }

@@ -207,5 +207,49 @@ export const integrationsRouter = createTRPCRouter({
       } catch (err) {
         console.error('Error creating new message:', err)
       }
+    }),
+  summarizeMessagesInChannel: protectedProcedure
+    .input(
+      z.object({
+        channelId: z.number(),
+        userQuery: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const queryEmbedding = await openAIUtils.generateEmbeddingFromText(input.userQuery, 1536)
+
+      if (!queryEmbedding) return { summary: '' }
+
+      // Find relevant messages in the channel
+      const relevantMessages = await ctx.db
+        .select({
+          content: schema.messages.content,
+          similarity: sql<number>`1 - (${cosineDistance(
+            schema.messages.contentEmbedding,
+            queryEmbedding
+          )})`,
+          name: schema.users.name
+        })
+        .from(schema.messages)
+        .leftJoin(schema.users, eq(schema.messages.userId, schema.users.id))
+        .where(eq(schema.messages.channelId, input.channelId))
+        .orderBy((t) => desc(t.similarity))
+        .limit(20)
+
+      // console.log('relevantMessages', relevantMessages)
+
+      if (!relevantMessages.length) return { summary: '' }
+
+      // Summarize the messages
+      const summarizedText = await openAIUtils.summarizeText(
+        relevantMessages
+          .map((m) => {
+            return `${m.name}: ${m.content}`
+          })
+          .join('\n'),
+        input.userQuery
+      )
+
+      return { summary: summarizedText || '' }
     })
 })

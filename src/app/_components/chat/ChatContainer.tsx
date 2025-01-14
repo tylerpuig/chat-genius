@@ -133,7 +133,7 @@ const LoadMoreButton = () => {
   return (
     <button
       // onClick={onClick}
-      className="flex -translate-x-1/2 transform items-center justify-center space-x-2 rounded-full bg-blue-900 px-2 py-[.2rem] text-sm text-blue-100 opacity-75 shadow-lg transition-colors duration-200 ease-in-out hover:bg-blue-800 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50"
+      className="flex -translate-x-1/2 transform items-center justify-center space-x-2 rounded-full bg-blue-800 px-2 py-[.2rem] text-sm text-blue-100 opacity-75 shadow-lg transition-colors duration-200 ease-in-out hover:bg-blue-800 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50"
       aria-label="Load more messages"
     >
       <span>Previous</span>

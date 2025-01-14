@@ -22,7 +22,8 @@ const initialState: UIState = {
   userProfileChatConfig: {
     userId: '',
     sheetOpen: false
-  }
+  },
+  chatSummaryOpen: false
 }
 
 const uiSlice = createSlice({
@@ -83,6 +84,9 @@ const uiSlice = createSlice({
     },
     updateUserProfileChatConfig: (state, action: PayloadAction<UserProfileChatConfig>) => {
       state.userProfileChatConfig = action.payload
+    },
+    setChatSummaryOpen: (state, action: PayloadAction<boolean>) => {
+      state.chatSummaryOpen = action.payload
     }
   }
 })
@@ -105,7 +109,8 @@ export const {
   setManageUserProfileSheetOpen,
   setWorkspaceSearchOpen,
   setAppSidebarOpen,
-  updateUserProfileChatConfig
+  updateUserProfileChatConfig,
+  setChatSummaryOpen
 } = uiSlice.actions
 
 export default uiSlice.reducer
