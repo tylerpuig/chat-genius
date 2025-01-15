@@ -7,6 +7,12 @@ export type UserProfileChatConfig = {
   sheetOpen: boolean
 }
 
+export type UserAgentChatConfig = {
+  agentId: string
+  toUserId: string
+  dialogOpen: boolean
+}
+
 export type UIState = {
   currentTab: ChatTab
   selectedMessageId: number
@@ -26,4 +32,5 @@ export type UIState = {
   appSidebarOpen: boolean
   userProfileChatConfig: UserProfileChatConfig
   chatSummaryOpen: boolean
+  userAgentChatConfig: UserAgentChatConfig
 }

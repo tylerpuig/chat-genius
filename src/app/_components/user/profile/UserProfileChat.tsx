@@ -1,4 +1,5 @@
 'use client'
+import { useEffect } from 'react'
 import { Button } from '~/components/ui/button'
 import { Sheet, SheetContent, SheetHeader } from '~/components/ui/sheet'
 import { Phone, MoreVertical, MessageSquare } from 'lucide-react'
@@ -13,7 +14,9 @@ export default function UserProfileChat() {
     setUserProfileChatConfig,
     setSelectedChannelId,
     setConversationUser,
-    setIsConversation
+    setIsConversation,
+    userAgentChatConfig,
+    setUserAgentChatConfig
   } = useUI()
 
   const { userList } = useChannelContext()
@@ -105,7 +108,17 @@ export default function UserProfileChat() {
             <MessageSquare className="!h-6 !w-6 stroke-blue-400" />
             <span className="sr-only">Chat</span>
           </Button>
-          <Button variant="channel" className="">
+          <Button
+            onClick={() => {
+              setUserAgentChatConfig({
+                ...userAgentChatConfig,
+                toUserId: getUserProfileDetails.data?.id ?? '',
+                dialogOpen: true
+              })
+            }}
+            variant="channel"
+            className=""
+          >
             <Phone className="!h-6 !w-6 stroke-blue-400" />
             <span className="sr-only">Call</span>
           </Button>

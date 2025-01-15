@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import type { UIState, ChatTab, UIView, UserProfileChatConfig } from './types'
+import type { UIState, ChatTab, UIView, UserProfileChatConfig, UserAgentChatConfig } from './types'
 import { type ConversationUser } from '~/server/db/types'
 
 const initialState: UIState = {
@@ -23,7 +23,12 @@ const initialState: UIState = {
     userId: '',
     sheetOpen: false
   },
-  chatSummaryOpen: false
+  chatSummaryOpen: false,
+  userAgentChatConfig: {
+    agentId: '',
+    toUserId: '',
+    dialogOpen: false
+  }
 }
 
 const uiSlice = createSlice({
@@ -87,6 +92,9 @@ const uiSlice = createSlice({
     },
     setChatSummaryOpen: (state, action: PayloadAction<boolean>) => {
       state.chatSummaryOpen = action.payload
+    },
+    updateUserAgentChatConfig: (state, action: PayloadAction<UserAgentChatConfig>) => {
+      state.userAgentChatConfig = action.payload
     }
   }
 })
@@ -110,7 +118,8 @@ export const {
   setWorkspaceSearchOpen,
   setAppSidebarOpen,
   updateUserProfileChatConfig,
-  setChatSummaryOpen
+  setChatSummaryOpen,
+  updateUserAgentChatConfig
 } = uiSlice.actions
 
 export default uiSlice.reducer
