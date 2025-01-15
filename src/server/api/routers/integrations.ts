@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '~/server/api/trpc'
-import { cosineDistance, desc, gt, sql, eq, and } from 'drizzle-orm'
+import { cosineDistance, desc, sql, eq, and } from 'drizzle-orm'
 import * as openAIUtils from '~/server/db/utils/openai'
 import * as schema from '~/server/db/schema'
 import { ee } from '~/server/api/routers/messages'

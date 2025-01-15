@@ -42,20 +42,20 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const [trpcClient] = useState(() =>
     api.createClient({
       links: [
-        loggerLink({
-          enabled: (op) =>
-            process.env.NODE_ENV === 'development' ||
-            (op.direction === 'down' && op.result instanceof Error)
-        }),
+        // loggerLink({
+        //   enabled: (op) =>
+        //     process.env.NODE_ENV === 'development' ||
+        //     (op.direction === 'down' && op.result instanceof Error)
+        // }),
         // unstable_httpBatchStreamLink({
         //   transformer: SuperJSON,
-        //   url: getBaseUrl() + "/api/trpc",
-        //   headers: () => {
-        //     const headers = new Headers();
-        //     headers.set("x-trpc-source", "nextjs-react");
-        //     return headers;
-        //   },
-        // }),
+        //   url: 'localhost:3000/api/trpc'
+        //   // headers: () => {
+        //   //   const headers = new Headers()
+        //   //   headers.set('x-trpc-source', 'nextjs-react')
+        //   //   return headers
+        //   // }
+        // })
         splitLink({
           // uses the httpSubscriptionLink for subscriptions
           condition: (op) => op.type === 'subscription',
@@ -64,7 +64,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             transformer: SuperJSON
           }),
           false: httpBatchLink({
-            url: `${getBaseUrl()}/api/trpc`,
+            url: `/api/trpc`,
             transformer: SuperJSON
           })
         })

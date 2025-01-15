@@ -27,6 +27,7 @@ export async function createMessageTextEmbedding(
     const embedding = response.data[0]?.embedding
     if (!embedding) return
 
+    // console.time('createMessageTextEmbedding')
     await db
       .update(schema.messages)
       .set({ contentEmbedding: embedding })
