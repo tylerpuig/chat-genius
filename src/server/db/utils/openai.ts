@@ -121,7 +121,7 @@ async function getAllUsers() {
 }
 
 export async function seedChannelWithMessages(iterations: number): Promise<void> {
-  const channelId = 58
+  const channelId = 72
 
   const userPreviousMessages: Record<string, string[]> = {}
   const channelMessages: string[] = []
@@ -159,8 +159,26 @@ export async function seedChannelWithMessages(iterations: number): Promise<void>
         channelMessages.shift()
       }
 
+      const previousMessages = channelMessages.slice(-3) // Get last 3 messages for context
+      const conversationContext = previousMessages.join(' ')
+
+      const timestamp = new Date().toLocaleString('en-US', {
+        weekday: 'long',
+        hour: 'numeric',
+        minute: '2-digit',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        hour12: true
+      })
+      const messageWithContext = `
+      from: ${randomUser.name}
+      message: ${message}
+      previous_context: ${conversationContext}
+      conversation_context: ${conversationContext}
+      timestamp: ${timestamp}`
       //   save the message to the database
-      const embedding = await createMessageEmbedding(message)
+      const embedding = await createMessageEmbedding(messageWithContext)
       if (!embedding) continue
 
       await db.insert(schema.messages).values({
@@ -285,6 +303,50 @@ export async function generateUserProfileResponse(
     // console.log(response.choices[0]?.message.parsed?.emojiResponse || '')
 
     return response.choices[0]?.message?.parsed || undefined
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+const askUserAvatarOutputSchema = z.object({
+  response: z.string()
+})
+
+export async function generateUserAvatarResponse(
+  pastMessageContext: string,
+  userQuery: string
+): Promise<string | undefined> {
+  try {
+    console.log(pastMessageContext, null, 2)
+    console.log('userQuery', userQuery)
+    const response = await openAIClient.beta.chat.completions.parse({
+      model: OPENAI_CHAT_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: `
+          You are an AI agent that is representing a user. You should represent your message in the same style as the user's message.
+
+          ${pastMessageContext}
+
+          Your response should be a single message that attempts to answer the user's question.
+
+          You are allowed to "make up" information that is not in the previous messages exactly, but it has to be relevant to the user's question. If there is no relevant information in the previous messages, you can say something like "Let me get back to you on that."
+
+          Your answer should depend on the context of the previous messages from the user. If there is no relevant information in the previous messages, you can say "I don't have any information about that."
+          
+          `
+        },
+        {
+          role: 'user',
+          content: `${userQuery}`
+        }
+      ],
+      response_format: zodResponseFormat(askUserAvatarOutputSchema, 'response')
+    })
+    // console.log(response.choices[0]?.message.parsed?.emojiResponse || '')
+
+    return response.choices[0]?.message?.parsed?.response || undefined
   } catch (err) {
     console.log(err)
   }

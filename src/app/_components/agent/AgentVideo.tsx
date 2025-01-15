@@ -10,6 +10,8 @@ import { Dialog, DialogContent } from '~/components/ui/dialog'
 import * as DIDSDKType from '@d-id/client-sdk'
 import { useToggle } from '@mantine/hooks'
 import { Textarea } from '~/components/ui/textarea'
+import { api } from '~/trpc/react'
+import { useUI } from '~/app/hooks/ui/useUI'
 
 type MessageDisplay = {
   role: 'user' | 'assistant'
@@ -17,9 +19,9 @@ type MessageDisplay = {
   id: string
 }
 const clientKey = process.env.NEXT_PUBLIC_D_ID_CLIENT_KEY
-const agentId = process.env.NEXT_PUBLIC_D_ID_AGENT_ID
 
 export default function AgentVideoDialog() {
+  const { userAgentChatConfig, setUserAgentChatConfig } = useUI()
   const videoRef = useRef<HTMLVideoElement>(null)
   const [message, setMessage] = useState('')
   const [connectionStatus, setConnectionStatus] = useState<string>('Disconnected')
@@ -29,8 +31,26 @@ export default function AgentVideoDialog() {
   const [isMicOn, toggleMic] = useToggle([false, true])
   const srcObjectRef = useRef<MediaStream>()
 
+  const getUserAvatarResponse = api.integrations.getUserAvatarResponse.useMutation()
+
+  const { data: agentDetails } = api.integrations.getUserAgentDetails.useQuery({
+    toUserId: userAgentChatConfig.toUserId
+  })
+
+  function closeAndCleanupCall(): void {
+    setUserAgentChatConfig({ ...userAgentChatConfig, dialogOpen: false })
+    if (agentManager) {
+      agentManager.disconnect()
+    }
+    setAgentManager(null)
+    setMessages([])
+    setConnectionStatus('Disconnected')
+    setMessage('')
+  }
+
   useEffect(() => {
     // Import SDK dynamically
+    if (DIDSDK) return
     import('@d-id/client-sdk').then((module) => {
       setDIDSDK(module)
     })
@@ -38,7 +58,10 @@ export default function AgentVideoDialog() {
 
   useEffect(() => {
     const initializeAgent = async () => {
-      if (!DIDSDK || !clientKey || !agentId) return
+      if (!DIDSDK || !clientKey || !agentDetails?.agentId || !userAgentChatConfig.dialogOpen) {
+        console.log('DIDSDK, clientKey, or agentId is not defined')
+        return
+      }
 
       setConnectionStatus('connecting')
 
@@ -101,9 +124,9 @@ export default function AgentVideoDialog() {
       }
 
       try {
-        console.log('Initializing D-ID agent with:', { agentId })
+        console.log('Initializing D-ID agent with:', { agentId: agentDetails.agentId })
 
-        const manager = await DIDSDK.createAgentManager(agentId, {
+        const manager = await DIDSDK.createAgentManager(agentDetails.agentId, {
           auth: { type: 'key', clientKey },
           callbacks: callbacks,
           streamOptions
@@ -123,15 +146,22 @@ export default function AgentVideoDialog() {
         agentManager.disconnect()
       }
     }
-  }, [DIDSDK])
+  }, [DIDSDK, userAgentChatConfig, agentDetails?.agentId])
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !agentManager) return
-
+  async function handleSendMessage(): Promise<void> {
     try {
+      if (!message.trim() || !agentManager || !agentDetails?.agentId) {
+        throw new Error('Invalid message or agent ID')
+      }
+
+      const response = await getUserAvatarResponse.mutateAsync({
+        toUserId: userAgentChatConfig.toUserId,
+        query: message
+      })
+
       await agentManager.speak({
         type: 'text',
-        input: message
+        input: response.avatarResponse
       })
       setMessage('')
     } catch (error) {
@@ -140,7 +170,14 @@ export default function AgentVideoDialog() {
   }
 
   return (
-    <Dialog open={true} onOpenChange={(open) => {}}>
+    <Dialog
+      open={userAgentChatConfig.dialogOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          closeAndCleanupCall()
+        }
+      }}
+    >
       <DialogContent className="border-0 bg-gray-900">
         {/* <Card className="mx-auto w-full max-w-2xl border-0 bg-gray-800"> */}
         {/* <CardHeader>
@@ -149,7 +186,7 @@ export default function AgentVideoDialog() {
               <span className="text-sm font-normal">Status: {connectionStatus}</span>
             </CardTitle>
           </CardHeader> */}
-        <div className="text-white">Talking to D-ID Agent</div>
+        <div className="text-white">Talking to {agentDetails?.userInfo?.name ?? ''} (Avatar)</div>
         <div className="space-y-4">
           <div className="relative z-[60] aspect-video overflow-hidden rounded-lg bg-gray-800">
             {connectionStatus === 'connecting' && (
@@ -166,7 +203,7 @@ export default function AgentVideoDialog() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type a message..."
-              onKeyPress={(e) => {
+              onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleSendMessage()
                 }
@@ -174,31 +211,33 @@ export default function AgentVideoDialog() {
 
               // disabled={connectionStatus !== 'connected'}
             />
-
-            <Button
-              onClick={handleSendMessage}
-              // disabled={!message.trim() || connectionStatus !== 'connected'}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
           </div>
+          <Button
+            className="w-full"
+            onClick={handleSendMessage}
+            variant="blue"
+            disabled={getUserAvatarResponse.isPending}
+          >
+            {getUserAvatarResponse.isPending ? <>Sending...</> : 'Send Message'}
+            <Send className="h-4 w-4" />
+          </Button>
         </div>
 
         <div className="flex justify-center gap-4">
           <Button
             variant="destructive"
-            // onClick={handleHangUp}
-            // disabled={callStatus === 'disconnected'}
+            onClick={() => {
+              closeAndCleanupCall()
+            }}
           >
             <PhoneOff className="mr-2 h-4 w-4" />
             Hang Up
           </Button>
           <Button
-            variant={isMicOn ? 'default' : 'secondary'}
+            variant="blue"
             onClick={() => {
               toggleMic()
             }}
-            // disabled={callStatus !== 'connected'}
           >
             {isMicOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
           </Button>
