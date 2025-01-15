@@ -11,12 +11,7 @@ import {
 } from '~/components/ui/dialog'
 import { Input } from '~/components/ui/input'
 import { api } from '~/trpc/react'
-import { useDebouncedState } from '@mantine/hooks'
 import { useUI } from '~/app/hooks/ui/useUI'
-import { ScrollArea, ScrollBar } from '~/components/ui/scroll-area'
-import { formatDistanceToNow } from 'date-fns'
-import { type WorkSpaceSearchResults } from '~/trpc/types'
-import { LineaerGradientLoader } from '~/app/_components/state/loading/LineaderGradient'
 
 import React from 'react'
 
@@ -82,11 +77,13 @@ export function ChatSummaryDialog() {
 
           <div className="duration-900 animate-in slide-in-from-top">
             {completion && (
-              // <ScrollArea className="h-64 flex-1 transform-gpu rounded-md">
               <div className="max-h-[500px] !overflow-y-auto scrollbar-thin">
-                <MarkdownPreview source={completion} style={{ padding: 10 }} className="" />
+                <MarkdownPreview
+                  source={completion}
+                  style={{ padding: 10 }}
+                  className="!bg-gray-800"
+                />
               </div>
-              // </ScrollArea>
             )}
           </div>
         </div>

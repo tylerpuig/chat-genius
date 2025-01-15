@@ -23,6 +23,7 @@
     "@auth/drizzle-adapter": "^1.7.2",
     "@aws-sdk/client-s3": "^3.723.0",
     "@aws-sdk/s3-request-presigner": "^3.726.0",
+    "@d-id/client-sdk": "^1.0.19-beta.132",
     "@mantine/hooks": "^7.15.3",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-avatar": "^1.1.2",

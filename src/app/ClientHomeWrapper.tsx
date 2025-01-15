@@ -17,6 +17,8 @@ import { WorkspaceSearchDialog } from './_components/chat/WorkspaceSearch'
 import MessageEditor from './_components/chat/MessageInput/MessageEditor'
 import UserProfileChat from './_components/user/profile/UserProfileChat'
 import { ChatSummaryDialog } from './_components/chat/ChatSummaryDialog'
+import AgentVideoDialog from './_components/agent/AgentVideo'
+
 const homeComponents: Record<UIView, JSX.Element> = {
   channel: <ChannelView />,
   conversation: <></>
@@ -116,6 +118,7 @@ export default function ClientHomeWrapper() {
         <WorkspaceSearchDialog />
         <UserProfileChat />
         <ChatSummaryDialog />
+        <AgentVideoDialog />
       </div>
     </div>
   )
