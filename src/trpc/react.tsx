@@ -61,7 +61,12 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
           condition: (op) => op.type === 'subscription',
           true: unstable_httpSubscriptionLink({
             url: `/api/trpc`,
-            transformer: SuperJSON
+            transformer: SuperJSON,
+            eventSourceOptions() {
+              return {
+                withCredentials: true
+              }
+            }
           }),
           false: httpBatchLink({
             url: `/api/trpc`,
