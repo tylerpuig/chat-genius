@@ -45,3 +45,4 @@ yarn-error.log*
 # idea files
 .idea
 /src/server/db/utils/prompts.ts
+/scripts/*
