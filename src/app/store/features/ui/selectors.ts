@@ -21,3 +21,4 @@ export const selectAppSidebarOpen = (state: RootState) => state.ui.appSidebarOpe
 export const selectUserProfileChatConfig = (state: RootState) => state.ui.userProfileChatConfig
 export const selectChatSummaryOpen = (state: RootState) => state.ui.chatSummaryOpen
 export const selectUserAgentChatConfig = (state: RootState) => state.ui.userAgentChatConfig
+export const selectUserVoiceChatConfig = (state: RootState) => state.ui.userVoiceChatConfig

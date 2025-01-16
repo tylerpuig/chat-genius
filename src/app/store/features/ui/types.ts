@@ -13,6 +13,11 @@ export type UserAgentChatConfig = {
   dialogOpen: boolean
 }
 
+export type UserVoiceChatConfig = {
+  toUserId: string
+  dialogOpen: boolean
+}
+
 export type UIState = {
   currentTab: ChatTab
   selectedMessageId: number
@@ -33,4 +38,5 @@ export type UIState = {
   userProfileChatConfig: UserProfileChatConfig
   chatSummaryOpen: boolean
   userAgentChatConfig: UserAgentChatConfig
+  userVoiceChatConfig: UserVoiceChatConfig
 }

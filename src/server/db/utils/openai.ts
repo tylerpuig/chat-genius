@@ -320,7 +320,11 @@ export async function generateUserAvatarResponse(
 
           You are allowed to "make up" information that is not in the previous messages exactly, but it has to be relevant to the user's question. If there is no relevant information in the previous messages, you can say something like "Let me get back to you on that."
 
-          Your answer should depend on the context of the previous messages from the user. If there is no relevant information in the previous messages, you can say "I don't have any information about that."
+          Your answer should depend on the context of the previous messages from the user. If there is no relevant information in the previous messages, you can say "I don't have any information about that.
+
+          Keep your answer to only 2 sentences.
+          
+          "
           
           `
         },

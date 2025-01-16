@@ -6,7 +6,8 @@ import type {
   ChatTab,
   UIView,
   UserProfileChatConfig,
-  UserAgentChatConfig
+  UserAgentChatConfig,
+  UserVoiceChatConfig
 } from '../../store/features/ui/types'
 import { type ConversationUser } from '~/server/db/types'
 
@@ -32,6 +33,7 @@ export const useUI = () => {
   const userProfileChatConfig = useSelector(uiSelectors.selectUserProfileChatConfig)
   const chatSummaryOpen = useSelector(uiSelectors.selectChatSummaryOpen)
   const userAgentChatConfig = useSelector(uiSelectors.selectUserAgentChatConfig)
+  const userVoiceChatConfig = useSelector(uiSelectors.selectUserVoiceChatConfig)
 
   return {
     // State
@@ -54,6 +56,7 @@ export const useUI = () => {
     userProfileChatConfig,
     chatSummaryOpen,
     userAgentChatConfig,
+    userVoiceChatConfig,
 
     // Actions
     switchTab: (tab: ChatTab) => dispatch(uiSlice.setCurrentTab(tab)),
@@ -82,6 +85,8 @@ export const useUI = () => {
       dispatch(uiSlice.updateUserProfileChatConfig(config)),
     setChatSummaryOpen: (open: boolean) => dispatch(uiSlice.setChatSummaryOpen(open)),
     setUserAgentChatConfig: (config: UserAgentChatConfig) =>
-      dispatch(uiSlice.updateUserAgentChatConfig(config))
+      dispatch(uiSlice.updateUserAgentChatConfig(config)),
+    setUserVoiceChatConfig: (config: UserVoiceChatConfig) =>
+      dispatch(uiSlice.setUserVoiceChatConfig(config))
   }
 }
