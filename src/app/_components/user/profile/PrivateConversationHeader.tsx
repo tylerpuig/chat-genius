@@ -3,12 +3,19 @@
 import { useEffect } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
-import { PhoneCall, MoreVertical } from 'lucide-react'
+import { PhoneCall, MoreVertical, Video } from 'lucide-react'
 import { api } from '~/trpc/react'
 import { useUI } from '~/app/hooks/ui/useUI'
 
 export default function PrivateConversationHeader() {
-  const { userProfileChatConfig, setConversationUser } = useUI()
+  const {
+    userProfileChatConfig,
+    setConversationUser,
+    userAgentChatConfig,
+    setUserAgentChatConfig,
+    setUserVoiceChatConfig,
+    userVoiceChatConfig
+  } = useUI()
   const userProfileDetails = api.user.getUserProfileDetails.useQuery({
     userId: userProfileChatConfig.userId
   })
@@ -57,11 +64,32 @@ export default function PrivateConversationHeader() {
         <div className="flex items-center space-x-4">
           {/* <span className="text-xs">{currentTime.toLocaleTimeString()}</span> */}
           <Button
+            onClick={() => {
+              setUserVoiceChatConfig({
+                ...userVoiceChatConfig,
+                toUserId: userProfileDetails?.data?.id ?? '',
+                dialogOpen: true
+              })
+            }}
             size="icon"
             variant="ghost"
             className="text-gray-300 hover:bg-gray-800 hover:text-blue-400"
           >
             <PhoneCall className="h-5 w-5" />
+          </Button>
+          <Button
+            onClick={() => {
+              setUserAgentChatConfig({
+                ...userAgentChatConfig,
+                toUserId: userProfileDetails?.data?.id ?? '',
+                dialogOpen: true
+              })
+            }}
+            size="icon"
+            variant="ghost"
+            className="text-gray-300 hover:bg-gray-800 hover:text-blue-400"
+          >
+            <Video className="h-5 w-5" />
           </Button>
           <Button
             size="icon"

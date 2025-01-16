@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { PhoneOff, Mic, MicOff, SendHorizonal, WandSparkles, Phone } from 'lucide-react'
+import { PhoneOff, Mic, MicOff, SendHorizonal, WandSparkles, Phone, Video } from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import { Dialog, DialogContent } from '~/components/ui/dialog'
 import * as DIDSDKType from '@d-id/client-sdk'
@@ -186,13 +186,12 @@ export default function AgentVideoDialog() {
                     <div className="h-16 w-16 animate-ping rounded-full bg-blue-500 opacity-75"></div>
                   </div>
                   <div className="relative z-10 animate-bounce">
-                    <Phone className="h-16 w-16 text-blue-400" />
+                    <Video className="h-16 w-16 text-blue-400" />
                   </div>
                 </div>
               </div>
             )}
           </div>
-          {/* )} */}
 
           <div className="flex items-center gap-2">
             <Textarea

@@ -1,9 +1,8 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { PhoneOff, Mic, MicOff, SendHorizonal, WandSparkles, Phone } from 'lucide-react'
+import { PhoneOff, WandSparkles, Phone } from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import { Dialog, DialogContent } from '~/components/ui/dialog'
-import { useToggle } from '@mantine/hooks'
 import { Textarea } from '~/components/ui/textarea'
 import { api } from '~/trpc/react'
 import { useUI } from '~/app/hooks/ui/useUI'
@@ -15,14 +14,47 @@ const elevenLabsKey = process.env.NEXT_PUBLIC_ELEVEN_LABS_KEY
 export default function AgentPhoneCallDialog() {
   const { userVoiceChatConfig, setUserVoiceChatConfig } = useUI()
   const [message, setMessage] = useState('')
-  const [connectionStatus, setConnectionStatus] = useState<string>('Disconnected')
-  const [isMicOn, toggleMic] = useToggle([false, true])
+  const [connectionStatus, setConnectionStatus] = useState<string>('connecting')
   const audioContext = useRef<AudioContext | null>(null)
 
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+  const recognition = new SpeechRecognition()
+
+  recognition.continuous = true
+  recognition.interimResults = true
+  recognition.lang = 'en-US'
+
+  recognition.onresult = (event) => {
+    try {
+      if (!event.results.length) {
+        return
+      }
+
+      const transcript = Array.from(event.results)
+        .map((result) => result[0])
+        .map((result) => {
+          if (result) {
+            return result.transcript
+          }
+        })
+        .join('')
+
+      setMessage(transcript)
+    } catch (err) {
+      console.error('Error processing speech:', err)
+    }
+  }
+
   // Initialize the recorder controls using the hook
-  const recorderControls = useVoiceVisualizer()
-  const { recordedBlob, startRecording, setPreloadedAudioBlob, togglePauseResume, stopRecording } =
-    recorderControls
+  const recorderControls = useVoiceVisualizer({
+    onStartRecording: () => {
+      recognition.start()
+    },
+    onStopRecording: () => {
+      recognition.stop()
+    }
+  })
+  const { setPreloadedAudioBlob, togglePauseResume } = recorderControls
 
   const getUserAvatarResponse = api.integrations.getUserAvatarResponse.useMutation()
 
@@ -34,14 +66,6 @@ export default function AgentPhoneCallDialog() {
       enabled: userVoiceChatConfig.dialogOpen
     }
   )
-
-  useEffect(() => {
-    if (isMicOn) {
-      startRecording()
-    } else {
-      stopRecording()
-    }
-  }, [isMicOn])
 
   async function handleSendMessage(): Promise<void> {
     try {
@@ -64,7 +88,7 @@ export default function AgentPhoneCallDialog() {
         text: response?.avatarResponse ?? ''
       }
 
-      const audioResponse = await axios.post(`${baseUrl}/${'21m00Tcm4TlvDq8ikWAM'}`, requestBody, {
+      const audioResponse = await axios.post(`${baseUrl}/CwhRBWXzGAHq8TQ4Fs17`, requestBody, {
         headers,
         responseType: 'blob'
       })
@@ -72,7 +96,7 @@ export default function AgentPhoneCallDialog() {
       if (audioResponse.status === 200) {
         const audioBlob = new Blob([audioResponse.data], { type: 'audio/mpeg' })
         setPreloadedAudioBlob(audioBlob)
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 2_000))
         togglePauseResume()
       }
 
@@ -93,6 +117,14 @@ export default function AgentPhoneCallDialog() {
     }
   }
 
+  // Not needed, just for the visual effect
+  // useEffect(() => {
+  //   const timeout = setTimeout(() => {
+  //     setConnectionStatus('connected')
+  //   }, 3_000)
+  //   return () => clearInterval(timeout)
+  // }, [])
+
   return (
     <Dialog
       open={userVoiceChatConfig.dialogOpen}
@@ -109,7 +141,7 @@ export default function AgentPhoneCallDialog() {
           <div className="">
             <VoiceVisualizer controls={recorderControls} isControlPanelShown={true} />
 
-            {connectionStatus === 'connecting' && (
+            {/* {connectionStatus === 'connecting' && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -120,7 +152,7 @@ export default function AgentPhoneCallDialog() {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           <div className="flex items-center gap-2">
@@ -153,14 +185,6 @@ export default function AgentPhoneCallDialog() {
           <Button variant="destructive" onClick={closeAndCleanupCall}>
             <PhoneOff className="mr-2 h-4 w-4" />
             Hang Up
-          </Button>
-          <Button
-            variant="blue"
-            onClick={() => {
-              toggleMic()
-            }}
-          >
-            {isMicOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
           </Button>
         </div>
       </DialogContent>

@@ -322,11 +322,7 @@ export async function generateUserAvatarResponse(
 
           Your answer should depend on the context of the previous messages from the user. If there is no relevant information in the previous messages, you can say "I don't have any information about that.
 
-          Keep your answer to only 2 sentences.
-          
-          "
-          
-          `
+          Keep your answer to only 2 sentences.`
         },
         {
           role: 'user',
