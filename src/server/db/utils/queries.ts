@@ -1,4 +1,4 @@
-import { eq, and, or, type SQL, sql, gt, asc, desc, inArray, lt } from 'drizzle-orm'
+import { eq, and, or, type SQL, sql, gt, asc, desc, inArray, lt, ne } from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import { db } from '~/server/db'
 import { type ChatTab } from '~/app/store/features/ui/types'
@@ -198,4 +198,72 @@ async function getSavedMessages(userId: string, limit: number = 20) {
   } catch (err) {
     console.error('Error getting saved messages:', err)
   }
+}
+
+export async function getLatestMessagesFromChannel(channelId: number, limit: number) {
+  try {
+    const messages = await db.query.messages.findMany({
+      columns: {
+        content: true,
+        createdAt: true
+      },
+      with: {
+        user: {
+          columns: {
+            name: true
+          }
+        }
+      },
+      orderBy: desc(schema.messages.createdAt),
+      // where: and(eq(schema.messages.channelId, channelId), ne(schema.messages.userId, userId)),
+      where: eq(schema.messages.channelId, channelId),
+      limit
+    })
+
+    return messages
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+export async function getLatestMessagesFromUser(userId: string, limit: number) {
+  try {
+    const messages = await db.query.messages.findMany({
+      columns: {
+        content: true,
+        createdAt: true
+      },
+      with: {
+        user: {
+          columns: {
+            name: true
+          }
+        }
+      },
+      orderBy: desc(schema.messages.createdAt),
+      where: eq(schema.messages.userId, userId),
+      limit
+    })
+
+    return messages
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+export async function getUserNameFromId(userId: string): Promise<string> {
+  try {
+    const user = await db.query.users.findFirst({
+      columns: {
+        name: true
+      },
+      where: eq(schema.users.id, userId)
+    })
+
+    return user?.name ?? ''
+  } catch (err) {
+    console.log(err)
+  }
+
+  return ''
 }

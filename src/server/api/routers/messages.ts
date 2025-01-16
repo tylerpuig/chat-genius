@@ -11,7 +11,8 @@ import {
 import { getUserChannels, getMessagesFromChannel } from '~/server/db/utils/queries'
 import { incrementMessageReplyCount, setMessageAttachmentCount } from '~/server/db/utils/insertions'
 import { generatePresignedUrl, generateDownloadUrl } from '~/server/db/utils/s3'
-import { createMessageTextEmbedding, seedChannelWithMessages } from '~/server/db/utils/openai'
+import { seedChannelWithMessages } from '~/server/db/utils/openai'
+import { formatNewChannelMessageEmbeddingContext } from '~/server/db/utils/format'
 
 // Event emitter for trpc subscriptions
 export const ee = new EventEmitter()
@@ -75,7 +76,13 @@ export const messagesRouter = createTRPCRouter({
         if (!newMessage?.id) return { id: 0 }
 
         // Create embedding for the new message, don't await in this scope
-        void createMessageTextEmbedding(newMessage.id, content)
+        // void createMessageTextEmbedding(newMessage.id, content)
+        void formatNewChannelMessageEmbeddingContext(
+          ctx.session.user.id,
+          content,
+          channelId,
+          newMessage.id
+        )
         // Emit the new message event
         // The subscription above will handle filtering to only subscribed users
         const subscriptionMessage: NewChannelMessage = {

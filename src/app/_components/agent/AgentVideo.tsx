@@ -1,11 +1,7 @@
 'use client'
-import React, { useEffect, useRef, useState } from 'react'
-import dynamic from 'next/dynamic'
-import { PhoneOff, Mic, MicOff } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { Input } from '~/components/ui/input'
+import { useEffect, useRef, useState } from 'react'
+import { PhoneOff, Mic, MicOff, SendHorizonal, WandSparkles } from 'lucide-react'
 import { Button } from '~/components/ui/button'
-import { Send } from 'lucide-react'
 import { Dialog, DialogContent } from '~/components/ui/dialog'
 import * as DIDSDKType from '@d-id/client-sdk'
 import { useToggle } from '@mantine/hooks'
@@ -219,7 +215,7 @@ export default function AgentVideoDialog() {
             disabled={getUserAvatarResponse.isPending}
           >
             {getUserAvatarResponse.isPending ? <>Sending...</> : 'Send Message'}
-            <Send className="h-4 w-4" />
+            <WandSparkles className="h-4 w-4" />
           </Button>
         </div>
 

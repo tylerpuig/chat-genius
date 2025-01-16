@@ -129,7 +129,6 @@ export const integrationsRouter = createTRPCRouter({
         }
         ee.emit('newMessage', subscriptionMessage)
 
-        // Create embedding for the new message, don't await in this scope
         const messageEmbedding = await openAIUtils.createMessageTextEmbedding(
           newMessage.id,
           content
