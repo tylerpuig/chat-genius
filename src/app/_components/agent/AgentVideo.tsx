@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { PhoneOff, Mic, MicOff, SendHorizonal, WandSparkles } from 'lucide-react'
+import { PhoneOff, Mic, MicOff, SendHorizonal, WandSparkles, Phone } from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import { Dialog, DialogContent } from '~/components/ui/dialog'
 import * as DIDSDKType from '@d-id/client-sdk'
@@ -46,7 +46,6 @@ export default function AgentVideoDialog() {
 
   useEffect(() => {
     // Import SDK dynamically
-    if (DIDSDK) return
     import('@d-id/client-sdk').then((module) => {
       setDIDSDK(module)
     })
@@ -175,23 +174,25 @@ export default function AgentVideoDialog() {
       }}
     >
       <DialogContent className="border-0 bg-gray-900">
-        {/* <Card className="mx-auto w-full max-w-2xl border-0 bg-gray-800"> */}
-        {/* <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              D-ID Agent
-              <span className="text-sm font-normal">Status: {connectionStatus}</span>
-            </CardTitle>
-          </CardHeader> */}
         <div className="text-white">Talking to {agentDetails?.userInfo?.name ?? ''} (Avatar)</div>
-        <div className="space-y-4">
+        <div className="relative z-[60] space-y-4">
           <div className="relative z-[60] aspect-video overflow-hidden rounded-lg bg-gray-800">
+            <video ref={videoRef} autoPlay playsInline className="h-full w-full object-cover" />
+
             {connectionStatus === 'connecting' && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-white"></div>
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-16 w-16 animate-ping rounded-full bg-blue-500 opacity-75"></div>
+                  </div>
+                  <div className="relative z-10 animate-bounce">
+                    <Phone className="h-16 w-16 text-blue-400" />
+                  </div>
+                </div>
               </div>
             )}
-            <video ref={videoRef} autoPlay playsInline className="h-full w-full object-cover" />
           </div>
+          {/* )} */}
 
           <div className="flex items-center gap-2">
             <Textarea
