@@ -41,8 +41,7 @@ export async function createMessageTextEmbedding(
 
 async function genRandomChannelMessage(
   userCtx: string,
-  messagesCtx: string,
-  userStatus: string
+  messagesCtx: string
 ): Promise<string | undefined> {
   try {
     const response = await openAIClient.chat.completions.create({
@@ -89,17 +88,9 @@ ${messagesCtx}
       ]
     })
 
-    //     -Form your response in the same style as the user's message.
-    // -The user's status is: ${userStatus}
-
     const message = response.choices[0]?.message?.content
     if (!message) return
     return message
-
-    // await db
-    //   .update(schema.messages)
-    //   .set({ contentEmbedding: embedding })
-    //   .where(eq(schema.messages.id, messageId))
   } catch (err) {
     console.error('Error creating message text embedding:', err)
   }
@@ -144,11 +135,7 @@ export async function seedChannelWithMessages(iterations: number): Promise<void>
       }
 
       const userCtx = usersPrevMessages.join('\n')
-      const message = await genRandomChannelMessage(
-        userCtx,
-        channelMessages.join('\n'),
-        randomUser.userStatus!
-      )
+      const message = await genRandomChannelMessage(userCtx, channelMessages.join('\n'))
       if (!message) continue
       console.log('new message', message, 'from', randomUser.name)
 

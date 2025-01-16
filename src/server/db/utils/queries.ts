@@ -59,16 +59,6 @@ export async function getMessagesFromChannel(
   limit: number = 20
 ) {
   try {
-    // const conditions: SQL<unknown>[] = [
-    //   eq(schema.messages.channelId, channelId),
-    //   eq(schema.messages.isReply, false)
-    // ]
-
-    // Add cursor condition if provided
-    // if (cursor) {
-    //   conditions.push(lt(schema.messages.id, cursor))
-    // }
-
     if (chatTab === 'Saved') {
       return await getSavedMessages(userId)
     }
@@ -122,20 +112,7 @@ export async function getMessagesFromChannel(
       // offset: offset || 0
     })
 
-    // Check if there are more results
-    // const hasMore = results.length > 20
-    // const messages = results.slice(0, 20)
-
-    // console.log('hasMore', hasMore)
-
-    const nextCursor = results.at(-1)?.id || 0
-
-    return {
-      messages: results,
-      // hasMore,
-      nextCursor
-    }
-    // return results
+    return results
   } catch (err) {
     console.error('Error getting messages from channel:', err)
   }
@@ -189,12 +166,7 @@ async function getSavedMessages(userId: string, limit: number = 20) {
       orderBy: asc(schema.messages.id)
     })
 
-    const nextCursor = results.at(-1)?.id || 0
-
-    return {
-      messages: results,
-      nextCursor
-    }
+    return results
   } catch (err) {
     console.error('Error getting saved messages:', err)
   }

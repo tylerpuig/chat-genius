@@ -41,9 +41,6 @@ export function ChannelProvider({ children }: { children: ReactNode }) {
 
   const userList = api.messages.getOnlineUsers.useQuery()
 
-  // const [currentNotificationType, setCurrentNotificationType] =
-  //   useState<ChannelMessageType>('NEW_MESSAGE')
-
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const replyMessagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -91,10 +88,10 @@ export function ChannelProvider({ children }: { children: ReactNode }) {
   }, [selectedChannelId, currentTab])
 
   useEffect(() => {
-    if (messages?.messages) {
-      setAllMessages(messages.messages)
+    if (messages) {
+      setAllMessages(messages)
     }
-  }, [messages?.messages])
+  }, [messages])
 
   // useEffect(() => {
   //   if (currentNotificationType === 'NEW_MESSAGE' && messagesEndRef.current) {
@@ -128,8 +125,6 @@ export function ChannelProvider({ children }: { children: ReactNode }) {
     'DELETED_REACTION'
   ])
 
-  const SCROLL_KEYS = new Set<ChannelMessageType>(['NEW_MESSAGE', 'NEW_REPLY'])
-
   api.messages.onMessage.useSubscription(
     {
       channelId: selectedChannelId
@@ -141,9 +136,14 @@ export function ChannelProvider({ children }: { children: ReactNode }) {
           refetch()
         }
 
-        if (SCROLL_KEYS.has(data.type)) {
+        if (data.type === 'NEW_MESSAGE') {
           await new Promise((resolve) => setTimeout(resolve, 1_000))
           scrollToBottomMainMessages()
+        }
+
+        if (data.type === 'NEW_REPLY') {
+          await new Promise((resolve) => setTimeout(resolve, 1_000))
+          scrollToBottomReplyMessages()
         }
         // refetchMessages()
       }

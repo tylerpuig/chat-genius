@@ -1,6 +1,18 @@
 import { z } from 'zod'
-import { createTRPCRouter, protectedProcedure, publicProcedure } from '~/server/api/trpc'
-import { eq, and, desc, or, ne, ilike, asc, cosineDistance, sql, exists } from 'drizzle-orm'
+import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
+import {
+  eq,
+  and,
+  desc,
+  or,
+  ne,
+  ilike,
+  asc,
+  cosineDistance,
+  sql,
+  exists,
+  isNotNull
+} from 'drizzle-orm'
 import * as schema from '~/server/db/schema'
 import * as openAIUtils from '~/server/db/utils/openai'
 
@@ -101,15 +113,13 @@ export const searchRouter = createTRPCRouter({
     )
     .query(async ({ input, ctx }) => {
       const messageEmbedding = await openAIUtils.generateEmbeddingFromText(input.query, 1536)
-      if (!messageEmbedding)
+      const smallEmbedding = await openAIUtils.generateEmbeddingFromText(input.query, 512)
+      if (!messageEmbedding || !smallEmbedding)
         return {
           users: [],
           messages: [],
           files: []
         }
-
-      // user's name & file name embeddings are 512 dimensions
-      const slicedEmbedding = messageEmbedding.slice(0, 512)
 
       const users = await ctx.db
         .select({
@@ -120,7 +130,7 @@ export const searchRouter = createTRPCRouter({
           userVisibility: schema.users.userVisibility,
           userStatus: schema.users.userStatus,
           lastOnline: schema.users.lastOnline,
-          similarity: sql<number>`1 - (${cosineDistance(schema.users.userNameEmbedding, slicedEmbedding)})`
+          similarity: sql<number>`1 - (${cosineDistance(schema.users.userNameEmbedding, smallEmbedding)})`
         })
         .from(schema.users)
         .leftJoin(
@@ -136,29 +146,24 @@ export const searchRouter = createTRPCRouter({
             )
           )
         )
-        .orderBy((t) => t.similarity)
-        .limit(10)
+        .where(isNotNull(schema.users.userNameEmbedding))
+        .orderBy((t) => desc(t.similarity))
+        .limit(5)
 
-      // const messages = await ctx.db
-      //   .select({
-      //     content: schema.messages.content,
-      //     similarity: sql<number>`1 - (${cosineDistance(schema.messages.contentEmbedding, messageEmbedding)})`,
-      //     channelId: schema.messages.channelId,
-      //     createdAt: schema.messages.createdAt
-      //   })
-      //   .from(schema.messages)
-      //   .orderBy((t) => desc(t.similarity))
-      //   .limit(10)
+      // console.log(users)
 
       const messages = await ctx.db
         .select({
           content: schema.messages.content,
           similarity: sql<number>`1 - (${cosineDistance(schema.messages.contentEmbedding, messageEmbedding)})`,
           channelId: schema.messages.channelId,
-          createdAt: schema.messages.createdAt
+          createdAt: schema.messages.createdAt,
+          channelName: schema.channels.name,
+          name: schema.users.name
         })
         .from(schema.messages)
         .innerJoin(schema.channels, eq(schema.messages.channelId, schema.channels.id))
+        .leftJoin(schema.users, eq(schema.messages.userId, schema.users.id))
         .where(
           or(
             // User is a member of the channel
@@ -174,7 +179,11 @@ export const searchRouter = createTRPCRouter({
                 )
             ),
             // Channel is public
-            and(eq(schema.channels.isPrivate, false), eq(schema.channels.isConversation, false)),
+            and(
+              eq(schema.channels.isPrivate, false),
+              eq(schema.channels.isConversation, false),
+              isNotNull(schema.messages.contentEmbedding)
+            ),
             // User is part of the conversation
             and(
               eq(schema.channels.isConversation, true),
@@ -203,16 +212,33 @@ export const searchRouter = createTRPCRouter({
         .select({
           id: schema.messageAttachmentsTable.id,
           fileName: schema.messageAttachmentsTable.fileName,
-          similarity: sql<number>`1 - (${cosineDistance(schema.messageAttachmentsTable.fileNameEmbedding, slicedEmbedding)})`
+          similarity: sql<number>`1 - (${cosineDistance(schema.messageAttachmentsTable.fileNameEmbedding, smallEmbedding)})`
         })
         .from(schema.messageAttachmentsTable)
+        .where(isNotNull(schema.messageAttachmentsTable.fileNameEmbedding))
         .orderBy((t) => desc(t.similarity))
         .limit(10)
 
+      // remove similarity to reduce network payload
+      const formattedUsers = users.map((u) => {
+        const { similarity, ...rest } = u
+        return rest
+      })
+
+      const formattedMessages = messages.map((m) => {
+        const { similarity, ...rest } = m
+        return rest
+      })
+
+      const formattedFiles = files.map((f) => {
+        const { similarity, ...rest } = f
+        return rest
+      })
+
       return {
-        users: users,
-        messages: messages,
-        files: files
+        users: formattedUsers,
+        messages: formattedMessages,
+        files: formattedFiles
       }
     })
 })

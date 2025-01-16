@@ -98,8 +98,8 @@ export function WorkspaceSearchDialog() {
             <h3 className="mb-2 text-sm font-semibold text-gray-400">Messages</h3>
             <div className="flex">
               {/* Added wrapper div with flex */}
-              <ScrollArea type="scroll" className="max-h-48 min-h-2 flex-1 rounded-md">
-                <div className="space-y-2">
+              <ScrollArea type="always" className="max-h-72 min-h-2 flex-1 rounded-md">
+                <div className="px-2">
                   {cachedSearchResults &&
                     cachedSearchResults?.messages.map((message) => (
                       <div
@@ -107,11 +107,16 @@ export function WorkspaceSearchDialog() {
                           setSelectedChannelId(message.channelId)
                           setWorkspaceSearchOpen(false)
                         }}
-                        className="flex cursor-pointer items-center rounded-md p-2 hover:bg-gray-800"
+                        className="cursor-pointer items-center rounded-md p-2 hover:bg-gray-800"
                       >
-                        <MessageSquare className="mr-2 h-5 w-5 text-blue-400" />
-                        <div className="space-x-2 break-all">
-                          <span>{message.content?.slice(0, 50) ?? ''}</span>
+                        {/* <MessageSquare className="mr-2 h-5 w-5 text-blue-400" /> */}
+                        <div className="flex items-center space-y-2 break-all border-b">
+                          <User className="mr-2 h-5 w-5 text-blue-400" />
+                          <span className="mr-2">{message.name ?? ''}</span>
+                          <span>{`#${message.channelName ?? ''}`}</span>
+                        </div>
+                        <div className="space-y-2 break-all">
+                          <span>{message.content ?? ''}</span>
                           <span>({formatDistanceToNow(message?.createdAt)})</span>
                         </div>
                       </div>
