@@ -50,6 +50,7 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
   const deleteMessage = api.messages.deleteMessage.useMutation()
   const saveMessage = api.messages.saveMessage.useMutation()
   const unSaveMessage = api.messages.unSaveMessage.useMutation()
+  const deleteMessageReply = api.messages.deleteMessageReply.useMutation()
 
   function openUserProfileChat() {
     setUserProfileChatConfig({
@@ -146,7 +147,6 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
                   <DropdownMenuItem className="text-gray-300 hover:text-gray-100">
                     Copy Message Link
                   </DropdownMenuItem>
-                  {/* {!isReply && ( */}
                   <DropdownMenuItem
                     onClick={() => {
                       if (!message?.isPinned) {
@@ -165,14 +165,20 @@ export function ChatMessage({ message, isReply = false }: ChatMessageProps) {
                   >
                     {message?.isPinned ? 'Unpin' : 'Pin to Channel'}
                   </DropdownMenuItem>
-                  {/* )} */}
                   {session?.user?.id === message?.userId && (
                     <DropdownMenuItem
                       onClick={() => {
-                        deleteMessage.mutate({
-                          messageId: id,
-                          channelId: selectedChannelId
-                        })
+                        if (isReply) {
+                          deleteMessageReply.mutate({
+                            messageId: id,
+                            channelId: selectedChannelId
+                          })
+                        } else {
+                          deleteMessage.mutate({
+                            messageId: id,
+                            channelId: selectedChannelId
+                          })
+                        }
                       }}
                       className="text-red-400 hover:text-red-300"
                     >

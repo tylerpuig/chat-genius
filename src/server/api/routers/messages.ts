@@ -9,7 +9,11 @@ import {
   type NewChannelMessage
 } from '~/server/api/utils/subscriptionManager'
 import { getUserChannels, getMessagesFromChannel } from '~/server/db/utils/queries'
-import { incrementMessageReplyCount, setMessageAttachmentCount } from '~/server/db/utils/insertions'
+import {
+  incrementMessageReplyCount,
+  setMessageAttachmentCount,
+  decrementMessageReplyCount
+} from '~/server/db/utils/insertions'
 import { generatePresignedUrl, generateDownloadUrl } from '~/server/db/utils/s3'
 import { seedChannelWithMessages } from '~/server/db/utils/openai'
 import { formatNewChannelMessageEmbeddingContext } from '~/server/db/utils/format'
@@ -289,6 +293,8 @@ export const messagesRouter = createTRPCRouter({
       }
 
       ee.emit('newMessage', subscriptionMessage)
+
+      return {}
     }),
   unPinMessage: protectedProcedure
     .input(
@@ -312,6 +318,8 @@ export const messagesRouter = createTRPCRouter({
       }
 
       ee.emit('newMessage', subscriptionMessage)
+
+      return {}
     }),
   deleteMessage: protectedProcedure
     .input(
@@ -330,7 +338,7 @@ export const messagesRouter = createTRPCRouter({
       })
 
       if (!currentMessage) {
-        return
+        return {}
       }
 
       await ctx.db.delete(schema.messages).where(eq(schema.messages.id, input.messageId))
@@ -342,8 +350,54 @@ export const messagesRouter = createTRPCRouter({
       }
 
       ee.emit('newMessage', subscriptionMessage)
-    }),
 
+      return {}
+    }),
+  deleteMessageReply: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.number(),
+        channelId: z.number()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Check if the message exists and from the current user
+      const currentMessage = await ctx.db.query.messages.findFirst({
+        columns: {
+          contentEmbedding: false
+        },
+        where: and(
+          eq(schema.messages.id, input.messageId),
+          eq(schema.messages.userId, ctx.session.user.id)
+        )
+      })
+
+      if (!currentMessage) {
+        return {}
+      }
+
+      const parentMessge = await ctx.db.query.messagesToParents.findFirst({
+        where: eq(schema.messagesToParents.messageId, input.messageId)
+      })
+
+      if (!parentMessge) {
+        return {}
+      }
+
+      await ctx.db.delete(schema.messages).where(eq(schema.messages.id, input.messageId))
+      await decrementMessageReplyCount(parentMessge.parentId)
+
+      const subscriptionMessage: NewChannelMessage = {
+        id: input.messageId,
+        channelId: input.channelId,
+        userId: ctx.session.user.id,
+        type: 'DELETED_MESSAGE'
+      }
+
+      ee.emit('newMessage', subscriptionMessage)
+
+      return {}
+    }),
   saveMessage: protectedProcedure
     .input(
       z.object({
