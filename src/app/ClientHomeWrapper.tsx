@@ -18,6 +18,7 @@ import MessageEditor from './_components/chat/MessageInput/MessageEditor'
 import UserProfileChat from './_components/user/profile/UserProfileChat'
 import { ChatSummaryDialog } from './_components/chat/ChatSummaryDialog'
 import AgentVideoDialog from './_components/agent/AgentVideo'
+import AgentPhoneCall from './_components/agent/AgentPhoneCall'
 
 const homeComponents: Record<UIView, JSX.Element> = {
   channel: <ChannelView />,
@@ -119,6 +120,7 @@ export default function ClientHomeWrapper() {
         <UserProfileChat />
         <ChatSummaryDialog />
         <AgentVideoDialog />
+        <AgentPhoneCall />
       </div>
     </div>
   )

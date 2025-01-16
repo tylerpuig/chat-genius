@@ -1,8 +1,7 @@
 'use client'
-import { useEffect } from 'react'
 import { Button } from '~/components/ui/button'
 import { Sheet, SheetContent, SheetHeader } from '~/components/ui/sheet'
-import { Phone, MoreVertical, MessageSquare } from 'lucide-react'
+import { Phone, MoreVertical, MessageSquare, Video } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { api } from '~/trpc/react'
@@ -16,7 +15,9 @@ export default function UserProfileChat() {
     setConversationUser,
     setIsConversation,
     userAgentChatConfig,
-    setUserAgentChatConfig
+    setUserAgentChatConfig,
+    userVoiceChatConfig,
+    setUserVoiceChatConfig
   } = useUI()
 
   const { userList } = useChannelContext()
@@ -110,8 +111,8 @@ export default function UserProfileChat() {
           </Button>
           <Button
             onClick={() => {
-              setUserAgentChatConfig({
-                ...userAgentChatConfig,
+              setUserVoiceChatConfig({
+                ...userVoiceChatConfig,
                 toUserId: getUserProfileDetails.data?.id ?? '',
                 dialogOpen: true
               })
@@ -121,6 +122,20 @@ export default function UserProfileChat() {
           >
             <Phone className="!h-6 !w-6 stroke-blue-400" />
             <span className="sr-only">Call</span>
+          </Button>
+          <Button
+            onClick={() => {
+              setUserAgentChatConfig({
+                ...userAgentChatConfig,
+                toUserId: getUserProfileDetails.data?.id ?? '',
+                dialogOpen: true
+              })
+            }}
+            variant="channel"
+            className=""
+          >
+            <Video className="!h-6 !w-6 stroke-blue-400" />
+            <span className="sr-only">Video</span>
           </Button>
           <Button variant="channel" className="">
             <MoreVertical className="!h-6 !w-6 stroke-blue-400" />
