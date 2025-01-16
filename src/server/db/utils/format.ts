@@ -41,7 +41,7 @@ export async function formatNewChannelMessageEmbeddingContext(
   }
 }
 
-function normalizeTimetamp(date: Date): string {
+export function normalizeTimetamp(date: Date): string {
   const options: Intl.DateTimeFormatOptions = {
     weekday: 'long',
     hour: 'numeric',

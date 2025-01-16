@@ -5,6 +5,7 @@ import * as openAIUtils from '~/server/db/utils/openai'
 import * as schema from '~/server/db/schema'
 import { ee } from '~/server/api/routers/messages'
 import { type NewChannelMessage } from '~/server/api/utils/subscriptionManager'
+import { normalizeTimetamp } from '~/server/db/utils/format'
 
 export const integrationsRouter = createTRPCRouter({
   predictNextMessage: protectedProcedure
@@ -323,21 +324,11 @@ export const integrationsRouter = createTRPCRouter({
         .orderBy((t) => desc(t.similarity))
         .limit(10)
 
-      console.log('relevantMessages', relevantMessages)
-
       const messageContext = relevantMessages.map((m) => {
         return {
           message: m.content,
           from: m.name,
-          timestamp: m.createdAt.toLocaleString('en-US', {
-            weekday: 'long',
-            hour: 'numeric',
-            minute: '2-digit',
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-            hour12: true
-          })
+          timestamp: normalizeTimetamp(m.createdAt)
         }
       })
       // .join('\n\n')
