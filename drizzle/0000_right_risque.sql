@@ -95,6 +95,18 @@ CREATE TABLE "session" (
 	"expires" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "user_avatar" (
+	"user_id" varchar(255) NOT NULL,
+	"image" varchar(2048),
+	"name" varchar(255) NOT NULL,
+	"video_id" varchar(255),
+	"video_prompt" varchar(255),
+	"voice_id" varchar(255),
+	"voice_prompt" varchar(255),
+	"text_prompt" varchar(255),
+	CONSTRAINT "user_avatar_user_id_pk" PRIMARY KEY("user_id")
+);
+--> statement-breakpoint
 CREATE TABLE "user" (
 	"id" varchar(255) PRIMARY KEY NOT NULL,
 	"name" varchar(255),
@@ -131,6 +143,7 @@ ALTER TABLE "messages_to_parents" ADD CONSTRAINT "messages_to_parents_parent_id_
 ALTER TABLE "saved_message" ADD CONSTRAINT "saved_message_message_id_message_id_fk" FOREIGN KEY ("message_id") REFERENCES "public"."message"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "saved_message" ADD CONSTRAINT "saved_message_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_avatar" ADD CONSTRAINT "user_avatar_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "account_user_id_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "channel_member_channel_id_idx" ON "channel_member" USING btree ("channel_id");--> statement-breakpoint
 CREATE INDEX "channel_member_user_id_idx" ON "channel_member" USING btree ("user_id");--> statement-breakpoint

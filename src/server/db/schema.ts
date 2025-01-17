@@ -91,12 +91,30 @@ export const conversationsTable = pgTable(
   ]
 )
 
+export const userAvatarsTable = pgTable(
+  'user_avatar',
+  {
+    userId: varchar('user_id', { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    avatarImage: varchar('image', { length: 2048 }),
+    avatarName: varchar('name', { length: 255 }).notNull(),
+    avatarVideoAgentId: varchar('video_id', { length: 255 }),
+    avatarVideoAgentPrompt: varchar('video_prompt', { length: 255 }),
+    avatarVoiceAgentId: varchar('voice_id', { length: 255 }),
+    avatarVoiceAgentPrompt: varchar('voice_prompt', { length: 255 }),
+    avatarTextAgentPrompt: varchar('text_prompt', { length: 255 })
+  },
+  (avatar) => [primaryKey({ columns: [avatar.userId] })]
+)
+
 // Add relation to existing users table
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   channels: many(channelMembers),
   messages: many(messages),
   accounts: many(accounts),
-  conversations: many(conversationsTable)
+  conversations: many(conversationsTable),
+  avatars: one(userAvatarsTable)
 }))
 
 export const accounts = pgTable(
