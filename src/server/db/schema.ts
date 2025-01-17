@@ -12,12 +12,7 @@ import {
 } from 'drizzle-orm/pg-core'
 import { type AdapterAccount } from 'next-auth/adapters'
 
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
+const OPENAI_EMBEDDING_DIMENSIONS = 1536
 
 export const users = pgTable(
   'user',
@@ -35,7 +30,7 @@ export const users = pgTable(
       mode: 'date',
       withTimezone: true
     }).default(sql`CURRENT_TIMESTAMP`),
-    userNameEmbedding: vector('user_name_embedding', { dimensions: 512 }),
+    userNameEmbedding: vector('user_name_embedding', { dimensions: OPENAI_EMBEDDING_DIMENSIONS }),
     lastOnline: timestamp('last_online', { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -195,13 +190,13 @@ export const messageAttachmentsTable = pgTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date()),
-    fileNameEmbedding: vector('embedding', { dimensions: 512 })
+    fileContentEmbedding: vector('embedding', { dimensions: OPENAI_EMBEDDING_DIMENSIONS })
   },
   (attachment) => [
     index('attachment_message_id_idx').on(attachment.messageId),
-    index('attachment_file_name_embedding_idx').using(
+    index('attachment_file_content_embedding_idx').using(
       'hnsw',
-      attachment.fileNameEmbedding.op('vector_cosine_ops')
+      attachment.fileContentEmbedding.op('vector_cosine_ops')
     )
   ]
 )
@@ -225,7 +220,7 @@ export const messages = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date()),
     replyCount: integer('reply_count').default(0).notNull(),
     attachmentCount: integer('attachment_count').default(0).notNull(),
-    contentEmbedding: vector('embedding', { dimensions: 1536 }),
+    contentEmbedding: vector('embedding', { dimensions: OPENAI_EMBEDDING_DIMENSIONS }),
     fromBot: boolean('is_bot').default(false).notNull()
   },
   (message) => [

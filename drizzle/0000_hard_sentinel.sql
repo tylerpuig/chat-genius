@@ -50,7 +50,7 @@ CREATE TABLE "message_attachment" (
 	"file_size" integer,
 	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"updated_at" timestamp with time zone,
-	"embedding" vector(512),
+	"embedding" vector(1536),
 	CONSTRAINT "message_attachment_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
@@ -115,7 +115,7 @@ CREATE TABLE "user" (
 	"user_status" varchar(255) DEFAULT 'active',
 	"password" varchar(255),
 	"email_verified" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-	"user_name_embedding" vector(512),
+	"user_name_embedding" vector(1536),
 	"last_online" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"image" varchar(2048)
 );
@@ -152,7 +152,7 @@ CREATE INDEX "channel_name_idx" ON "channel" USING btree ("name");--> statement-
 CREATE INDEX "conversation_user1_idx" ON "conversation" USING btree ("user1_id");--> statement-breakpoint
 CREATE INDEX "conversation_user2_idx" ON "conversation" USING btree ("user2_id");--> statement-breakpoint
 CREATE INDEX "attachment_message_id_idx" ON "message_attachment" USING btree ("message_id");--> statement-breakpoint
-CREATE INDEX "attachment_file_name_embedding_idx" ON "message_attachment" USING hnsw ("embedding" vector_cosine_ops);--> statement-breakpoint
+CREATE INDEX "attachment_file_content_embedding_idx" ON "message_attachment" USING hnsw ("embedding" vector_cosine_ops);--> statement-breakpoint
 CREATE INDEX "message_reaction_message_emoji_idx" ON "message_reaction" USING btree ("message_id","emoji");--> statement-breakpoint
 CREATE INDEX "message_channel_id_idx" ON "message" USING btree ("channel_id");--> statement-breakpoint
 CREATE INDEX "message_user_id_idx" ON "message" USING btree ("user_id");--> statement-breakpoint

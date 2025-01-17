@@ -1,5 +1,5 @@
 {
-  "id": "327bb16f-c31e-4afe-ace8-1c9d953a9295",
+  "id": "6b44810c-32d0-47b5-a36b-a39b1ea8d6c2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -531,7 +531,7 @@
         },
         "embedding": {
           "name": "embedding",
-          "type": "vector(512)",
+          "type": "vector(1536)",
           "primaryKey": false,
           "notNull": false
         }
@@ -552,8 +552,8 @@
           "method": "btree",
           "with": {}
         },
-        "attachment_file_name_embedding_idx": {
-          "name": "attachment_file_name_embedding_idx",
+        "attachment_file_content_embedding_idx": {
+          "name": "attachment_file_content_embedding_idx",
           "columns": [
             {
               "expression": "embedding",
@@ -1185,7 +1185,7 @@
         },
         "user_name_embedding": {
           "name": "user_name_embedding",
-          "type": "vector(512)",
+          "type": "vector(1536)",
           "primaryKey": false,
           "notNull": false
         },
