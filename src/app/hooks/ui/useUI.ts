@@ -34,6 +34,7 @@ export const useUI = () => {
   const chatSummaryOpen = useSelector(uiSelectors.selectChatSummaryOpen)
   const userAgentChatConfig = useSelector(uiSelectors.selectUserAgentChatConfig)
   const userVoiceChatConfig = useSelector(uiSelectors.selectUserVoiceChatConfig)
+  const userAvatarEditorOpen = useSelector(uiSelectors.selectUserAvatarEditorOpen)
 
   return {
     // State
@@ -57,6 +58,7 @@ export const useUI = () => {
     chatSummaryOpen,
     userAgentChatConfig,
     userVoiceChatConfig,
+    userAvatarEditorOpen,
 
     // Actions
     switchTab: (tab: ChatTab) => dispatch(uiSlice.setCurrentTab(tab)),
@@ -87,6 +89,7 @@ export const useUI = () => {
     setUserAgentChatConfig: (config: UserAgentChatConfig) =>
       dispatch(uiSlice.updateUserAgentChatConfig(config)),
     setUserVoiceChatConfig: (config: UserVoiceChatConfig) =>
-      dispatch(uiSlice.setUserVoiceChatConfig(config))
+      dispatch(uiSlice.setUserVoiceChatConfig(config)),
+    setUserAvatarEditorOpen: (open: boolean) => dispatch(uiSlice.setUserAvatarEditorOpen(open))
   }
 }

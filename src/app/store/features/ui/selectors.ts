@@ -22,3 +22,4 @@ export const selectUserProfileChatConfig = (state: RootState) => state.ui.userPr
 export const selectChatSummaryOpen = (state: RootState) => state.ui.chatSummaryOpen
 export const selectUserAgentChatConfig = (state: RootState) => state.ui.userAgentChatConfig
 export const selectUserVoiceChatConfig = (state: RootState) => state.ui.userVoiceChatConfig
+export const selectUserAvatarEditorOpen = (state: RootState) => state.ui.userAvatarEditorOpen

@@ -39,7 +39,8 @@ const initialState: UIState = {
   userVoiceChatConfig: {
     toUserId: '',
     dialogOpen: false
-  }
+  },
+  userAvatarEditorOpen: false
 }
 
 const uiSlice = createSlice({
@@ -109,6 +110,9 @@ const uiSlice = createSlice({
     },
     setUserVoiceChatConfig: (state, action: PayloadAction<UserVoiceChatConfig>) => {
       state.userVoiceChatConfig = action.payload
+    },
+    setUserAvatarEditorOpen: (state, action: PayloadAction<boolean>) => {
+      state.userAvatarEditorOpen = action.payload
     }
   }
 })
@@ -134,7 +138,8 @@ export const {
   updateUserProfileChatConfig,
   setChatSummaryOpen,
   updateUserAgentChatConfig,
-  setUserVoiceChatConfig
+  setUserVoiceChatConfig,
+  setUserAvatarEditorOpen
 } = uiSlice.actions
 
 export default uiSlice.reducer

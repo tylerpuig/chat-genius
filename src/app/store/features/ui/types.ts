@@ -39,4 +39,5 @@ export type UIState = {
   chatSummaryOpen: boolean
   userAgentChatConfig: UserAgentChatConfig
   userVoiceChatConfig: UserVoiceChatConfig
+  userAvatarEditorOpen: boolean
 }
