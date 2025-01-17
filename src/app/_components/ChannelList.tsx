@@ -89,7 +89,7 @@ export default function ChannelList() {
         </>
       )}
 
-      <Button
+      {/* <Button
         onClick={() => {
           seedDB.mutate()
         }}
@@ -110,7 +110,7 @@ export default function ChannelList() {
           <Plus className="h-4 w-4" />
           <div>Seed Messages</div>
         </div>
-      </Button>
+      </Button> */}
     </div>
   )
 }

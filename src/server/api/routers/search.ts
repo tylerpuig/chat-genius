@@ -222,7 +222,7 @@ export const searchRouter = createTRPCRouter({
         .orderBy((t) => desc(t.similarity))
         .limit(10)
 
-      console.log('files', files)
+      // console.log('files', files)
 
       // remove similarity to reduce network payload
       const formattedUsers = users.map((u) => {
