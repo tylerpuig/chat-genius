@@ -22,8 +22,14 @@ export default function MessageEditor({
   const { files, uploadToS3 } = useFileAttachmentContext()
   const { data: session } = useSession()
 
-  const { setFileUploadModalOpen, selectedChannelName, selectedChannelId, setChatSummaryOpen } =
-    useUI()
+  const {
+    setFileUploadModalOpen,
+    selectedChannelName,
+    selectedChannelId,
+    setChatSummaryOpen,
+    conversationUser,
+    isConversation
+  } = useUI()
   const [autoCompleteOn, setAutoCompleteOn] = useState(true)
 
   // Create a debounced version of messageContent
@@ -97,7 +103,9 @@ export default function MessageEditor({
 
     predictNextMessage.mutate({
       currentText: debouncedContent,
-      channelId: selectedChannelId
+      channelId: selectedChannelId,
+      toUserId: conversationUser?.id,
+      isConversation: isConversation
     })
 
     return () => {

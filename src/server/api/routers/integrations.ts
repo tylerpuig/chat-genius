@@ -9,7 +9,14 @@ import { normalizeTimetamp } from '~/server/db/utils/format'
 
 export const integrationsRouter = createTRPCRouter({
   predictNextMessage: protectedProcedure
-    .input(z.object({ currentText: z.string(), channelId: z.number() }))
+    .input(
+      z.object({
+        currentText: z.string(),
+        channelId: z.number(),
+        toUserId: z.string().optional(),
+        isConversation: z.boolean().optional()
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       //
 
@@ -34,7 +41,7 @@ export const integrationsRouter = createTRPCRouter({
         )
         .orderBy(desc(schema.messages.createdAt))
         .leftJoin(schema.users, eq(schema.messages.userId, schema.users.id))
-        .limit(20)
+        .limit(10)
 
       // Get similar messages from the current user
       const similarUserMessages = await ctx.db
@@ -49,17 +56,42 @@ export const integrationsRouter = createTRPCRouter({
         .orderBy((t) => desc(t.similarity))
         .limit(10)
 
+      let botUserContext: string = ''
+
+      if (input.isConversation && input.toUserId) {
+        const botUserMessageContext = await ctx.db
+          .select({
+            similarity: similarity,
+            content: schema.messages.content,
+            name: schema.users.name
+          })
+          .from(schema.messages)
+          .leftJoin(schema.users, eq(schema.messages.userId, input.toUserId))
+          .where(
+            and(
+              eq(schema.messages.userId, input.toUserId),
+              eq(schema.messages.channelId, input.channelId)
+            )
+          )
+          .orderBy((t) => desc(t.similarity))
+          .limit(10)
+
+        botUserContext = botUserMessageContext
+          .map((m) => `from: ${m.name} message: ${m.content}`)
+          .join('\n')
+      }
+
       // Context from user's similar messages
       const userMessagesContext = similarUserMessages.map((m) => m.content).join('\n')
 
       // Context from recent channel messages
       const recentMessagesContext = recentMessages
-        .map((m) => `from: ${m.name}, similarity: ${m.similarity} message: ${m.content}`)
+        .map((m) => `from: ${m.name}, message: ${m.content}`)
         .join('\n')
 
       const suggestedMessage = await openAIUtils.generateSuggestedMessage(
         input.currentText,
-        userMessagesContext,
+        userMessagesContext + botUserContext,
         recentMessagesContext
       )
 
