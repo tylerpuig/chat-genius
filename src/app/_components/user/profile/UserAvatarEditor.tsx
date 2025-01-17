@@ -14,12 +14,15 @@ import { type EditUserAvatar } from '~/trpc/types'
 import { ImageIcon } from 'lucide-react'
 
 export default function UserAvatarEditor() {
-  const [avatarInfo, setAvatarInfo] = useState<EditUserAvatar | undefined>()
+  const [avatarInfo, setAvatarInfo] = useState<EditUserAvatar>({
+    avatarName: '',
+    avatarVideoAgentPrompt: '',
+    avatarVoiceAgentPrompt: '',
+    avatarTextAgentPrompt: ''
+  })
 
   const { data: session } = useSession()
-
   const { data, refetch: refecthAvatarInfo } = api.user.getAvatarInfo.useQuery()
-
   const { userAvatarEditorOpen, setUserAvatarEditorOpen } = useUI()
 
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>): void {
@@ -41,13 +44,6 @@ export default function UserAvatarEditor() {
   useEffect(() => {
     if (data) {
       setAvatarInfo(data)
-    } else {
-      setAvatarInfo({
-        avatarName: '',
-        avatarVideoAgentPrompt: '',
-        avatarVoiceAgentPrompt: '',
-        avatarTextAgentPrompt: ''
-      })
     }
   }, [data])
 
@@ -91,7 +87,6 @@ export default function UserAvatarEditor() {
                 value={avatarInfo?.avatarName ?? ''}
                 onChange={(e) => {
                   setAvatarInfo((prev) => {
-                    if (!prev) return
                     return { ...prev, avatarName: e.target.value }
                   })
                 }}
@@ -105,7 +100,6 @@ export default function UserAvatarEditor() {
                 value={avatarInfo?.avatarVideoAgentPrompt ?? ''}
                 onChange={(e) => {
                   setAvatarInfo((prev) => {
-                    if (!prev) return
                     return { ...prev, avatarVideoAgentPrompt: e.target.value }
                   })
                 }}
@@ -119,7 +113,6 @@ export default function UserAvatarEditor() {
                 value={avatarInfo?.avatarVoiceAgentPrompt ?? ''}
                 onChange={(e) => {
                   setAvatarInfo((prev) => {
-                    if (!prev) return
                     return { ...prev, avatarVoiceAgentPrompt: e.target.value }
                   })
                 }}
@@ -133,7 +126,6 @@ export default function UserAvatarEditor() {
                 value={avatarInfo?.avatarTextAgentPrompt ?? ''}
                 onChange={(e) => {
                   setAvatarInfo((prev) => {
-                    if (!prev) return
                     return { ...prev, avatarTextAgentPrompt: e.target.value }
                   })
                 }}
