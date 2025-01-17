@@ -44,7 +44,6 @@ export async function setMessageAttachmentCount(messageId: number, count: number
 
 export async function createPrivateConversationsForNewUser(newUserId: string): Promise<void> {
   try {
-    // await db.transaction(async (tx) => {
     // 1. Get all existing user IDs except the new user that don't already have a conversation
     const existingUsers = await db
       .select({ id: schema.users.id })

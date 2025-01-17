@@ -23,6 +23,8 @@ export default function AgentVideoDialog() {
   const [connectionStatus, setConnectionStatus] = useState<string>('Disconnected')
   const [agentManager, setAgentManager] = useState<DIDSDKType.AgentManager | null>(null)
   const [messages, setMessages] = useState<DIDSDKType.Message[]>([])
+  const [videoStreamState, setVideoStreamState] = useState<'STOP' | 'START'>('STOP')
+  const [recognition, setRecognition] = useState<SpeechRecognition>()
   const [DIDSDK, setDIDSDK] = useState<typeof DIDSDKType | null>(null)
   const [isMicOn, toggleMic] = useToggle([false, true])
   const srcObjectRef = useRef<MediaStream>()
@@ -50,6 +52,77 @@ export default function AgentVideoDialog() {
       setDIDSDK(module)
     })
   }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      console.error('Speech recognition not supported in this browser')
+      return
+    }
+
+    const recognition = new SpeechRecognition()
+
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+
+    recognition.onresult = (event) => {
+      try {
+        if (!event.results.length) {
+          return
+        }
+
+        const transcript = Array.from(event.results)
+          .map((result) => result[0])
+          .map((result) => {
+            if (result) {
+              return result.transcript
+            }
+          })
+          .join('')
+
+        setMessage(transcript)
+      } catch (err) {
+        console.error('Error processing speech:', err)
+      }
+    }
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error)
+    }
+
+    setRecognition(recognition)
+
+    return () => {
+      recognition.stop()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!recognition) return
+    if (isMicOn) {
+      recognition?.start()
+    } else {
+      recognition?.stop()
+    }
+  }, [isMicOn, recognition])
+
+  useEffect(() => {
+    const checkVideoPlayback = () => {
+      if (videoRef.current && !videoRef.current.paused && isMicOn) {
+        toggleMic() // Turn off mic when video is actually playing
+      }
+    }
+
+    // Set up event listener for when video starts playing
+    videoRef.current?.addEventListener('play', checkVideoPlayback)
+
+    return () => {
+      videoRef.current?.removeEventListener('play', checkVideoPlayback)
+    }
+  }, [isMicOn])
 
   useEffect(() => {
     const initializeAgent = async () => {
@@ -197,7 +270,13 @@ export default function AgentVideoDialog() {
             <Textarea
               className="border-0 bg-gray-800 text-gray-100 placeholder-gray-500"
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => {
+                setMessage(e.target.value)
+
+                if (recognition && !e.target.value.trim().length) {
+                  // recognition.
+                }
+              }}
               placeholder="Type a message..."
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {

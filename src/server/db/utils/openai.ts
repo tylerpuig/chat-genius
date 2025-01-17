@@ -51,35 +51,38 @@ async function genRandomChannelMessage(
           role: 'system',
           content: `
 
-          This is the #marketing channel where the marketing team discusses campaign strategies, content planning, and performance metrics. The team is currently focused on:
+          This is the #finance channel where the finance team discusses quarterly
+    forecasts, budget planning, and financial metrics. The team is currently focused on:
+    - Q2 2025 budget planning and forecasting
+    - Implementing new financial reporting automation
+    - Reviewing departmental spending trends
+    - Discussing potential areas for cost optimization
+    - Analyzing cash flow projections for upcoming expansion plans
 
-Planning Q2 2025 campaign calendar
-Reviewing social media engagement metrics
-Brainstorming new content ideas
-Tracking conversion rates across platforms
-Coordinating upcoming product launch materials
+    The conversation should maintain a casual and natural tone. The finananical terms should be easilty understandable by a non-financial person.
 
-Generate a single message from one of the team members that naturally continues this conversation.
+    Generate a single message from one of the team members that naturally continues this conversation.
 The message should:
+- Only be around 20 - 50 words. If the previous user's message was longer, this response should be longer, and vice versa
+- Be relevant to the ongoing discussion
+- Include specific details or numbers when appropriate
+- Reflect the speaker's role
+- Maintain a conversational tone
+- Occasionally ask questions or request input from others
+- Sometimes reference specific financial metrics, tools, or processes
+- Don't put any placeholders
+- It's important that there's a diversity of messages, so don't just follow the same format as the previous messages, unless explicitly asked to do so
+- You can use emojis if that fits the user style
+- Make your response a mixture of questions and discoveries (e.g., "What's the current trend in the market?" or "I just finished the report for Q2") based on previous messages of the user
+- If the previous message has an emoji, don't include it in your response
+- COME UP WITH DIFFERENT INTROS instead of HEY TEAM. YOU DON'T ALWAYS NEED AN INTRO
+- IF YOUR PRVIOUS MESSAGE HAS A QUESTION AT THE END, DO NOT ASK A QUESTION AT THE END OF YOUR RESPONSE
 
-Only be around 20 - 50 words. If the previous user's message was longer, this response should be longer, and vice versa
-Be relevant to ongoing marketing initiatives
-Include specific metrics or campaign details when appropriate
-Reflect the speaker's marketing role
-Maintain a conversational tone
-Occasionally ask questions or request feedback from others
-Sometimes reference specific marketing tools, platforms, or strategies
-Don't put any placeholders
-It's important that there's a diversity of messages, so don't just follow the same format as the previous messages, unless explicitly asked to do so
-You can use emojis if that fits the user style
-Make your response a mixture of updates and questions (e.g., "How's the Instagram campaign performing?" or "Just finished the blog post draft") based on previous messages of the user
-If the previous message has an emoji, don't include it in your response
-COME UP WITH DIFFERENT INTROS instead of HEY TEAM. YOU DON'T ALWAYS NEED AN INTRO
-IF YOUR PREVIOUS MESSAGE HAS A QUESTION AT THE END, DO NOT ASK A QUESTION AT THE END OF YOUR RESPONSE
-
-Here are the previous messages from the user:
+- Here are the previous messages from the user:
 ${userCtx}
+
 If you don't see any previous messages, create a new "style" for the user by differentiating them from the rest of the users. For example, you can use emojis or different colors to differentiate the user. Don't use too many emojis if other messages have emojis.
+
 Here are the previous messages from the channel:
 ${messagesCtx}
 
@@ -112,7 +115,7 @@ async function getAllUsers() {
 }
 
 export async function seedChannelWithMessages(iterations: number): Promise<void> {
-  const channelId = 72
+  const channelId = 57
 
   const userPreviousMessages: Record<string, string[]> = {}
   const channelMessages: string[] = []

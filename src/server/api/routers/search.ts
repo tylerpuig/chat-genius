@@ -165,48 +165,51 @@ export const searchRouter = createTRPCRouter({
         .innerJoin(schema.channels, eq(schema.messages.channelId, schema.channels.id))
         .leftJoin(schema.users, eq(schema.messages.userId, schema.users.id))
         .where(
-          or(
-            // User is a member of the channel
-            exists(
-              ctx.db
-                .select()
-                .from(schema.channelMembers)
-                .where(
-                  and(
-                    eq(schema.channelMembers.channelId, schema.messages.channelId),
-                    eq(schema.channelMembers.userId, ctx.session.user.id)
-                  )
-                )
-            ),
-            // Channel is public
-            and(
-              eq(schema.channels.isPrivate, false),
-              eq(schema.channels.isConversation, false),
-              isNotNull(schema.messages.contentEmbedding)
-            ),
-            // User is part of the conversation
-            and(
-              eq(schema.channels.isConversation, true),
+          and(
+            isNotNull(schema.messages.contentEmbedding),
+            or(
+              // User is a member of the channel
               exists(
                 ctx.db
                   .select()
-                  .from(schema.conversationsTable)
+                  .from(schema.channelMembers)
                   .where(
                     and(
-                      eq(schema.conversationsTable.channelId, schema.messages.channelId),
-                      or(
-                        eq(schema.conversationsTable.user1Id, ctx.session.user.id),
-                        eq(schema.conversationsTable.user2Id, ctx.session.user.id)
-                      )
+                      eq(schema.channelMembers.channelId, schema.messages.channelId),
+                      eq(schema.channelMembers.userId, ctx.session.user.id)
                     )
                   )
+              ),
+              // Channel is public
+              and(
+                eq(schema.channels.isPrivate, false),
+                eq(schema.channels.isConversation, false),
+                isNotNull(schema.messages.contentEmbedding)
+              ),
+              // User is part of the conversation
+              and(
+                eq(schema.channels.isConversation, true),
+                exists(
+                  ctx.db
+                    .select()
+                    .from(schema.conversationsTable)
+                    .where(
+                      and(
+                        eq(schema.conversationsTable.channelId, schema.messages.channelId),
+                        or(
+                          eq(schema.conversationsTable.user1Id, ctx.session.user.id),
+                          eq(schema.conversationsTable.user2Id, ctx.session.user.id)
+                        )
+                      )
+                    )
+                )
               )
             )
           )
         )
         .orderBy((t) => desc(t.similarity))
         .limit(10)
-      // console.log('userMessages', messages)
+      console.log('messages', messages)
 
       const files = await ctx.db
         .select({

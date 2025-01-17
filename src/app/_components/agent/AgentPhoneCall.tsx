@@ -14,44 +14,49 @@ const elevenLabsKey = process.env.NEXT_PUBLIC_ELEVEN_LABS_KEY
 export default function AgentPhoneCallDialog() {
   const { userVoiceChatConfig, setUserVoiceChatConfig } = useUI()
   const [message, setMessage] = useState('')
-  const [connectionStatus, setConnectionStatus] = useState<string>('connecting')
+  const [recognition, setRecognition] = useState<SpeechRecognition>()
+  // const [connectionStatus, setConnectionStatus] = useState<string>('connecting')
   const audioContext = useRef<AudioContext | null>(null)
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-  const recognition = new SpeechRecognition()
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    const recognition = new SpeechRecognition()
 
-  recognition.continuous = true
-  recognition.interimResults = true
-  recognition.lang = 'en-US'
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
 
-  recognition.onresult = (event) => {
-    try {
-      if (!event.results.length) {
-        return
+    recognition.onresult = (event) => {
+      try {
+        if (!event.results.length) {
+          return
+        }
+
+        const transcript = Array.from(event.results)
+          .map((result) => result[0])
+          .map((result) => {
+            if (result) {
+              return result.transcript
+            }
+          })
+          .join('')
+
+        setMessage(transcript)
+      } catch (err) {
+        console.error('Error processing speech:', err)
       }
-
-      const transcript = Array.from(event.results)
-        .map((result) => result[0])
-        .map((result) => {
-          if (result) {
-            return result.transcript
-          }
-        })
-        .join('')
-
-      setMessage(transcript)
-    } catch (err) {
-      console.error('Error processing speech:', err)
     }
-  }
+
+    setRecognition(recognition)
+  }, [])
 
   // Initialize the recorder controls using the hook
   const recorderControls = useVoiceVisualizer({
     onStartRecording: () => {
-      recognition.start()
+      recognition?.start()
     },
     onStopRecording: () => {
-      recognition.stop()
+      recognition?.stop()
     }
   })
   const { setPreloadedAudioBlob, togglePauseResume } = recorderControls
@@ -108,7 +113,7 @@ export default function AgentPhoneCallDialog() {
 
   function closeAndCleanupCall(): void {
     setUserVoiceChatConfig({ ...userVoiceChatConfig, dialogOpen: false })
-    setConnectionStatus('Disconnected')
+    // setConnectionStatus('Disconnected')
     setMessage('')
 
     if (audioContext.current) {
