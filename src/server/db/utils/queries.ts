@@ -103,7 +103,7 @@ export async function getMessagesFromChannel(
         },
         attachments: {
           columns: {
-            fileNameEmbedding: false
+            fileContentEmbedding: false
           }
         }
       },
@@ -158,7 +158,7 @@ async function getSavedMessages(userId: string, limit: number = 20) {
         },
         attachments: {
           columns: {
-            fileNameEmbedding: false
+            fileContentEmbedding: false
           }
         }
       },

@@ -122,7 +122,8 @@ export function ChannelProvider({ children }: { children: ReactNode }) {
     'NEW_MESSAGE',
     'NEW_REPLY',
     'NEW_REACTION',
-    'DELETED_REACTION'
+    'DELETED_REACTION',
+    'NEW_ATTACHMENT'
   ])
 
   api.messages.onMessage.useSubscription(

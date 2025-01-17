@@ -14,9 +14,15 @@ import {
   setMessageAttachmentCount,
   decrementMessageReplyCount
 } from '~/server/db/utils/insertions'
-import { generatePresignedUrl, generateDownloadUrl } from '~/server/db/utils/s3'
+import {
+  generatePresignedUrl,
+  generateDownloadUrl,
+  downloadFileFromLink
+} from '~/server/db/utils/s3'
 import { seedChannelWithMessages } from '~/server/db/utils/openai'
 import { formatNewChannelMessageEmbeddingContext } from '~/server/db/utils/format'
+import { type MessageAttachmentInsertion } from '~/server/db/types'
+import * as openAIUtils from '~/server/db/utils/openai'
 
 // Event emitter for trpc subscriptions
 export const ee = new EventEmitter()
@@ -651,16 +657,43 @@ export const messagesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      await ctx.db.insert(schema.messageAttachmentsTable).values(input.files)
+      const insertResults: MessageAttachmentInsertion[] = []
+      for (const file of input.files) {
+        const presignedUrl = await generateDownloadUrl(file.fileKey)
+        if (!presignedUrl) continue
+        const fileContents = await downloadFileFromLink(presignedUrl)
+        const messageContext = `
+        file_name: ${file.fileName}
+        file_type: ${file.fileType}
+        file_content: ${fileContents}
+        `
+        await openAIUtils.generateEmbeddingFromText(
+          messageContext,
+          openAIUtils.OPENAI_EMBEDDING_DIMENSIONS
+        )
+        const fileContentEmbedding = await openAIUtils.generateEmbeddingFromText(
+          file.fileName,
+          openAIUtils.OPENAI_EMBEDDING_DIMENSIONS
+        )
+        insertResults.push({
+          ...file,
+          fileContentEmbedding: fileContentEmbedding ?? null
+        })
+      }
 
-      await setMessageAttachmentCount(input.messageId, input.files.length)
+      if (!insertResults.length) return
+      await ctx.db.insert(schema.messageAttachmentsTable).values(insertResults)
 
-      ee.emit('newMessage', {
-        id: input.channelId,
-        content: '',
+      await setMessageAttachmentCount(input.messageId, insertResults.length)
+
+      const subscriptionMessage: NewChannelMessage = {
+        id: input.messageId,
         channelId: input.channelId,
-        userId: ctx.session.user.id
-      })
+        userId: ctx.session.user.id,
+        type: 'NEW_ATTACHMENT'
+      }
+
+      ee.emit('newMessage', subscriptionMessage)
     }),
   getMessageAttachments: protectedProcedure
     .input(z.object({ messageId: z.number() }))

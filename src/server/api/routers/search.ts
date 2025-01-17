@@ -113,8 +113,8 @@ export const searchRouter = createTRPCRouter({
     )
     .query(async ({ input, ctx }) => {
       const messageEmbedding = await openAIUtils.generateEmbeddingFromText(input.query, 1536)
-      const smallEmbedding = await openAIUtils.generateEmbeddingFromText(input.query, 512)
-      if (!messageEmbedding || !smallEmbedding)
+
+      if (!messageEmbedding)
         return {
           users: [],
           messages: [],
@@ -130,7 +130,7 @@ export const searchRouter = createTRPCRouter({
           userVisibility: schema.users.userVisibility,
           userStatus: schema.users.userStatus,
           lastOnline: schema.users.lastOnline,
-          similarity: sql<number>`1 - (${cosineDistance(schema.users.userNameEmbedding, smallEmbedding)})`
+          similarity: sql<number>`1 - (${cosineDistance(schema.users.userNameEmbedding, messageEmbedding)})`
         })
         .from(schema.users)
         .leftJoin(
@@ -209,18 +209,20 @@ export const searchRouter = createTRPCRouter({
         )
         .orderBy((t) => desc(t.similarity))
         .limit(10)
-      console.log('messages', messages)
+      // console.log('messages', messages)
 
       const files = await ctx.db
         .select({
           id: schema.messageAttachmentsTable.id,
           fileName: schema.messageAttachmentsTable.fileName,
-          similarity: sql<number>`1 - (${cosineDistance(schema.messageAttachmentsTable.fileNameEmbedding, smallEmbedding)})`
+          similarity: sql<number>`1 - (${cosineDistance(schema.messageAttachmentsTable.fileContentEmbedding, messageEmbedding)})`
         })
         .from(schema.messageAttachmentsTable)
-        .where(isNotNull(schema.messageAttachmentsTable.fileNameEmbedding))
+        .where(isNotNull(schema.messageAttachmentsTable.fileContentEmbedding))
         .orderBy((t) => desc(t.similarity))
         .limit(10)
+
+      console.log('files', files)
 
       // remove similarity to reduce network payload
       const formattedUsers = users.map((u) => {

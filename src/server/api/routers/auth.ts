@@ -26,7 +26,7 @@ export const authRouter = createTRPCRouter({
 
       // Simply get a random avatar
       const randomAvatar = generator.generateRandomAvatar(input.email)
-      const userNameEmbedding = await openAIUtils.generateEmbeddingFromText(input.name, 512)
+      const userNameEmbedding = await openAIUtils.generateEmbeddingFromText(input.name, 1536)
 
       const [newUser] = await ctx.db
         .insert(users)
@@ -60,7 +60,7 @@ export const authRouter = createTRPCRouter({
 
     for (let i = 0; i < 10; i++) {
       const fakeName = faker.person.fullName()
-      const nameEmbedding = await openAIUtils.generateEmbeddingFromText(fakeName, 512)
+      const nameEmbedding = await openAIUtils.generateEmbeddingFromText(fakeName, 1536)
       const newUser: SeedUser = {
         name: fakeName,
         userNameEmbedding: nameEmbedding ?? null,

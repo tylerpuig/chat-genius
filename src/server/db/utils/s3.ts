@@ -1,5 +1,6 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import axios from 'axios'
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -39,4 +40,19 @@ export async function generatePresignedUrl(fileName: string) {
   } catch (error) {
     console.error('Error generating pre-signed URL:', error)
   }
+}
+
+export async function downloadFileFromLink(fileUrl: string): Promise<string> {
+  try {
+    const response = await axios.get(fileUrl, {
+      responseType: 'arraybuffer'
+    })
+
+    const fileString = Buffer.from(response.data).toString('utf-8')
+    return fileString
+  } catch (error) {
+    console.error('Error downloading file:', error)
+  }
+
+  return ''
 }

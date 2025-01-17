@@ -7,3 +7,4 @@ export type ConversationUser = Omit<
   InferSelectModel<typeof schema.users>,
   'password' | 'emailVerified' | 'email' | 'userNameEmbedding'
 >
+export type MessageAttachmentInsertion = InferInsertModel<typeof schema.messageAttachmentsTable>

@@ -8,7 +8,7 @@ import { ee } from '~/server/api/routers/messages'
 
 const OPENAI_EMBEDDING_MODEL = 'text-embedding-3-large'
 const OPENAI_CHAT_MODEL = 'gpt-4o-mini-2024-07-18'
-const OPENAI_EMBEDDING_DIMENSIONS = 1536
+export const OPENAI_EMBEDDING_DIMENSIONS = 1536
 const openAIClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
@@ -115,7 +115,7 @@ async function getAllUsers() {
 }
 
 export async function seedChannelWithMessages(iterations: number): Promise<void> {
-  const channelId = 57
+  const channelId = 4
 
   const userPreviousMessages: Record<string, string[]> = {}
   const channelMessages: string[] = []

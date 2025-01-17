@@ -12,8 +12,6 @@ import {
 } from 'drizzle-orm/pg-core'
 import { type AdapterAccount } from 'next-auth/adapters'
 
-const OPENAI_EMBEDDING_DIMENSIONS = 1536
-
 export const users = pgTable(
   'user',
   {
@@ -30,7 +28,7 @@ export const users = pgTable(
       mode: 'date',
       withTimezone: true
     }).default(sql`CURRENT_TIMESTAMP`),
-    userNameEmbedding: vector('user_name_embedding', { dimensions: OPENAI_EMBEDDING_DIMENSIONS }),
+    userNameEmbedding: vector('user_name_embedding', { dimensions: 1536 }),
     lastOnline: timestamp('last_online', { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -190,7 +188,7 @@ export const messageAttachmentsTable = pgTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date()),
-    fileContentEmbedding: vector('embedding', { dimensions: OPENAI_EMBEDDING_DIMENSIONS })
+    fileContentEmbedding: vector('embedding', { dimensions: 1536 })
   },
   (attachment) => [
     index('attachment_message_id_idx').on(attachment.messageId),
@@ -220,7 +218,7 @@ export const messages = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date()),
     replyCount: integer('reply_count').default(0).notNull(),
     attachmentCount: integer('attachment_count').default(0).notNull(),
-    contentEmbedding: vector('embedding', { dimensions: OPENAI_EMBEDDING_DIMENSIONS }),
+    contentEmbedding: vector('embedding', { dimensions: 1536 }),
     fromBot: boolean('is_bot').default(false).notNull()
   },
   (message) => [

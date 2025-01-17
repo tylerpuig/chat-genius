@@ -18,6 +18,7 @@ export type ChannelMessageType =
   | 'UNSAVE_MESSAGE'
   | 'PIN_MESSAGE'
   | 'UNPIN_MESSAGE'
+  | 'NEW_ATTACHMENT'
 
 export type NewChannelMessage = {
   id: number

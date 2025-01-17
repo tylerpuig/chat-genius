@@ -97,7 +97,11 @@ export function MessageAttachmentsSheet() {
               {attachmentFiles.data &&
                 attachmentFiles.data?.map((file) => (
                   <TableRow key={file.id} className="border-b border-gray-800 hover:bg-slate-800">
-                    <TableCell className="font-medium text-gray-300">{file.fileName}</TableCell>
+                    <TableCell className="font-medium text-gray-300">
+                      {file.fileName.length > 20
+                        ? file.fileName.slice(0, 20) + '...'
+                        : file.fileName}
+                    </TableCell>
                     <TableCell className="text-gray-400">
                       {formatFileSizeToKB(file.fileSize)}
                     </TableCell>
