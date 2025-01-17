@@ -1,6 +1,6 @@
 'use client'
 
-import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from 'lucide-react'
+import { Bell, ChevronsUpDown, CreditCard, LogOut, User, Sparkles } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import {
   DropdownMenu,
@@ -21,7 +21,7 @@ export function NavUser() {
   const { isMobile } = useSidebar()
   const { data: session } = useSession()
 
-  const { setManageUserProfileSheetOpen } = useUI()
+  const { setManageUserProfileSheetOpen, setUserAvatarEditorOpen } = useUI()
 
   return (
     <SidebarMenu className="">
@@ -66,8 +66,12 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => setManageUserProfileSheetOpen(true)}>
-                <BadgeCheck />
+                <User />
                 Account
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setUserAvatarEditorOpen(true)}>
+                <Sparkles />
+                Avatar
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <CreditCard />

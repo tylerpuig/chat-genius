@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '~/server/api/trpc'
 import { eq } from 'drizzle-orm'
 import { channels, channelMembers } from '~/server/db/schema'
-import { users } from '~/server/db/schema'
+import { users, userAvatarsTable } from '~/server/db/schema'
 
 const editUserSchema = z.object({
   name: z.string().min(1).nullable(),
@@ -62,5 +62,55 @@ export const usersRouter = createTRPCRouter({
       })
 
       return user
+    }),
+  updateUserAvatar: protectedProcedure
+    .input(
+      z.object({
+        avatarName: z.string(),
+        videoCallPrompt: z.string(),
+        phoneCallPrompt: z.string(),
+        textChatPrompt: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [result] = await ctx.db
+        .insert(userAvatarsTable)
+        .values({
+          userId: ctx.session.user.id,
+          avatarName: input.avatarName,
+          avatarVideoAgentPrompt: input.videoCallPrompt,
+          avatarVoiceAgentPrompt: input.phoneCallPrompt,
+          avatarTextAgentPrompt: input.textChatPrompt
+        })
+        .onConflictDoUpdate({
+          target: userAvatarsTable.userId,
+          set: {
+            avatarName: input.avatarName,
+            avatarVideoAgentPrompt: input.videoCallPrompt,
+            avatarVoiceAgentPrompt: input.phoneCallPrompt,
+            avatarTextAgentPrompt: input.textChatPrompt
+          }
+        })
+        .returning({
+          avatarName: userAvatarsTable.avatarName,
+          avatarVideoAgentPrompt: userAvatarsTable.avatarVideoAgentPrompt,
+          avatarVoiceAgentPrompt: userAvatarsTable.avatarVoiceAgentPrompt,
+          avatarTextAgentPrompt: userAvatarsTable.avatarTextAgentPrompt
+        })
+
+      return result
+    }),
+  getAvatarInfo: protectedProcedure.query(async ({ ctx }) => {
+    const avatarInfo = await ctx.db.query.userAvatarsTable.findFirst({
+      where: eq(userAvatarsTable.userId, ctx.session.user.id),
+      columns: {
+        avatarName: true,
+        avatarVideoAgentPrompt: true,
+        avatarVoiceAgentPrompt: true,
+        avatarTextAgentPrompt: true
+      }
     })
+
+    return avatarInfo
+  })
 })

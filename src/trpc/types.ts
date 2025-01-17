@@ -7,3 +7,4 @@ export type ChatMessageData = NonNullable<
 export type OnlineUserList = RouterOutputs['messages']['getOnlineUsers']
 export type WorkSpaceSearchResults =
   RouterOutputs['search']['getWorkspaceSearchResultsBySimilarity']
+export type EditUserAvatar = NonNullable<RouterOutputs['user']['updateUserAvatar']>

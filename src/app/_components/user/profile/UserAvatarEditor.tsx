@@ -9,25 +9,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Sheet, SheetContent } from '~/components/ui/sheet'
 import { useUI } from '~/app/hooks/ui/useUI'
 import { useSession } from 'next-auth/react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '~/components/ui/select'
 import { api } from '~/trpc/react'
-import { type EditUserInput } from '~/server/api/routers/user'
+import { type EditUserAvatar } from '~/trpc/types'
 import { ImageIcon } from 'lucide-react'
 
 export default function UserAvatarEditor() {
-  const [userInfo, setUserInfo] = useState<EditUserInput | undefined>()
+  const [avatarInfo, setAvatarInfo] = useState<EditUserAvatar | undefined>()
 
   const { data: session } = useSession()
 
-  const { data, refetch: refetchUserInfo } = api.user.getUserDetails.useQuery()
+  const { data, refetch: refecthAvatarInfo } = api.user.getAvatarInfo.useQuery()
 
-  const { manageUserProfileSheetOpen, setManageUserProfileSheetOpen } = useUI()
+  const { userAvatarEditorOpen, setUserAvatarEditorOpen } = useUI()
 
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>): void {
     try {
@@ -39,28 +32,35 @@ export default function UserAvatarEditor() {
     }
   }
 
-  const editUserDetails = api.user.editUserDetails.useMutation({
+  const updateUserAvatar = api.user.updateUserAvatar.useMutation({
     onSuccess: () => {
-      refetchUserInfo()
+      refecthAvatarInfo()
     }
   })
 
   useEffect(() => {
     if (data) {
-      setUserInfo(data)
+      setAvatarInfo(data)
+    } else {
+      setAvatarInfo({
+        avatarName: '',
+        avatarVideoAgentPrompt: '',
+        avatarVoiceAgentPrompt: '',
+        avatarTextAgentPrompt: ''
+      })
     }
   }, [data])
 
   return (
-    <Sheet open={manageUserProfileSheetOpen} onOpenChange={setManageUserProfileSheetOpen}>
+    <Sheet open={userAvatarEditorOpen} onOpenChange={setUserAvatarEditorOpen}>
       <SheetContent className="scrollbar-overlay overflow-auto border-gray-700 bg-gray-900 px-1 text-gray-200">
         <div className="mt-6 bg-gray-900 px-4 text-gray-100">
           <div className="space-y-6">
             <div className="flex items-center justify-center space-x-4">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={session?.user?.image ?? ''} alt={userInfo?.name ?? ''} />
+                <AvatarImage src={session?.user?.image ?? ''} alt={avatarInfo?.avatarName ?? ''} />
                 <AvatarFallback>
-                  {(userInfo?.name ?? '')
+                  {(avatarInfo?.avatarName ?? '')
                     .split(' ')
                     .map((n) => n[0])
                     .join('')}
@@ -85,15 +85,14 @@ export default function UserAvatarEditor() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">Avatar Name</Label>
               <Input
                 id="name"
-                value={userInfo?.name ?? ''}
+                value={avatarInfo?.avatarName ?? ''}
                 onChange={(e) => {
-                  if (!userInfo) return
-                  setUserInfo((prev) => {
+                  setAvatarInfo((prev) => {
                     if (!prev) return
-                    return { ...prev, name: e.target.value }
+                    return { ...prev, avatarName: e.target.value }
                   })
                 }}
                 className="border-0 border-gray-600 bg-gray-700 text-gray-100 focus:border-blue-500"
@@ -101,48 +100,41 @@ export default function UserAvatarEditor() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status" className="text-gray-300">
-                Status
-              </Label>
-              <Select
-                value={userInfo?.userVisibility ?? ''}
-                onValueChange={(option) => {
-                  setUserInfo((prev) => {
+              <Label htmlFor="video-call-prompt">Video Call Prompt</Label>
+              <Textarea
+                value={avatarInfo?.avatarVideoAgentPrompt ?? ''}
+                onChange={(e) => {
+                  setAvatarInfo((prev) => {
                     if (!prev) return
-                    return { ...prev, userVisibility: option }
+                    return { ...prev, avatarVideoAgentPrompt: e.target.value }
                   })
                 }}
-              >
-                <SelectTrigger className="border-0 border-gray-600 bg-gray-700 text-gray-100">
-                  <SelectValue placeholder="Select your status" />
-                </SelectTrigger>
-                <SelectContent className="border-gray-600 bg-gray-700">
-                  <SelectItem value="active" className="text-green-400">
-                    Active
-                  </SelectItem>
-                  <SelectItem value="away" className="text-yellow-400">
-                    Away
-                  </SelectItem>
-                  <SelectItem value="dnd" className="text-red-400">
-                    Do Not Disturb
-                  </SelectItem>
-                  <SelectItem value="invisible" className="text-gray-400">
-                    Invisible
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+                className="border-0 border-gray-600 bg-gray-700 text-gray-100 focus:border-blue-500"
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">Phone Call Prompt</Label>
               <Textarea
-                id="status"
-                value={userInfo?.userStatus ?? ''}
+                value={avatarInfo?.avatarVoiceAgentPrompt ?? ''}
                 onChange={(e) => {
-                  if (!userInfo) return
-                  setUserInfo((prev) => {
+                  setAvatarInfo((prev) => {
                     if (!prev) return
-                    return { ...prev, userStatus: e.target.value }
+                    return { ...prev, avatarVoiceAgentPrompt: e.target.value }
+                  })
+                }}
+                className="border-0 border-gray-600 bg-gray-700 text-gray-100 focus:border-blue-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="text-chat-prompt">Text Chat Prompt</Label>
+              <Textarea
+                value={avatarInfo?.avatarTextAgentPrompt ?? ''}
+                onChange={(e) => {
+                  setAvatarInfo((prev) => {
+                    if (!prev) return
+                    return { ...prev, avatarTextAgentPrompt: e.target.value }
                   })
                 }}
                 className="border-0 border-gray-600 bg-gray-700 text-gray-100 focus:border-blue-500"
@@ -150,49 +142,21 @@ export default function UserAvatarEditor() {
             </div>
 
             <Button
-              disabled={!userInfo || editUserDetails.isPending}
+              disabled={!avatarInfo || updateUserAvatar.isPending}
               onClick={async () => {
-                if (!userInfo) return
-                await editUserDetails.mutateAsync(userInfo)
+                if (!avatarInfo) return
+                await updateUserAvatar.mutateAsync({
+                  avatarName: avatarInfo.avatarName ?? '',
+                  videoCallPrompt: avatarInfo.avatarVideoAgentPrompt ?? '',
+                  phoneCallPrompt: avatarInfo.avatarVoiceAgentPrompt ?? '',
+                  textChatPrompt: avatarInfo.avatarTextAgentPrompt ?? ''
+                })
               }}
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
-              {editUserDetails.isPending ? 'Updating...' : 'Update Profile'}
+              {updateUserAvatar.isPending ? 'Updating...' : 'Update Avatar'}
             </Button>
           </div>
-
-          {/* <div className="mt-8 border-t border-gray-700 pt-8">
-                <h3 className="mb-4 text-xl font-semibold">Change Password</h3>
-                <form onSubmit={handlePasswordChange} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="current-password">Current Password</Label>
-                    <Input
-                      id="current-password"
-                      type="password"
-                      className="border-gray-600 bg-gray-700 text-gray-100 focus:border-blue-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-password">New Password</Label>
-                    <Input
-                      id="new-password"
-                      type="password"
-                      className="border-gray-600 bg-gray-700 text-gray-100 focus:border-blue-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm New Password</Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      className="border-gray-600 bg-gray-700 text-gray-100 focus:border-blue-500"
-                    />
-                  </div>
-                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                    Change Password
-                  </Button>
-                </form>
-              </div> */}
         </div>
       </SheetContent>
     </Sheet>
